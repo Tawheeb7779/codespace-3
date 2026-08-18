@@ -11,7 +11,12 @@ import {
   ChevronDown,
   Terminal as TermIcon,
   Play,
-  Code2
+  Code2,
+  PanelRight,
+  Sparkles,
+  Info,
+  Layers,
+  ChevronUp
 } from 'lucide-react';
 import { useWorkspaceStore, FileItem } from '../stores/useWorkspaceStore';
 import { useNavigate } from 'react-router-dom';
@@ -38,6 +43,8 @@ export const WorkspaceView: React.FC = () => {
   const [newFileName, setNewFileName] = useState('');
   const [creatingInParent, setCreatingInParent] = useState<string | null>(null);
   const [isFolder, setIsFolder] = useState(false);
+  const [showRightPanel, setShowRightPanel] = useState(true);
+  const [showBottomPanel, setShowBottomPanel] = useState(false);
 
   const activeFile = activeFileId ? getFileById(activeFileId) : null;
 
@@ -144,9 +151,9 @@ export const WorkspaceView: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex h-full overflow-hidden">
+    <div className="flex-1 flex flex-col md:flex-row h-full overflow-hidden select-none">
       {/* File Explorer Sidebar Panel */}
-      <div className="w-64 bg-[#121620]/90 border-r border-white/10 flex flex-col h-full shrink-0">
+      <div className="w-full md:w-64 bg-[#121620]/90 border-r border-b md:border-b-0 border-white/10 flex flex-col shrink-0 max-h-48 md:max-h-full">
         <div className="p-3 border-b border-white/10 flex items-center justify-between">
           <span className="text-xs font-bold font-mono uppercase tracking-wider text-slate-300 flex items-center space-x-1.5">
             <Code2 className="w-4 h-4 text-blue-400" />
@@ -168,7 +175,6 @@ export const WorkspaceView: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {renderFileTree(files)}
 
-          {/* New file creation modal/input inline */}
           {creatingInParent !== undefined && (
             <form onSubmit={handleCreateSubmit} className="mt-2 p-2 bg-white/5 border border-blue-500/40 rounded-lg">
               <div className="text-[10px] text-blue-400 font-mono mb-1">
@@ -213,7 +219,7 @@ export const WorkspaceView: React.FC = () => {
 
       {/* Code Editor Main Panel */}
       <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0e131d]">
-        {/* Editor Tabs */}
+        {/* Breadcrumbs & Tabs */}
         <div className="flex items-center bg-[#171c26]/80 border-b border-white/10 overflow-x-auto select-none">
           {openFileIds.map((id) => {
             const file = getFileById(id);
@@ -249,6 +255,13 @@ export const WorkspaceView: React.FC = () => {
 
           <div className="flex items-center space-x-2 px-3">
             <button
+              onClick={() => setShowRightPanel(!showRightPanel)}
+              className="hidden lg:flex items-center space-x-1 text-xs font-mono text-slate-400 hover:text-slate-200 p-1 rounded"
+              title="Toggle Context Panel"
+            >
+              <PanelRight className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => navigate('/preview')}
               className="flex items-center space-x-1 text-xs font-mono text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 px-2.5 py-1 rounded border border-cyan-500/30 transition-all"
             >
@@ -283,6 +296,7 @@ export const WorkspaceView: React.FC = () => {
                 padding: { top: 12 },
                 automaticLayout: true
               }}
+              loading={<div className="p-4 font-mono text-xs text-blue-400">Loading Monaco Editor Kernel...</div>}
             />
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-slate-500 font-mono text-sm">
@@ -291,7 +305,66 @@ export const WorkspaceView: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Bottom Quick Terminal Drawer Toggle */}
+        <div className="border-t border-white/10 bg-[#171c26]/90 p-2 flex items-center justify-between text-xs font-mono text-slate-400">
+          <button
+            onClick={() => setShowBottomPanel(!showBottomPanel)}
+            className="flex items-center space-x-2 text-slate-300 hover:text-white"
+          >
+            <TermIcon className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Terminal & WASM Sandbox Output</span>
+            <ChevronUp className={`w-3.5 h-3.5 transition-transform ${showBottomPanel ? 'rotate-180' : ''}`} />
+          </button>
+          <span className="text-[10px] text-slate-500">UTF-8 / LF / TypeScript</span>
+        </div>
+
+        {showBottomPanel && (
+          <div className="h-40 bg-[#090e18] border-t border-white/10 p-3 font-mono text-xs text-slate-300 overflow-y-auto">
+            <div className="text-emerald-400 font-bold mb-1">[CodeSpace WASM Kernel Status]</div>
+            <div>➜ Local Server: http://localhost:3000</div>
+            <div>➜ 0 Vulnerabilities found in package sandbox tree</div>
+            <button onClick={() => navigate('/terminal')} className="text-blue-400 underline mt-2 inline-block">
+              Open full interactive terminal screen →
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Right Contextual Panel (Inspector / AI Shortcuts) */}
+      {showRightPanel && activeFile && (
+        <div className="hidden lg:flex w-64 bg-[#121620]/90 border-l border-white/10 flex-col h-full p-3 font-mono text-xs space-y-4 shrink-0">
+          <div className="flex items-center justify-between border-b border-white/10 pb-2 text-slate-300 font-bold">
+            <span className="flex items-center space-x-1.5">
+              <Info className="w-4 h-4 text-blue-400" />
+              <span>File Context Inspector</span>
+            </span>
+            <button onClick={() => setShowRightPanel(false)} className="text-slate-400 hover:text-white">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">File Properties</div>
+            <div className="bg-white/5 p-2 rounded border border-white/5 space-y-1">
+              <div className="text-slate-200 font-semibold">{activeFile.name}</div>
+              <div className="text-[11px] text-slate-400 truncate">{activeFile.path}</div>
+              <div className="text-cyan-400 text-[10px] uppercase font-bold">{activeFile.language}</div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">AI Quick Actions</div>
+            <button
+              onClick={() => navigate('/ai')}
+              className="w-full flex items-center space-x-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 p-2 rounded text-left transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              <span>Explain file logic with Nexus AI</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
