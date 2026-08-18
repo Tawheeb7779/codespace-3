@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Source Control Panel - AETHER IDE</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#0b1326",
+                        "primary-container": "#4d8eff",
+                        "on-tertiary-container": "#340080",
+                        "on-secondary-fixed": "#001f26",
+                        "on-tertiary": "#3c0091",
+                        "on-primary-container": "#00285d",
+                        "error-container": "#93000a",
+                        "secondary": "#4cd7f6",
+                        "surface-container-low": "#131b2e",
+                        "surface-variant": "#2d3449",
+                        "tertiary-fixed": "#e9ddff",
+                        "surface-dim": "#0b1326",
+                        "surface-container": "#171f33",
+                        "tertiary-container": "#a078ff",
+                        "on-secondary": "#003640",
+                        "error": "#ffb4ab",
+                        "on-error-container": "#ffdad6",
+                        "background": "#0b1326",
+                        "tertiary": "#d0bcff",
+                        "tertiary-fixed-dim": "#d0bcff",
+                        "secondary-fixed-dim": "#4cd7f6",
+                        "primary": "#adc6ff",
+                        "secondary-fixed": "#acedff",
+                        "on-secondary-container": "#00424e",
+                        "inverse-primary": "#005ac2",
+                        "outline-variant": "#424754",
+                        "on-background": "#dae2fd",
+                        "on-primary": "#002e6a",
+                        "surface-container-high": "#222a3d",
+                        "surface-tint": "#adc6ff",
+                        "inverse-surface": "#dae2fd",
+                        "on-tertiary-fixed-variant": "#5516be",
+                        "inverse-on-surface": "#283044",
+                        "outline": "#8c909f",
+                        "secondary-container": "#03b5d3",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-highest": "#2d3449",
+                        "on-secondary-fixed-variant": "#004e5c",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-container-lowest": "#060e20",
+                        "on-surface": "#dae2fd",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed": "#23005c",
+                        "surface-bright": "#31394d",
+                        "on-primary-fixed": "#001a42",
+                        "on-primary-fixed-variant": "#004395",
+                        "git-added": "#4caf50",
+                        "git-modified": "#ffb300",
+                        "git-deleted": "#f44336",
+                        "git-untracked": "#9e9e9e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-gap": "12px",
+                        "unit": "8px",
+                        "container-padding": "24px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "code-md": ["JetBrains Mono"],
+                        "display-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "code-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-base {
+            background-color: rgba(11, 19, 38, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        .glass-surface {
+            background-color: rgba(11, 19, 38, 0.5);
+            backdrop-filter: blur(40px);
+        }
+        .glass-focus {
+            background-color: rgba(11, 19, 38, 0.7);
+            backdrop-filter: blur(60px);
+        }
+        .glass-control {
+            background-color: rgba(11, 19, 38, 0.8);
+            backdrop-filter: blur(20px);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+        }
+        .diamond-edge {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen overflow-hidden flex flex-col antialiased selection:bg-primary-container/30">
+<!-- TopNavBar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-gutter bg-surface/30 backdrop-blur-[40px] font-body-md text-body-md docked full-width top-0 h-14 border-b border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] text-primary">
+<div class="flex items-center gap-gutter">
+<span class="font-headline-md text-headline-md font-bold tracking-tight text-primary">AETHER IDE</span>
+<div class="hidden md:flex items-center gap-1 ml-4">
+<a class="px-3 py-1.5 rounded text-on-surface-variant hover:bg-white/5 transition-colors active:scale-95 duration-200" href="#">Build</a>
+<a class="px-3 py-1.5 rounded text-on-surface-variant hover:bg-white/5 transition-colors active:scale-95 duration-200" href="#">Debug</a>
+<a class="px-3 py-1.5 rounded text-on-surface-variant hover:bg-white/5 transition-colors active:scale-95 duration-200" href="#">Deploy</a>
+<a class="px-3 py-1.5 rounded text-on-surface-variant hover:bg-white/5 transition-colors active:scale-95 duration-200" href="#">Collaborate</a>
+</div>
+</div>
+<div class="flex items-center gap-stack-gap">
+<button class="p-2 rounded text-on-surface-variant hover:bg-white/5 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded text-on-surface-variant hover:bg-white/5 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<img alt="User profile" class="w-8 h-8 rounded-full border border-white/20 object-cover" data-alt="A macro shot of a sleek, dark metallic user avatar icon with subtle electric blue rim lighting against a pitch black void, symbolizing a digital profile in a high-tech interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0XiIO-Jxi8OkP_yH0bs__26BDDe8AaHabBPeN4cqMQ3eHX0DD_YsAtKz5JLVooCJs-ayTLmD489R5jeC50Cm_3Rnlg57zDaPacAGnKwJYTmCgoKt8XbgFwoBbq5-rc8egRasXdC3gRxxSZ9JOzqRDXwAOxnRo0SHKGyq9Ue2ExG9SfBIzbPbt4dQHU0SnPSHe6IxGWK-fT5Ua6Z4yWXxbn4Is8JTpz16wSEM3gBjyoCyeg2lTwVw_"/>
+</div>
+</nav>
+<!-- SideNavBar & Main Content -->
+<div class="flex flex-1 pt-14">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-14 h-[calc(100vh-80px)] z-40 flex flex-col bg-surface-container/50 backdrop-blur-[40px] text-secondary font-label-sm text-label-sm docked left-0 h-full w-20 md:w-64 border-r border-white/10 shadow-2xl transition-all duration-300 ease-in-out">
+<div class="p-4 border-b border-white/10 flex items-center gap-3">
+<img alt="Workspace Icon" class="w-8 h-8 rounded bg-white/5 object-cover" data-alt="A stylized, glowing geometric cube representing a workspace icon, floating in a dark, atmospheric void with a subtle volumetric fog." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD41xnCJH3avdGeV1xvwpL4P4h36xc_yPh85BFSOUTynLAzBDPzHMMmHBdHFdh6C5fbFwCvF7eqSTK7PDf42pfm7psWyk6Id1-vGwEBM1d1L0rOEc1klfVihICk-QkB7nRCYVxQwb_R-_CDNG1ew9yc1IHkqALUKf-hVu4LxmK4l0ESpesLCNy-Jab95GvDPvQI5WmBsjhsjXviHQDgZimtTwIcvyGmcPpr_bailnQ4v9BMT9Ywdm_T"/>
+<div class="hidden md:block overflow-hidden">
+<div class="font-bold text-on-surface truncate">Project Alpha</div>
+<div class="text-on-surface-variant text-xs truncate">Main Branch</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto py-2">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-white/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">folder</span>
+<span class="hidden md:inline">Explorer</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary/20 text-primary border-r-2 border-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">schema</span>
+<span class="hidden md:inline">Source Control</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-white/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">extension</span>
+<span class="hidden md:inline">Extensions</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-white/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">terminal</span>
+<span class="hidden md:inline">Debugger</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-white/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">auto_awesome</span>
+<span class="hidden md:inline">Copilot</span>
+</a>
+</div>
+<div class="mt-auto border-t border-white/10 py-2">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-white/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">account_circle</span>
+<span class="hidden md:inline">Profile</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-white/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">help</span>
+<span class="hidden md:inline">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-20 md:ml-64 relative bg-background/50 h-[calc(100vh-88px)]">
+<!-- Background atmosphere -->
+<div class="absolute inset-0 pointer-events-none opacity-30">
+<div class="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px]"></div>
+<div class="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-tertiary-container/10 rounded-full blur-[100px]"></div>
+</div>
+<!-- Content Container -->
+<div class="h-full flex flex-col p-container-padding z-10 relative">
+<!-- Source Control Panel Structure -->
+<div class="glass-surface diamond-edge rounded-lg flex flex-col h-full overflow-hidden w-full max-w-md border-white/5 border">
+<!-- Header -->
+<header class="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">account_tree</span>
+<span class="font-body-md text-on-surface font-semibold uppercase tracking-wider text-xs">Source Control</span>
+</div>
+<div class="flex gap-1">
+<button class="p-1.5 rounded hover:bg-white/10 text-on-surface-variant transition-colors" title="Fetch">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+</button>
+<button class="p-1.5 rounded hover:bg-white/10 text-on-surface-variant transition-colors" title="Pull">
+<span class="material-symbols-outlined text-[18px]">arrow_downward</span>
+</button>
+<button class="p-1.5 rounded hover:bg-white/10 text-on-surface-variant transition-colors" title="Push">
+<span class="material-symbols-outlined text-[18px]">arrow_upward</span>
+</button>
+<button class="p-1.5 rounded hover:bg-white/10 text-on-surface-variant transition-colors" title="More Actions">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Area -->
+<div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+<!-- Commit Section -->
+<div class="flex flex-col gap-2">
+<textarea class="w-full h-24 bg-surface-container-low text-on-surface border border-white/10 rounded-md p-3 font-body-md text-sm focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all resize-none glass-base" placeholder="Message (Ctrl+Enter to commit)"></textarea>
+<button class="w-full glass-control border border-primary/30 text-primary py-2 rounded-md font-label-sm uppercase hover:bg-primary/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">check</span>
+                                Commit &amp; Push
+                            </button>
+</div>
+<!-- Branches -->
+<div class="flex items-center justify-between mt-2 pt-4 border-t border-white/5">
+<div class="flex items-center gap-2 text-on-surface-variant text-sm">
+<span class="material-symbols-outlined text-[16px]">fork_right</span>
+<span class="font-code-md text-xs">feature/dark-mode</span>
+</div>
+<button class="text-xs text-secondary hover:text-secondary-fixed transition-colors">Switch</button>
+</div>
+<!-- Changes List -->
+<div class="flex flex-col gap-1 mt-4">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-sm text-on-surface-variant uppercase tracking-widest text-[10px]">Changes <span class="bg-white/10 px-1.5 py-0.5 rounded-full ml-1">4</span></span>
+<div class="flex gap-2">
+<button class="text-on-surface-variant hover:text-on-surface" title="Stage All">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+</div>
+</div>
+<!-- File Items -->
+<div class="group flex items-center justify-between p-1.5 rounded hover:bg-white/5 cursor-pointer transition-colors text-sm">
+<div class="flex items-center gap-2 overflow-hidden">
+<span class="w-1.5 h-1.5 rounded-full bg-git-modified flex-shrink-0"></span>
+<span class="font-code-md text-git-modified text-xs truncate">src/components/Header.tsx</span>
+</div>
+<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 hover:bg-white/10 rounded text-on-surface-variant" title="Open File">
+<span class="material-symbols-outlined text-[14px]">file_open</span>
+</button>
+<button class="p-1 hover:bg-white/10 rounded text-on-surface-variant" title="Discard Changes">
+<span class="material-symbols-outlined text-[14px]">undo</span>
+</button>
+<button class="p-1 hover:bg-white/10 rounded text-on-surface-variant" title="Stage Changes">
+<span class="material-symbols-outlined text-[14px]">add</span>
+</button>
+</div>
+</div>
+<div class="group flex items-center justify-between p-1.5 rounded hover:bg-white/5 cursor-pointer transition-colors text-sm">
+<div class="flex items-center gap-2 overflow-hidden">
+<span class="w-1.5 h-1.5 rounded-full bg-git-added flex-shrink-0"></span>
+<span class="font-code-md text-git-added text-xs truncate">src/styles/theme.css</span>
+</div>
+<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 hover:bg-white/10 rounded text-on-surface-variant" title="Discard Changes">
+<span class="material-symbols-outlined text-[14px]">undo</span>
+</button>
+<button class="p-1 hover:bg-white/10 rounded text-on-surface-variant" title="Stage Changes">
+<span class="material-symbols-outlined text-[14px]">add</span>
+</button>
+</div>
+</div>
+<div class="group flex items-center justify-between p-1.5 rounded hover:bg-white/5 cursor-pointer transition-colors text-sm">
+<div class="flex items-center gap-2 overflow-hidden">
+<span class="w-1.5 h-1.5 rounded-full bg-git-deleted flex-shrink-0"></span>
+<span class="font-code-md text-git-deleted line-through opacity-70 text-xs truncate">old_assets/logo.svg</span>
+</div>
+<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 hover:bg-white/10 rounded text-on-surface-variant" title="Restore">
+<span class="material-symbols-outlined text-[14px]">restore</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Sync Status Footer -->
+<div class="bg-surface-container-highest/50 border-t border-white/5 p-2 flex items-center justify-between text-xs text-on-surface-variant">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] animate-spin">sync</span>
+<span>Syncing...</span>
+</div>
+<span class="font-code-md text-[10px] opacity-70">origin/main</span>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="fixed bottom-0 left-0 w-full z-50 flex items-center justify-between px-gutter bg-surface-container-lowest/80 backdrop-blur-[20px] font-code-md text-code-md docked bottom-0 w-full h-8 border-t border-white/5 text-on-surface-variant">
+<div class="font-label-sm text-label-sm font-bold">System: Healthy | Latency: 12ms | Env: Production</div>
+<div class="flex gap-4">
+<a class="text-on-surface-variant/70 hover:text-on-surface transition-colors" href="#">Documentation</a>
+<a class="text-on-surface-variant/70 hover:text-on-surface transition-colors" href="#">API Reference</a>
+</div>
+</footer>
+</body></html>

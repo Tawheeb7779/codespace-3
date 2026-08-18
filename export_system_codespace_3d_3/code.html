@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Export System - CodeSpace 3D</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#d8e2ff",
+                        "primary": "#adc6ff",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-surface": "#dee2f1",
+                        "inverse-on-surface": "#2b303b",
+                        "on-secondary-fixed": "#001c39",
+                        "tertiary-fixed": "#ffdcc6",
+                        "on-tertiary-container": "#461f00",
+                        "secondary-container": "#0267b8",
+                        "on-background": "#dee2f1",
+                        "surface-tint": "#adc6ff",
+                        "surface-container-highest": "#303540",
+                        "on-surface-variant": "#c2c6d6",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "on-secondary": "#00315d",
+                        "on-primary": "#002e6a",
+                        "tertiary-container": "#df7412",
+                        "on-primary-fixed": "#001a42",
+                        "surface-bright": "#343944",
+                        "surface": "#0e131d",
+                        "surface-container": "#1b202a",
+                        "surface-container-low": "#171c26",
+                        "on-tertiary-fixed": "#311400",
+                        "secondary-fixed": "#d4e3ff",
+                        "background": "#0e131d",
+                        "outline-variant": "#424754",
+                        "error": "#ffb4ab",
+                        "inverse-surface": "#dee2f1",
+                        "surface-container-high": "#252a35",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "outline": "#8c909f",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-container": "#d6e5ff",
+                        "secondary": "#a4c9ff",
+                        "inverse-primary": "#005ac2",
+                        "on-tertiary": "#502400",
+                        "surface-container-lowest": "#090e18",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-dim": "#0e131d",
+                        "primary-container": "#4d8eff",
+                        "tertiary": "#ffb786",
+                        "on-error": "#690005",
+                        "on-secondary-fixed-variant": "#004883",
+                        "surface-variant": "#303540",
+                        "on-primary-container": "#00285d",
+                        "error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xl": "40px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "container-max": "1440px",
+                        "unit": "4px",
+                        "xs": "4px",
+                        "gutter": "20px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "code-sm": ["JetBrains Mono"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "code-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background-color: rgba(14, 19, 29, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(66, 71, 84, 0.3);
+        }
+        .glow-active:focus-within, .glow-active:hover {
+            box-shadow: 0 0 10px rgba(77, 142, 255, 0.15);
+            border-color: rgba(173, 198, 255, 0.4);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            background-color: rgba(23, 28, 38, 0.8);
+            border-color: rgba(173, 198, 255, 0.3);
+        }
+        .card-active {
+            background-color: rgba(77, 142, 255, 0.05);
+            border-color: #adc6ff;
+            box-shadow: 0 0 15px rgba(173, 198, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<nav class="bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 shadow-sm flex justify-between items-center px-lg w-full sticky top-0 z-50 h-16 w-full h-16 hidden md:flex">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary">CodeSpace 3D</span>
+</div>
+<div class="flex items-center gap-xl ml-xl absolute left-1/2 transform -translate-x-1/2">
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-200" href="#">Project</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-200" href="#">Edit</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-200" href="#">View</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-body-md text-body-md hover:text-primary transition-colors duration-200 opacity-80" href="#">Go</a>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200 flex items-center justify-center p-sm rounded-full hover:bg-surface-container-high">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200 flex items-center justify-center p-sm rounded-full hover:bg-surface-container-high">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+<button class="bg-primary text-on-primary font-label-caps text-label-caps px-lg py-sm rounded-full hover:bg-primary-fixed transition-colors duration-200 ml-sm">Deploy</button>
+</div>
+</nav>
+<div class="flex flex-1 pt-16 md:pt-0">
+<!-- SideNavBar -->
+<aside class="bg-surface-container-low/50 dark:bg-surface-container-low/50 backdrop-blur-md border-r border-outline-variant/10 fixed left-0 top-16 h-[calc(100vh-64px)] z-40 flex flex-col w-[280px] h-screen hidden md:flex">
+<div class="p-lg border-b border-outline-variant/10">
+<div class="flex items-center gap-sm mb-lg">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant/20 flex-shrink-0">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A futuristic minimalist avatar placeholder featuring subtle neon geometric patterns in deep blue and glowing white on a dark charcoal background. High-tech corporate aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArjtz3e1JFfLC7KZlHxsy0FkkMaX1o8tmeRII7SiPTc53YrSdfX5x_j4v8WauYuAPceshyAFQC0ZsuXfyEKt5kI6Qbx1rx4tCQUOVgcdUW9dzwTP4iBc5EOcdv0VfLPM9PHYEFlMiEXjCbRRAMBsSZcaZlw0_0piA8JCAoAfAPYoz3zOlnSkS3se9KZ5d9ELM0kjp1iZbu6LPd3sWBbtn5NwFyfy_qZq6r8htaVba1xDqXUgT051kB"/>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-primary m-0">Project Alpha</h3>
+<p class="text-on-surface-variant font-label-caps text-label-caps m-0 opacity-80">Active Session</p>
+</div>
+</div>
+<button class="w-full bg-surface-container-high text-on-surface border border-outline-variant/30 hover:border-primary/50 py-sm px-md rounded-md font-label-caps text-label-caps transition-all duration-300 ease-in-out flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-[18px]">add</span> New Asset
+                </button>
+</div>
+<div class="flex-1 overflow-y-auto py-sm">
+<a class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-label-caps text-label-caps transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span> Workspace
+                </a>
+<a class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-label-caps text-label-caps transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="layers">layers</span> Assets
+                </a>
+<a class="flex items-center gap-md px-lg py-md text-primary bg-primary/10 border-r-4 border-primary font-label-caps text-label-caps transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span> Terminal
+                </a>
+<a class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-label-caps text-label-caps transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span> Settings
+                </a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 md:ml-[280px] p-lg md:p-xl overflow-y-auto pb-24">
+<header class="mb-xl">
+<h1 class="font-display-lg text-display-lg text-on-surface mb-xs">Project Export Center</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Finalize and distribute your immersive experience.</p>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Left Column: Export Options (2/3 width) -->
+<div class="lg:col-span-2 space-y-lg">
+<h2 class="font-headline-md text-headline-md text-primary mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined">rocket_launch</span> Target Environment
+                    </h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+<!-- Option 1: Standard ZIP -->
+<div class="glass-panel rounded-xl p-md card-hover cursor-pointer border border-outline-variant/20 flex flex-col h-full relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container/50 to-transparent z-0"></div>
+<div class="relative z-10 flex items-start gap-md mb-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center border border-outline-variant/30 text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]">folder_zip</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Standard ZIP</h3>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-xs">For local dev &amp; sharing</p>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-auto text-sm opacity-80">Packages source files, assets, and config into a compressed archive.</p>
+</div>
+<!-- Option 2: WebBundle -->
+<div class="glass-panel rounded-xl p-md card-active cursor-pointer border border-primary/40 flex flex-col h-full relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+<div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent z-0"></div>
+<div class="absolute top-sm right-sm text-primary flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-caps text-label-caps text-[10px]">SELECTED</span>
+</div>
+<div class="relative z-10 flex items-start gap-md mb-md">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/30 text-primary">
+<span class="material-symbols-outlined text-[24px]">public</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">WebBundle</h3>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-xs">Optimized for browser</p>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-auto text-sm opacity-80">Compiles to static HTML/JS/CSS with optimized textures for web delivery.</p>
+</div>
+<!-- Option 3: Docker Container -->
+<div class="glass-panel rounded-xl p-md card-hover cursor-pointer border border-outline-variant/20 flex flex-col h-full relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container/50 to-transparent z-0"></div>
+<div class="relative z-10 flex items-start gap-md mb-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center border border-outline-variant/30 text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]">directions_boat</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Docker Image</h3>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-xs">Ready-to-deploy env</p>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-auto text-sm opacity-80">Creates a production-ready container image with all dependencies included.</p>
+</div>
+<!-- Option 4: Direct Deploy -->
+<div class="glass-panel rounded-xl p-md card-hover cursor-pointer border border-outline-variant/20 flex flex-col h-full relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container/50 to-transparent z-0"></div>
+<div class="relative z-10 flex items-start gap-md mb-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center border border-outline-variant/30 text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]">cloud_upload</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Direct Deploy</h3>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-xs">Vercel / Netlify</p>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-auto text-sm opacity-80">Push directly to connected hosting platforms via CI/CD pipeline.</p>
+</div>
+</div>
+</div>
+<!-- Right Column: Settings & Actions (1/3 width) -->
+<div class="space-y-lg">
+<!-- Configuration Panel -->
+<div class="glass-panel rounded-xl p-md border border-outline-variant/20 flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-md flex items-center gap-sm pb-sm border-b border-outline-variant/20">
+<span class="material-symbols-outlined text-[20px]">tune</span> Export Settings
+                        </h2>
+<div class="space-y-md">
+<!-- Directory Input -->
+<div class="glow-active rounded-md transition-shadow">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-xs">Output Directory</label>
+<div class="flex items-center bg-surface-container border border-outline-variant/30 rounded-md overflow-hidden focus-within:border-primary/50">
+<span class="px-sm text-on-surface-variant font-code-sm">./dist/</span>
+<input class="bg-transparent border-none text-on-surface font-code-sm text-code-sm w-full py-sm px-xs focus:ring-0" type="text" value="web-bundle-v1.2"/>
+</div>
+</div>
+<!-- Compression Slider -->
+<div>
+<div class="flex justify-between items-center mb-xs">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Compression Level</label>
+<span class="font-code-sm text-code-sm text-primary">High</span>
+</div>
+<input class="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary" max="3" min="1" type="range" value="2"/>
+<div class="flex justify-between text-[10px] font-label-caps text-on-surface-variant mt-xs opacity-60">
+<span>Normal</span>
+<span>High</span>
+<span>Extreme</span>
+</div>
+</div>
+<!-- Toggles -->
+<div class="space-y-sm pt-sm border-t border-outline-variant/10">
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="font-body-md text-body-md text-on-surface text-sm group-hover:text-primary transition-colors">Minify Source Code</span>
+<div class="relative">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface after:border-outline-variant after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</div>
+</label>
+<label class="flex items-center justify-between cursor-pointer group">
+<span class="font-body-md text-body-md text-on-surface text-sm group-hover:text-primary transition-colors">Include Raw 3D Assets</span>
+<div class="relative">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface-variant after:border-outline-variant after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</div>
+</label>
+<label class="flex items-center justify-between cursor-pointer group opacity-50">
+<span class="font-body-md text-body-md text-on-surface text-sm">Include Node Modules</span>
+<div class="relative">
+<input class="sr-only peer" disabled="" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-high/50 peer-focus:outline-none rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface-variant/50 after:border-outline-variant/50 after:border after:rounded-full after:h-4 after:w-4 after:transition-all"></div>
+</div>
+</label>
+</div>
+</div>
+</div>
+<!-- Progress / Action Section -->
+<div class="glass-panel rounded-xl p-md border border-primary/30 bg-surface-container/50 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+<div class="flex items-center gap-sm mb-md text-primary">
+<span class="material-symbols-outlined">check_circle</span>
+<h3 class="font-headline-sm text-headline-sm m-0">Ready for Export</h3>
+</div>
+<div class="bg-surface-container-low border border-outline-variant/20 rounded-md p-sm mb-md flex justify-between items-center font-code-sm text-code-sm text-on-surface-variant">
+<div class="flex flex-col">
+<span class="text-[10px] uppercase opacity-70">Est. Size</span>
+<span class="text-on-surface">42.8 MB</span>
+</div>
+<div class="h-6 w-[1px] bg-outline-variant/30"></div>
+<div class="flex flex-col text-right">
+<span class="text-[10px] uppercase opacity-70">Est. Time</span>
+<span class="text-on-surface">~1m 15s</span>
+</div>
+</div>
+<button class="w-full bg-primary hover:bg-primary-fixed text-on-primary font-body-md text-body-md font-bold py-md px-lg rounded-lg shadow-[0_0_15px_rgba(173,198,255,0.2)] hover:shadow-[0_0_25px_rgba(173,198,255,0.4)] transition-all duration-300 flex items-center justify-center gap-sm relative overflow-hidden group">
+<span class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out rounded-lg pointer-events-none"></span>
+<span class="relative z-10 material-symbols-outlined">play_arrow</span>
+<span class="relative z-10">Start Export</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest dark:bg-surface-container-lowest border-t border-outline-variant/20 flat fixed bottom-0 w-full z-50 flex items-center justify-between px-md py-xs h-8">
+<div class="font-code-sm text-code-sm text-on-surface-variant">© 2024 CodeSpace 3D | System Healthy</div>
+<div class="flex gap-md font-code-sm text-code-sm text-on-surface-variant">
+<a class="hover:text-primary cursor-default" href="#">Docs</a>
+<a class="hover:text-primary cursor-default" href="#">Support</a>
+<a class="hover:text-primary cursor-default" href="#">Changelog</a>
+</div>
+</footer>
+</body></html>

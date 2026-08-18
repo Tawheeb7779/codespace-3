@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Voice-Integrated Task Manager | CodeSpace 3D</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#dee2f1",
+                        "surface-container": "#1b202a",
+                        "tertiary-fixed": "#ffdcc6",
+                        "outline": "#8c909f",
+                        "on-secondary-fixed-variant": "#004883",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-highest": "#303540",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "inverse-on-surface": "#2b303b",
+                        "on-tertiary-fixed": "#311400",
+                        "on-background": "#dee2f1",
+                        "primary-container": "#4d8eff",
+                        "surface": "#0e131d",
+                        "primary-fixed": "#d8e2ff",
+                        "secondary": "#a4c9ff",
+                        "on-surface": "#dee2f1",
+                        "primary": "#adc6ff",
+                        "surface-variant": "#303540",
+                        "surface-tint": "#adc6ff",
+                        "primary-fixed-dim": "#adc6ff",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#0267b8",
+                        "error-container": "#93000a",
+                        "surface-bright": "#343944",
+                        "on-primary": "#002e6a",
+                        "background": "#0e131d",
+                        "on-error": "#690005",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "on-tertiary-container": "#461f00",
+                        "tertiary": "#ffb786",
+                        "tertiary-container": "#df7412",
+                        "surface-dim": "#0e131d",
+                        "outline-variant": "#424754",
+                        "surface-container-lowest": "#090e18",
+                        "on-tertiary": "#502400",
+                        "on-primary-container": "#00285d",
+                        "inverse-primary": "#005ac2",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-container-low": "#171c26",
+                        "on-secondary-container": "#d6e5ff",
+                        "on-secondary": "#00315d",
+                        "surface-container-high": "#252a35",
+                        "on-secondary-fixed": "#001c39",
+                        "secondary-fixed": "#d4e3ff",
+                        "on-primary-fixed": "#001a42"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xl": "40px",
+                        "container-max": "1440px",
+                        "unit": "4px",
+                        "xs": "4px",
+                        "gutter": "20px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "code-sm": ["JetBrains Mono"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background-color: rgba(9, 13, 22, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(140, 144, 159, 0.12);
+        }
+        .glow-active {
+            box-shadow: 0 0 8px 0 rgba(173, 198, 255, 0.3);
+            border-color: rgba(173, 198, 255, 0.3);
+        }
+        .pulse-ring {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-surface-container/80 backdrop-blur-md border-b border-outline-variant/10 text-on-surface">
+<div class="flex items-center gap-lg">
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tighter">CodeSpace 3D</span>
+<div class="flex items-center bg-surface-container-high rounded-full px-4 py-2 border border-outline-variant/20 ml-xl w-64">
+<span class="material-symbols-outlined text-on-surface-variant mr-2">search</span>
+<input class="bg-transparent border-none outline-none text-body-md w-full text-on-surface placeholder:text-on-surface-variant/50 focus:ring-0 p-0" placeholder="Search..." type="text"/>
+</div>
+</div>
+<div class="hidden md:flex gap-lg h-full">
+<a class="h-full flex items-center text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 transition-colors duration-200 px-md cursor-pointer active:scale-95 transition-transform" href="#">Workspace</a>
+<a class="h-full flex items-center text-primary border-b-2 border-primary pb-1 hover:bg-surface-bright/20 transition-colors duration-200 px-md cursor-pointer active:scale-95 transition-transform" href="#">Tasks</a>
+<a class="h-full flex items-center text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 transition-colors duration-200 px-md cursor-pointer active:scale-95 transition-transform" href="#">Assets</a>
+<a class="h-full flex items-center text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 transition-colors duration-200 px-md cursor-pointer active:scale-95 transition-transform" href="#">Terminal</a>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 rounded-full transition-colors cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright/20 rounded-full transition-colors cursor-pointer active:scale-95 transition-transform">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<img alt="Lead Developer Avatar" class="w-8 h-8 rounded-full border border-outline-variant/30 ml-2" data-alt="A highly detailed close-up of a futuristic developer avatar, glowing neon blue accents on dark sleek visor, cyberpunk aesthetic, high tech lighting, 8k resolution, photorealistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAPbUxmXpuNA6D03XRgzSsSx3wOQkAq4mjY2lZS5Qnuv78V8hmp5WM3XdnkLfi5pqepHnGcpmmxlrUh8ZeotbadKIYwVzhsbvAhPvspxm_IFWawKjZb00D3v3fiRArwWjz_mlKXcCJlBUYiSUINXbBiyacUB6JA2bncG2mVGxJTR5dKh2oAQNarvzg7yIxxxKDLz1PSGZzsZM02bEj7JqQrwSKEW2dtJtqUc_UiEm8Ym7ozNhj17s4"/>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 bottom-0 flex flex-col pt-lg bg-surface-container-lowest/90 backdrop-blur-xl border-r border-outline-variant/10 w-72 z-40">
+<div class="px-md mb-xl flex items-center gap-md">
+<img alt="Project Alpha" class="w-12 h-12 rounded-xl" data-alt="A sleek minimalist abstract logo featuring a glowing blue wireframe cube on a pitch black background, technical corporate identity, highly polished, vector style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZimjUo5beu-Gj0InN5bILZdTFT0u4pvQXpbsWAldhhNLEW8pn1xVxQvNwnYR5NR3sW8-LFnQsvznA88KBbWTY4XognKcA1-3qk4Rv4AGCPkxoa3_-WTk_K9ODH2zqa-REkTsMr04pInw3cJLMqc_4f_Zew-h13zEK9UfNYmSghr86XdLWKHAwAJD7bFv2GyMCv8n5tmUo8hW0qQc4FcCi6dSU9qT2MYhR2BPBAxSyW05N0hh9XVeK"/>
+<div>
+<h2 class="font-body-md font-bold text-on-surface">Project Alpha</h2>
+<p class="font-label-caps text-on-surface-variant text-[10px]">V-0.9.4-Stable</p>
+</div>
+</div>
+<div class="px-md mb-lg">
+<button class="w-full bg-primary-container text-on-primary-container py-2 rounded-lg font-body-md font-semibold hover:bg-primary-fixed transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+                New Task
+            </button>
+</div>
+<nav class="flex-1 flex flex-col gap-1 px-sm">
+<a class="bg-secondary-container/30 text-secondary border-l-4 border-secondary px-md py-sm flex items-center gap-md rounded-r-lg hover:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-body-md">Board</span>
+</a>
+<a class="text-on-surface-variant px-md py-sm flex items-center gap-md hover:bg-surface-variant/50 transition-all duration-200 rounded-lg hover:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-body-md">List</span>
+</a>
+<a class="text-on-surface-variant px-md py-sm flex items-center gap-md hover:bg-surface-variant/50 transition-all duration-200 rounded-lg hover:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-body-md">Calendar</span>
+</a>
+<a class="text-on-surface-variant px-md py-sm flex items-center gap-md hover:bg-surface-variant/50 transition-all duration-200 rounded-lg hover:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+<span class="font-body-md">Files</span>
+</a>
+<a class="text-on-surface-variant px-md py-sm flex items-center gap-md hover:bg-surface-variant/50 transition-all duration-200 rounded-lg hover:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">terminal</span>
+<span class="font-body-md">Logs</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-1 px-sm pb-lg">
+<a class="text-on-surface-variant px-md py-sm flex items-center gap-md hover:bg-surface-variant/50 transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-body-md">Documentation</span>
+</a>
+<a class="text-on-surface-variant px-md py-sm flex items-center gap-md hover:bg-surface-variant/50 transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-body-md">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Workspace -->
+<main class="ml-72 mt-16 p-lg h-[calc(100vh-64px)] flex flex-col gap-lg overflow-y-auto">
+<!-- Header & Stats -->
+<header class="flex justify-between items-end">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-2">Voice-Integrated Task Manager | CodeSpace 3D</h1>
+<div class="flex gap-lg">
+<div class="glass-panel px-md py-sm rounded-lg flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">data_usage</span>
+<span class="font-label-caps text-on-surface-variant">Total Tasks: <strong class="text-on-surface">42</strong></span>
+</div>
+<div class="glass-panel px-md py-sm rounded-lg flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary">speed</span>
+<span class="font-label-caps text-on-surface-variant">Velocity: <strong class="text-on-surface">85%</strong></span>
+</div>
+<div class="glass-panel px-md py-sm rounded-lg flex items-center gap-3">
+<span class="material-symbols-outlined text-error">timer</span>
+<span class="font-label-caps text-on-surface-variant">Next Deadline: <strong class="text-on-surface">2h</strong></span>
+</div>
+</div>
+</div>
+<!-- Voice UI Overlay trigger/indicator -->
+<div class="relative group cursor-pointer">
+<div class="absolute inset-0 bg-primary/20 rounded-full blur-md pulse-ring"></div>
+<div class="relative glass-panel bg-surface-container-high border-primary/50 text-primary p-4 rounded-full flex items-center justify-center glow-active">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">mic</span>
+</div>
+</div>
+</header>
+<!-- Kanban & Voice Panel Layout -->
+<div class="flex gap-lg h-full overflow-hidden">
+<!-- Kanban Columns -->
+<div class="flex-1 flex gap-lg overflow-x-auto pb-4">
+<!-- To Do -->
+<div class="w-80 flex-shrink-0 flex flex-col gap-md">
+<div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+<h3 class="font-body-md font-semibold text-on-surface">To Do <span class="text-on-surface-variant font-normal text-sm ml-1">(قيد الانتظار)</span></h3>
+<span class="bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded text-sm">12</span>
+</div>
+<div class="flex-1 overflow-y-auto flex flex-col gap-sm pr-2">
+<!-- Card -->
+<div class="glass-panel p-md rounded-xl hover:border-outline-variant/30 transition-colors cursor-grab">
+<div class="flex justify-between items-start mb-2">
+<span class="px-2 py-0.5 rounded text-xs bg-error-container/30 text-error border border-error/20 font-code-sm">URGENT</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">more_horiz</span>
+</div>
+<h4 class="font-body-md text-on-surface mb-2">Update Core Shader Logic</h4>
+<p class="font-code-sm text-on-surface-variant text-sm line-clamp-2 mb-4">Refactor the GLSL pipeline for the new rendering engine...</p>
+<div class="flex justify-between items-center">
+<div class="flex -space-x-2">
+<img alt="Assignee" class="w-6 h-6 rounded-full border-2 border-surface" data-alt="A tiny developer avatar, futuristic techwear, cyberpunk neon lighting, highly detailed miniature portrait." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDS-3HfRJRM_X5BjXh_sMh4O2DhkEdS-qy9IATcG4KWw7asOSjMwLfJrWAd6iPQK58TS2lDw8a_tIkNMM3vpjyM6oi3W80rkuECnB9yHMQHQJU5dOZapYaaXoOHtrXFyCxCL9ln_cwpJonxAEpt6IfNZkim0_Tf824-hja3EBo5UXeSQ1owkcIPnRcsgfxYMoP5YY8s5JZ1NUHwt8sbeiUy1sDqr8XTlvZUDlLDRGnPhK_gXP-N2tpP"/>
+</div>
+<span class="text-on-surface-variant text-xs flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">chat_bubble</span> 3</span>
+</div>
+</div>
+</div>
+</div>
+<!-- In Progress -->
+<div class="w-80 flex-shrink-0 flex flex-col gap-md">
+<div class="flex items-center justify-between pb-2 border-b border-primary/30">
+<h3 class="font-body-md font-semibold text-primary">In Progress <span class="text-on-surface-variant font-normal text-sm ml-1">(قيد التنفيذ)</span></h3>
+<span class="bg-primary-container/20 text-primary px-2 py-0.5 rounded text-sm">4</span>
+</div>
+<div class="flex-1 overflow-y-auto flex flex-col gap-sm pr-2">
+<!-- Card - Active Voice Target -->
+<div class="glass-panel p-md rounded-xl glow-active cursor-grab relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="px-2 py-0.5 rounded text-xs bg-tertiary-container/30 text-tertiary border border-tertiary/20 font-code-sm">FEATURE</span>
+<span class="material-symbols-outlined text-primary text-sm pulse-ring">mic</span>
+</div>
+<h4 class="font-body-md text-on-surface mb-2">Voice Assistant UI Overlay</h4>
+<div class="flex items-center gap-2 mb-4 text-xs text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-primary pulse-ring"></span>
+<span>Voice modifying...</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex -space-x-2">
+<img alt="Assignee" class="w-6 h-6 rounded-full border-2 border-surface" data-alt="A small futuristic avatar icon, blue glowing visor, sleek technical design, dark background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDk9uW7peMy3gjQ0vXrnJdiia_P4nFdfb0gwvffLVlbx8l6irzD3rX01_YSRWwevUmDWTeC6V33AElx7tQIqgTEgaZlw98Z0CLlQACc81lD1Cjwgx4ZYPLnQMHyqp6FZkOr5HHgWNUmO0JYRrRP391C3bPkppahSqvq0eajbUdygg9i8yfMeZ-VZ3IekzZD4yUcopB95a_dGqz6qdAmYziMGjY_60Q8Yu1KRnTilNUCqXKjamE4WTo-"/>
+</div>
+<span class="text-on-surface-variant text-xs flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">attachment</span> 2</span>
+</div>
+</div>
+</div>
+</div>
+<!-- In Review -->
+<div class="w-80 flex-shrink-0 flex flex-col gap-md">
+<div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+<h3 class="font-body-md font-semibold text-on-surface">In Review <span class="text-on-surface-variant font-normal text-sm ml-1">(المراجعة)</span></h3>
+<span class="bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded text-sm">8</span>
+</div>
+<div class="flex-1 overflow-y-auto flex flex-col gap-sm pr-2">
+<!-- Card -->
+<div class="glass-panel p-md rounded-xl hover:border-outline-variant/30 transition-colors cursor-grab opacity-70">
+<div class="flex justify-between items-start mb-2">
+<span class="px-2 py-0.5 rounded text-xs bg-surface-variant text-on-surface-variant border border-outline-variant/20 font-code-sm">BUG</span>
+</div>
+<h4 class="font-body-md text-on-surface mb-2">Fix Mesh Collision</h4>
+<p class="font-code-sm text-on-surface-variant text-sm line-clamp-2 mb-4">Resolve boundary issues in sector 4...</p>
+<div class="flex justify-between items-center">
+<span class="text-secondary text-xs flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">check_circle</span> Approved</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Voice Assistant Side Panel -->
+<div class="w-96 flex-shrink-0 glass-panel rounded-2xl flex flex-col border-primary/20 overflow-hidden">
+<div class="p-md bg-surface-container-highest/50 border-b border-outline-variant/10 flex items-center gap-3">
+<div class="relative">
+<div class="absolute inset-0 bg-primary/30 rounded-full blur-sm pulse-ring"></div>
+<span class="material-symbols-outlined text-primary relative z-10" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+</div>
+<div>
+<h3 class="font-body-md font-semibold text-on-surface">AI Voice Assistant</h3>
+<p class="text-xs text-primary flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-primary pulse-ring"></span> Listening</p>
+</div>
+</div>
+<div class="flex-1 p-md flex flex-col gap-lg overflow-y-auto">
+<!-- Real-time Status -->
+<div class="bg-surface-container-lowest/50 rounded-xl p-4 border border-outline-variant/10">
+<p class="font-code-sm text-on-surface-variant text-sm mb-1">Transcribing...</p>
+<p class="font-body-md text-on-surface">"Move task <span class="text-primary font-semibold">Voice Assistant UI Overlay</span> to In Review..."</p>
+<div class="mt-3 flex gap-1 items-end h-4">
+<div class="w-1 bg-primary/40 rounded-t h-full"></div>
+<div class="w-1 bg-primary/60 rounded-t h-3/4"></div>
+<div class="w-1 bg-primary rounded-t h-1/2 pulse-ring"></div>
+<div class="w-1 bg-primary/80 rounded-t h-full pulse-ring" style="animation-delay: 0.1s"></div>
+<div class="w-1 bg-primary/50 rounded-t h-2/3"></div>
+</div>
+</div>
+<!-- Suggested Commands -->
+<div>
+<h4 class="font-label-caps text-on-surface-variant mb-3 flex items-center gap-2"><span class="material-symbols-outlined text-[16px]">lightbulb</span> Suggested Commands</h4>
+<div class="flex flex-col gap-2">
+<button class="text-left bg-surface-container-low hover:bg-surface-container p-3 rounded-lg border border-outline-variant/10 transition-colors group">
+<p class="font-body-md text-on-surface group-hover:text-primary transition-colors">"What are my urgent tasks?"</p>
+<p class="font-body-md text-on-surface-variant text-sm mt-1" dir="rtl">ما هي مهامي العاجلة؟</p>
+</button>
+<button class="text-left bg-surface-container-low hover:bg-surface-container p-3 rounded-lg border border-outline-variant/10 transition-colors group">
+<p class="font-body-md text-on-surface group-hover:text-primary transition-colors">"Move task to In Review"</p>
+<p class="font-body-md text-on-surface-variant text-sm mt-1" dir="rtl">انقل المهمة إلى المراجعة</p>
+</button>
+<button class="text-left bg-surface-container-low hover:bg-surface-container p-3 rounded-lg border border-outline-variant/10 transition-colors group">
+<p class="font-body-md text-on-surface group-hover:text-primary transition-colors">"Add new UI task"</p>
+<p class="font-body-md text-on-surface-variant text-sm mt-1" dir="rtl">أضف مهمة واجهة جديدة</p>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

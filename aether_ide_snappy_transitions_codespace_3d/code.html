@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aether IDE | CodeSpace 3D</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-low": "#131b2e",
+                      "on-tertiary": "#3c0091",
+                      "on-background": "#dae2fd",
+                      "primary-fixed": "#d8e2ff",
+                      "on-error": "#690005",
+                      "on-tertiary-fixed-variant": "#5516be",
+                      "inverse-on-surface": "#283044",
+                      "secondary-container": "#03b5d3",
+                      "tertiary-fixed-dim": "#d0bcff",
+                      "secondary": "#4cd7f6",
+                      "outline-variant": "#424754",
+                      "surface-variant": "#2d3449",
+                      "on-tertiary-fixed": "#23005c",
+                      "surface-dim": "#0b1326",
+                      "primary-container": "#4d8eff",
+                      "inverse-primary": "#005ac2",
+                      "background": "#0b1326",
+                      "surface-container-high": "#222a3d",
+                      "on-primary-fixed": "#001a42",
+                      "surface": "#0b1326",
+                      "on-error-container": "#ffdad6",
+                      "surface-tint": "#adc6ff",
+                      "on-primary-container": "#00285d",
+                      "surface-container-highest": "#2d3449",
+                      "surface-bright": "#31394d",
+                      "surface-container": "#171f33",
+                      "inverse-surface": "#dae2fd",
+                      "tertiary-fixed": "#e9ddff",
+                      "on-secondary-container": "#00424e",
+                      "primary-fixed-dim": "#adc6ff",
+                      "secondary-fixed-dim": "#4cd7f6",
+                      "error": "#ffb4ab",
+                      "surface-container-lowest": "#060e20",
+                      "on-primary-fixed-variant": "#004395",
+                      "secondary-fixed": "#acedff",
+                      "tertiary-container": "#a078ff",
+                      "on-secondary-fixed": "#001f26",
+                      "outline": "#8c909f",
+                      "on-surface-variant": "#c2c6d6",
+                      "tertiary": "#d0bcff",
+                      "primary": "#adc6ff",
+                      "error-container": "#93000a",
+                      "on-secondary-fixed-variant": "#004e5c",
+                      "on-primary": "#002e6a",
+                      "on-surface": "#dae2fd",
+                      "on-secondary": "#003640",
+                      "on-tertiary-container": "#340080"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-gap": "12px",
+                      "gutter": "16px",
+                      "unit": "8px",
+                      "container-padding": "24px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "code-md": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "code-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<style>
+        /* Glassmorphism Levels */
+        .glass-level-1 {
+            background: rgba(11, 19, 38, 0.3); /* Base */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .glass-level-2 {
+            background: rgba(11, 19, 38, 0.5); /* Surface */
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+        }
+        .glass-level-3 {
+            background: rgba(11, 19, 38, 0.7); /* Focus */
+            backdrop-filter: blur(60px);
+            -webkit-backdrop-filter: blur(60px);
+        }
+        .glass-level-4 {
+            background: rgba(11, 19, 38, 0.8); /* Control */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Diamond Edge Cut */
+        .diamond-edge {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Global Background Shader Container */
+        .shader-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Custom Scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Page Entrance Animation */
+        @keyframes aether-entrance {
+            0% { opacity: 0; transform: scale(0.98); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-entrance {
+            animation: aether-entrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* Glass Shimmer Effect */
+        .glass-shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-shimmer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .glass-shimmer:hover::after {
+            animation: shimmer-sweep 1s ease-in-out;
+        }
+        @keyframes shimmer-sweep {
+            100% { left: 200%; }
+        }
+
+        /* Interactive Glass Reflection */
+        .interactive-glass::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(600px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(173, 198, 255, 0.08), transparent 40%);
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .interactive-glass:hover::before {
+            opacity: 1;
+        }
+      </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden selection:bg-primary/20 selection:text-primary antialiased">
+<!-- Global Background Animation -->
+<div class="shader-bg">
+</div>
+<!-- TopNavBar (Shared Component) -->
+<nav class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-gutter glass-level-2 docked full-width top-0 h-14 border-b border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] interactive-glass">
+<!-- Brand / Logo -->
+<div class="flex items-center gap-unit">
+<span class="font-headline-md text-headline-md font-bold tracking-tight text-primary">AETHER IDE</span>
+</div>
+<!-- Search Bar (on_left in LTR, on right in RTL) -->
+<div class="flex-1 max-w-md mx-gutter">
+<div class="relative glass-level-1 diamond-edge rounded-full flex items-center px-4 py-1.5 focus-within:ring-2 focus-within:ring-primary/50 transition-all duration-300">
+<span class="material-symbols-outlined text-on-surface-variant mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-none outline-none text-on-surface w-full font-body-md text-sm placeholder-on-surface-variant/50 focus:ring-0" placeholder="البحث في الملفات، الأوامر..." type="text"/>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="hidden md:flex items-center gap-6">
+<a class="font-body-md text-body-md text-primary border-b-2 border-primary pb-1 active:scale-95 duration-150" href="#">بناء</a> <!-- Active: Build -->
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:bg-white/5 transition-colors active:scale-95 pb-1 border-b-2 border-transparent duration-150" href="#">تصحيح</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:bg-white/5 transition-colors active:scale-95 pb-1 border-b-2 border-transparent duration-150" href="#">نشر</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:bg-white/5 transition-colors active:scale-95 pb-1 border-b-2 border-transparent duration-150" href="#">تعاون</a>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-unit pr-gutter">
+<button class="p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-colors group relative">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full"></span>
+</button>
+<button class="p-2 rounded-full hover:bg-white/5 text-on-surface-variant transition-colors group">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full ml-2 overflow-hidden diamond-edge glass-level-3">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A macro photography shot of a high-tech robotic eye lens reflecting a futuristic neon cityscape, highly detailed, deep blacks and sharp blues, luxury glassmorphic aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOjFDI9unaA2nI7J6oTc7rJsHjwIDKxdmS3_Dk43V2yHTP-2yaafoq1cTGLPLt-oNTDANfbYv3xzcqhgnE9MDl9_77oweA9BEWAt1rHg_CaczcsCHbxYcKmzdDTSUwqzEf9FDWLCIYtxOsiQAFZ4InOMahnmL8077IKjcgTH8TeIjs-w489SveO_vrc-74fDyS3Cm4zPo35r7xOXI2VWxQvLaw483eZYKguSOz6EPJj2JsdDLR8DJR"/>
+</div>
+</div>
+</nav>
+<!-- SideNavBar (Shared Component) -->
+<aside class="fixed right-0 top-14 h-[calc(100vh-80px)] z-40 flex flex-col glass-level-2 docked right-0 md:w-64 w-20 border-l border-white/10 shadow-2xl transition-all ease-in-out interactive-glass duration-200">
+<!-- Header -->
+<div class="p-4 border-b border-white/5 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg glass-level-3 diamond-edge flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary" data-icon="rocket_launch">rocket_launch</span>
+</div>
+<div class="hidden md:block overflow-hidden">
+<h2 class="font-headline-md text-sm font-bold text-primary truncate">Project Alpha</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant truncate">Main Branch</p>
+</div>
+</div>
+<!-- Tabs -->
+<div class="flex-1 overflow-y-auto py-2">
+<a class="flex items-center gap-3 px-4 py-3 bg-primary/20 text-primary border-r-2 border-primary group transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="folder" data-weight="fill" style="font-variation-settings: 'FILL' 1;">folder</span>
+<span class="font-label-sm text-label-sm hidden md:block">المستكشف</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-white/10 hover:text-on-surface border-r-2 border-transparent group transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="schema">schema</span>
+<span class="font-label-sm text-label-sm hidden md:block">التحكم في المصدر</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-white/10 hover:text-on-surface border-r-2 border-transparent group transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="extension">extension</span>
+<span class="font-label-sm text-label-sm hidden md:block">الاضافات</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-white/10 hover:text-on-surface border-r-2 border-transparent group transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="terminal">terminal</span>
+<span class="font-label-sm text-label-sm hidden md:block">مصحح الأخطاء</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-white/10 hover:text-on-surface border-r-2 border-transparent group transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label-sm text-label-sm hidden md:block">الطيار المساعد</span>
+</a>
+</div>
+<!-- Footer Tabs -->
+<div class="mt-auto border-t border-white/5 py-2">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-white/10 hover:text-on-surface group transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="account_circle">account_circle</span>
+<span class="font-label-sm text-label-sm hidden md:block">الملف الشخصي</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-white/10 hover:text-on-surface group transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" data-icon="help">help</span>
+<span class="font-label-sm text-label-sm hidden md:block">الدعم</span>
+</a>
+</div>
+</aside>
+<!-- Main Workspace -->
+<main class="fixed top-14 left-0 right-20 md:right-64 h-[calc(100vh-80px)] p-container-padding flex flex-col gap-container-padding overflow-hidden animate-entrance">
+<!-- Dashboard Header -->
+<header class="flex justify-between items-end shrink-0">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">نظرة عامة على النظام</h1>
+<p class="font-body-md text-body-md text-on-surface-variant/70 mt-1">مشروع ألفا - بيئة الإنتاج</p>
+</div>
+<div class="flex gap-unit">
+<button class="glass-level-4 rounded-lg px-4 py-2 font-label-sm text-label-sm text-on-surface hover:text-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="refresh">refresh</span>
+                    تحديث
+                </button>
+<button class="glass-level-4 bg-primary/20 rounded-lg px-4 py-2 font-label-sm text-label-sm text-primary hover:bg-primary/30 transition-colors diamond-edge flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="play_arrow" data-weight="fill">play_arrow</span>
+                    تشغيل
+                </button>
+</div>
+</header>
+<!-- Bento Grid Layout -->
+<div class="flex-1 grid grid-cols-12 grid-rows-6 gap-stack-gap overflow-hidden">
+<!-- Floating Dashboard Cards -->
+<div class="col-span-12 lg:col-span-3 row-span-2 glass-level-2 diamond-edge rounded-xl p-4 flex flex-col justify-between shadow-2xl hover:-translate-y-1 transition-transform glass-shimmer duration-200">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-secondary" data-icon="memory">memory</span>
+<span class="font-label-sm text-label-sm text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">+2.4%</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-surface-variant/70 mb-1">استهلاك المعالج</h3>
+<p class="font-headline-lg text-headline-lg font-bold">42<span class="text-sm font-normal text-on-surface-variant">%</span></p>
+</div>
+<div class="w-full h-1 bg-surface-container rounded-full overflow-hidden mt-2">
+<div class="h-full bg-secondary w-[42%] rounded-full"></div>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-3 row-span-2 glass-level-2 diamond-edge rounded-xl p-4 flex flex-col justify-between shadow-2xl hover:-translate-y-1 transition-transform glass-shimmer duration-200">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-tertiary" data-icon="dns">dns</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-white/5 px-2 py-0.5 rounded-full">مستقر</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-surface-variant/70 mb-1">الذاكرة العشوائية</h3>
+<p class="font-headline-lg text-headline-lg font-bold">12.4<span class="text-sm font-normal text-on-surface-variant">GB</span></p>
+</div>
+<div class="w-full h-1 bg-surface-container rounded-full overflow-hidden mt-2">
+<div class="h-full bg-tertiary w-[75%] rounded-full"></div>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-3 row-span-2 glass-level-2 diamond-edge rounded-xl p-4 flex flex-col justify-between shadow-2xl hover:-translate-y-1 transition-transform glass-shimmer duration-200">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-primary" data-icon="group">group</span>
+<span class="font-label-sm text-label-sm text-error bg-error/10 px-2 py-0.5 rounded-full">-5</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-surface-variant/70 mb-1">المستخدمين النشطين</h3>
+<p class="font-headline-lg text-headline-lg font-bold">1,204</p>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-3 row-span-2 glass-level-2 diamond-edge rounded-xl p-4 flex flex-col justify-between shadow-2xl hover:-translate-y-1 transition-transform glass-shimmer duration-200">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-on-surface" data-icon="cloud_done">cloud_done</span>
+<span class="font-label-sm text-label-sm text-primary bg-primary/10 px-2 py-0.5 rounded-full">اليوم</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-surface-variant/70 mb-1">عمليات النشر</h3>
+<p class="font-headline-lg text-headline-lg font-bold">24</p>
+</div>
+</div>
+<!-- Code Editor Preview (Primary Surface) -->
+<div class="col-span-12 lg:col-span-9 row-span-4 glass-level-1 diamond-edge rounded-xl shadow-2xl flex flex-col overflow-hidden relative duration-200">
+<!-- Editor Tabs -->
+<div class="flex items-center px-2 py-1 border-b border-white/10 glass-level-2 shrink-0">
+<div class="flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-t-lg border-t border-l border-r border-white/10 text-primary">
+<span class="material-symbols-outlined text-sm" data-icon="javascript">javascript</span>
+<span class="font-code-md text-xs">main.js</span>
+<span class="material-symbols-outlined text-xs ml-2 hover:bg-white/10 rounded cursor-pointer" data-icon="close">close</span>
+</div>
+<div class="flex items-center gap-2 px-4 py-2 text-on-surface-variant hover:bg-white/5 rounded-t-lg cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="css">css</span>
+<span class="font-code-md text-xs">styles.css</span>
+</div>
+</div>
+<!-- Editor Content -->
+<div class="flex-1 p-4 overflow-auto font-code-md text-code-md leading-relaxed">
+<pre><code class="text-on-surface-variant">
+<span class="text-tertiary">import</span> { Engine } <span class="text-tertiary">from</span> <span class="text-secondary">'@aether/core'</span>;
+<span class="text-tertiary">import</span> { FluidShader } <span class="text-tertiary">from</span> <span class="text-secondary">'@aether/materials'</span>;
+
+<span class="text-on-surface-variant/50">// Initialize spatial engine</span>
+<span class="text-primary">const</span> engine = <span class="text-tertiary">new</span> <span class="text-on-surface">Engine</span>({
+  antialias: <span class="text-secondary">true</span>,
+  alpha: <span class="text-secondary">true</span>
+});
+
+<span class="text-primary">const</span> shader = <span class="text-tertiary">new</span> <span class="text-on-surface">FluidShader</span>({
+  baseColor: <span class="text-secondary">'#0b1326'</span>,
+  accentColor: <span class="text-secondary">'#adc6ff'</span>,
+  density: <span class="text-secondary">0.8</span>
+});
+
+<span class="text-on-surface-variant/50">// selection highlight simulation</span>
+<span class="bg-primary/20 text-on-surface">engine.scene.add(shader);
+engine.start();</span>
+
+<span class="text-primary">function</span> <span class="text-tertiary">update</span>() {
+  shader.time += <span class="text-secondary">0.01</span>;
+  <span class="text-on-surface">requestAnimationFrame</span>(update);
+}
+</code></pre>
+</div>
+<!-- Floating Action Button inside Editor -->
+<button class="absolute bottom-6 right-6 w-12 h-12 rounded-full glass-level-4 bg-primary text-on-primary shadow-[0_10px_30px_rgba(77,142,255,0.4)] flex items-center justify-center hover:scale-105 transition-transform diamond-edge">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</button>
+</div>
+<!-- Notifications / Activity (Level 3 Sidebar) -->
+<div class="hidden lg:flex col-span-3 row-span-4 glass-level-3 diamond-edge rounded-xl shadow-2xl flex-col overflow-hidden duration-200">
+<div class="p-4 border-b border-white/10 flex justify-between items-center">
+<h3 class="font-label-sm text-label-sm font-bold text-on-surface">أحدث النشاطات</h3>
+<span class="material-symbols-outlined text-on-surface-variant text-sm cursor-pointer hover:text-primary transition-colors" data-icon="filter_list">filter_list</span>
+</div>
+<div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="commit">commit</span>
+</div>
+<div>
+<p class="font-body-md text-sm text-on-surface">تم دفع تحديثات جديدة للفرع <span class="font-code-md text-secondary">main</span></p>
+<p class="font-label-sm text-xs text-on-surface-variant/70 mt-1">منذ 10 دقائق بواسطة Ahmed</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-full bg-error/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-error text-sm" data-icon="warning">warning</span>
+</div>
+<div>
+<p class="font-body-md text-sm text-on-surface">فشل في بناء المشروع <span class="font-code-md text-error">v2.1</span></p>
+<p class="font-label-sm text-xs text-on-surface-variant/70 mt-1">منذ 45 دقيقة - الخادم #3</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-full bg-tertiary/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="merge_type">merge_type</span>
+</div>
+<div>
+<p class="font-body-md text-sm text-on-surface">تم دمج طلب سحب <span class="font-code-md text-tertiary">#402</span></p>
+<p class="font-label-sm text-xs text-on-surface-variant/70 mt-1">منذ ساعتين بواسطة Sarah</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="fixed bottom-0 left-0 w-full z-50 flex items-center justify-between px-gutter glass-level-1 docked bottom-0 h-8 border-t border-white/5">
+<div class="font-label-sm text-label-sm font-bold text-on-surface-variant/70">
+            System: Healthy | Latency: 12ms | Env: Production
+        </div>
+<div class="flex gap-4">
+<a class="font-code-md text-code-md text-on-surface-variant/70 hover:text-on-surface transition-colors" href="#">Documentation</a>
+<a class="font-code-md text-code-md text-on-surface-variant/70 hover:text-on-surface transition-colors" href="#">API Reference</a>
+</div>
+</footer>
+<script>
+    // Interactive Glass Reflection Effect
+    document.querySelectorAll('.interactive-glass').forEach(el => {
+        el.addEventListener('mousemove', e => {
+            const rect = el.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            el.style.setProperty('--mouse-x', `${x}px`);
+            el.style.setProperty('--mouse-y', `${y}px`);
+        });
+    });
+</script>
+</body></html>

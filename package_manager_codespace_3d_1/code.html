@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>مدير الحزم - CodeSpace 3D</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#002e6a",
+                        "secondary": "#a4c9ff",
+                        "on-primary-fixed": "#001a42",
+                        "on-tertiary": "#502400",
+                        "primary": "#adc6ff",
+                        "on-secondary-container": "#d6e5ff",
+                        "surface-container-low": "#171c26",
+                        "surface-container-lowest": "#090e18",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-high": "#252a35",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "on-secondary-fixed-variant": "#004883",
+                        "on-tertiary-container": "#461f00",
+                        "on-secondary": "#00315d",
+                        "on-surface": "#dee2f1",
+                        "surface-tint": "#adc6ff",
+                        "tertiary": "#ffb786",
+                        "on-error": "#690005",
+                        "surface": "#0e131d",
+                        "primary-container": "#4d8eff",
+                        "secondary-fixed": "#d4e3ff",
+                        "error": "#ffb4ab",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "surface-dim": "#0e131d",
+                        "primary-fixed": "#d8e2ff",
+                        "outline-variant": "#424754",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "on-secondary-fixed": "#001c39",
+                        "inverse-surface": "#dee2f1",
+                        "surface-container-highest": "#303540",
+                        "inverse-on-surface": "#2b303b",
+                        "outline": "#8c909f",
+                        "on-primary-fixed-variant": "#004395",
+                        "tertiary-fixed": "#ffdcc6",
+                        "on-background": "#dee2f1",
+                        "inverse-primary": "#005ac2",
+                        "on-tertiary-fixed": "#311400",
+                        "background": "#0e131d",
+                        "surface-container": "#1b202a",
+                        "tertiary-container": "#df7412",
+                        "error-container": "#93000a",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-variant": "#303540",
+                        "secondary-container": "#0267b8",
+                        "surface-bright": "#343944",
+                        "on-primary-container": "#00285d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "gutter": "20px",
+                        "xl": "40px",
+                        "container-max": "1440px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"],
+                        "code-sm": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "code-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background-color: rgba(9, 13, 22, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(66, 71, 84, 0.3);
+        }
+        .glow-border:hover, .glow-border:focus-within {
+            border-color: rgba(173, 198, 255, 0.5);
+            box-shadow: 0 0 10px rgba(173, 198, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<header class="flex items-center justify-between px-gutter w-full sticky top-0 z-50 bg-surface-container/60 backdrop-blur-xl border-b border-outline-variant/30 w-full h-14 flat no shadows duration-200 ease-in-out">
+<div class="flex items-center gap-6">
+<h1 class="font-headline-md text-headline-md font-bold tracking-tight text-primary">CodeSpace 3D</h1>
+<nav class="hidden md:flex gap-6">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-white/5 transition-all px-2 py-1 rounded" href="#">Build</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-white/5 transition-all px-2 py-1 rounded" href="#">Debug</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-white/5 transition-all px-2 py-1 rounded" href="#">Deploy</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant/30">
+<img alt="Developer Profile" class="w-full h-full object-cover" data-alt="A futuristic minimalist developer profile picture, glowing neon blue accents, dark tech laboratory aesthetic, high resolution, soft futuristic lighting, deep blacks and precise details." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGqZW2JN6ZToqM0B7UyHoAL6BHDEAECMzY4tR4nmEMrUgeDDHPrv05_VGTt8aO5jCbtZJLB2_fYpGAxnTzeyK7aLzSinal6N0QCmX8mxwhiuzYXPEcHQ6gD8VlHgKX0ubJSHkVuVdrXEe2DK3Z8M0ywNmnnRLr9wnzdQbSC2hWUWLaFI9blBYM-7NZafa5jRaLDq2jMOuWrtpn-Xm9IGf92jE8a7A5R9blLpb9QhDBHELUv9Kelz25"/>
+</div>
+</div>
+</header>
+<div class="flex h-[calc(100vh-3.5rem)]">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col fixed right-0 top-0 h-full pt-14 bg-surface-container-low/80 backdrop-blur-md border-l border-outline-variant/20 w-[280px] flat no shadows transition-all duration-300 z-40">
+<div class="p-6 border-b border-outline-variant/20">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center border border-outline-variant/30">
+<img alt="CodeSpace Logo" class="w-8 h-8 object-cover" data-alt="A sleek, futuristic 3D cube logo glowing with subtle blue light against a dark metallic background. High-tech laboratory vibe, minimalist, sharp edges." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLOJeR-CHjXuuD2AA3VGRQGjilIf8qB0D8dCF8MtjsfVr62sCQlxDyG9A1ySvZjtxndEiTQUpJkZdndWAbzf20oHD1Kru__A4E2CyiRb9RaWijW82Fw45_Fu6EOn1uUUFiVJbmIPU5OoHnmHaIScpyK0LwBJdOMuBKYOSPGkqrVl2E6_70HWmy_gBXWqF4gX1YDnC0fOMOqfkftxMC1IFOYseukjgf8F-IRg88uGlP5bWF48Ooigcg"/>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary text-sm font-semibold">Project Alpha</h2>
+<p class="font-label-caps text-label-caps text-on-surface-variant/70">V3.2.0</p>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-label-caps text-label-caps py-2 rounded-DEFAULT hover:brightness-110 transition-all font-semibold">
+                    New Asset
+                </button>
+</div>
+<div class="flex-1 py-4 flex flex-col gap-2 px-4">
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant/70 hover:text-on-surface hover:bg-surface-variant/30 font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">folder_open</span> Workspace
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant/70 hover:text-on-surface hover:bg-surface-variant/30 font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">inventory_2</span> Assets
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant/70 hover:text-on-surface hover:bg-surface-variant/30 font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">terminal</span> Terminal
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT bg-secondary-container/40 text-secondary border-r-2 border-secondary font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span> Settings
+                </a>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto bg-background md:mr-[280px] p-lg">
+<div class="max-w-container-max mx-auto space-y-lg pb-xl">
+<!-- Page Header & Search -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-xl">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">مدير الحزم (Package Manager)</h2>
+<p class="text-on-surface-variant mt-2">إدارة تبعيات المشروع والمكتبات.</p>
+</div>
+<div class="relative w-full md:w-96">
+<div class="absolute inset-y-0 right-0 pl-3 pr-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">search</span>
+</div>
+<input class="w-full bg-surface-container border border-outline-variant/30 text-on-surface rounded-DEFAULT py-2 pr-10 pl-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all glow-border" placeholder="ابحث عن حزم (npm, yarn)..." type="text"/>
+</div>
+</div>
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md mb-xl">
+<div class="glass-panel p-md rounded-lg flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant">إجمالي الحزم</p>
+<p class="font-headline-md text-headline-md text-on-surface mt-1">128</p>
+</div>
+</div>
+<div class="glass-panel p-md rounded-lg flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-secondary-container/20 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">update</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant">تحديثات متاحة</p>
+<p class="font-headline-md text-headline-md text-on-surface mt-1">12</p>
+</div>
+</div>
+<div class="glass-panel p-md rounded-lg flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-error-container/20 flex items-center justify-center text-error">
+<span class="material-symbols-outlined">security</span>
+</div>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant">ثغرات أمنية</p>
+<p class="font-headline-md text-headline-md text-error mt-1">2</p>
+</div>
+</div>
+</div>
+<!-- Package List -->
+<div class="glass-panel rounded-lg overflow-hidden">
+<div class="px-md py-3 border-b border-outline-variant/30 flex justify-between items-center bg-surface-container/50">
+<h3 class="font-body-lg text-body-lg text-on-surface font-semibold">الحزم المثبتة</h3>
+<div class="flex gap-2">
+<button class="px-3 py-1 bg-surface-container border border-outline-variant/30 rounded-DEFAULT text-sm hover:bg-surface-variant transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">filter_list</span> تصفية
+                            </button>
+</div>
+</div>
+<div class="divide-y divide-outline-variant/20">
+<!-- Package Item 1 -->
+<div class="p-md hover:bg-surface-variant/20 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="flex items-start gap-4">
+<div class="mt-1">
+<span class="material-symbols-outlined text-outline">view_in_ar</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h4 class="font-body-md text-body-md text-primary-fixed font-semibold">three.js</h4>
+<span class="px-2 py-0.5 rounded-DEFAULT bg-surface-container-highest border border-outline-variant/50 font-code-sm text-code-sm text-on-surface-variant text-xs">v0.150.1</span>
+</div>
+<p class="text-sm text-on-surface-variant mt-1">مكتبة جافا سكريبت لإنشاء وعرض رسومات ثلاثية الأبعاد متحركة في متصفح الويب.</p>
+<div class="flex items-center gap-3 mt-2">
+<span class="flex items-center gap-1 text-xs text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> آمن
+                                        </span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded hover:bg-surface-container" title="تحديث">
+<span class="material-symbols-outlined">upgrade</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors rounded hover:bg-surface-container" title="إزالة">
+<span class="material-symbols-outlined">delete</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-on-surface transition-colors rounded hover:bg-surface-container" title="التوثيق">
+<span class="material-symbols-outlined">menu_book</span>
+</button>
+</div>
+</div>
+<!-- Package Item 2 -->
+<div class="p-md hover:bg-surface-variant/20 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-surface-container/20 border-l-2 border-r-0 border-l-transparent border-r-error/50">
+<div class="flex items-start gap-4">
+<div class="mt-1">
+<span class="material-symbols-outlined text-outline">code</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h4 class="font-body-md text-body-md text-primary-fixed font-semibold">react</h4>
+<span class="px-2 py-0.5 rounded-DEFAULT bg-surface-container-highest border border-outline-variant/50 font-code-sm text-code-sm text-on-surface-variant text-xs">v18.2.0</span>
+<span class="px-2 py-0.5 rounded-DEFAULT bg-secondary-container/20 text-secondary text-xs border border-secondary/30">تحديث: v18.3.0</span>
+</div>
+<p class="text-sm text-on-surface-variant mt-1">مكتبة جافا سكريبت لبناء واجهات المستخدم.</p>
+<div class="flex items-center gap-3 mt-2">
+<span class="flex items-center gap-1 text-xs text-error">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span> ثغرة أمنية (متوسطة)
+                                        </span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<button class="px-3 py-1.5 bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors rounded-DEFAULT text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">upgrade</span> تحديث
+                                </button>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors rounded hover:bg-surface-container" title="إزالة">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<!-- Package Item 3 -->
+<div class="p-md hover:bg-surface-variant/20 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="flex items-start gap-4">
+<div class="mt-1">
+<span class="material-symbols-outlined text-outline">brush</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h4 class="font-body-md text-body-md text-primary-fixed font-semibold">tailwind-merge</h4>
+<span class="px-2 py-0.5 rounded-DEFAULT bg-surface-container-highest border border-outline-variant/50 font-code-sm text-code-sm text-on-surface-variant text-xs">v1.14.0</span>
+</div>
+<p class="text-sm text-on-surface-variant mt-1">أداة لدمج فئات Tailwind CSS بشكل صحيح.</p>
+<div class="flex items-center gap-3 mt-2">
+<span class="flex items-center gap-1 text-xs text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> آمن
+                                        </span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded hover:bg-surface-container" title="تحديث">
+<span class="material-symbols-outlined">upgrade</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors rounded hover:bg-surface-container" title="إزالة">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Voice Command Floating Bar -->
+<div class="fixed bottom-12 left-1/2 transform -translate-x-1/2 z-50 glass-panel rounded-full px-6 py-3 flex items-center gap-4 shadow-lg border border-primary/30">
+<div class="relative flex items-center justify-center w-8 h-8">
+<span class="absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75 animate-ping"></span>
+<span class="relative inline-flex rounded-full h-6 w-6 bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-sm" style="font-variation-settings: 'FILL' 1;">mic</span>
+</span>
+</div>
+<div class="flex items-center gap-2 border-r border-outline-variant/30 pr-4 mr-2 text-sm">
+<span class="text-on-surface-variant">التعرف الصوتي نشط:</span>
+<span class="font-code-sm text-code-sm text-primary">"تحديث حزمة three.js"</span>
+</div>
+</div>
+<!-- Footer -->
+<footer class="fixed bottom-0 left-0 w-full flex items-center justify-between px-4 z-50 bg-surface-container-lowest/90 backdrop-blur-lg border-t border-outline-variant/30 h-8 flat no shadows transition-opacity duration-150 font-code-sm text-code-sm">
+<div class="text-on-surface-variant">
+            System Health: Optimal | Latency: 24ms
+        </div>
+<div class="flex items-center gap-4 hidden sm:flex">
+<a class="text-tertiary-fixed font-bold hover:text-primary transition-colors" href="#">Voice Assistant Ready</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Documentation</a>
+</div>
+</footer>
+</body></html>

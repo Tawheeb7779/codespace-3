@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeSpace 3D - الإشعارات</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#a078ff",
+                    "surface-container-lowest": "#060e20",
+                    "on-primary-container": "#00285d",
+                    "outline": "#8c909f",
+                    "on-secondary": "#003640",
+                    "outline-variant": "#424754",
+                    "tertiary-fixed": "#e9ddff",
+                    "secondary-container": "#03b5d3",
+                    "primary-container": "#4d8eff",
+                    "surface-container-low": "#131b2e",
+                    "secondary": "#4cd7f6",
+                    "tertiary-fixed-dim": "#d0bcff",
+                    "primary-fixed": "#d8e2ff",
+                    "error-container": "#93000a",
+                    "tertiary": "#d0bcff",
+                    "on-primary": "#002e6a",
+                    "on-secondary-container": "#00424e",
+                    "on-error": "#690005",
+                    "primary": "#adc6ff",
+                    "on-primary-fixed": "#001a42",
+                    "surface-tint": "#adc6ff",
+                    "on-secondary-fixed": "#001f26",
+                    "surface-bright": "#31394d",
+                    "on-secondary-fixed-variant": "#004e5c",
+                    "on-surface": "#dae2fd",
+                    "on-tertiary-fixed": "#23005c",
+                    "primary-fixed-dim": "#adc6ff",
+                    "surface-variant": "#2d3449",
+                    "on-tertiary-fixed-variant": "#5516be",
+                    "inverse-surface": "#dae2fd",
+                    "on-background": "#dae2fd",
+                    "secondary-fixed-dim": "#4cd7f6",
+                    "background": "#0b1326",
+                    "on-tertiary": "#3c0091",
+                    "on-surface-variant": "#c2c6d6",
+                    "surface": "#0b1326",
+                    "on-primary-fixed-variant": "#004395",
+                    "secondary-fixed": "#acedff",
+                    "on-error-container": "#ffdad6",
+                    "on-tertiary-container": "#340080",
+                    "surface-dim": "#0b1326",
+                    "error": "#ffb4ab",
+                    "inverse-primary": "#005ac2",
+                    "surface-container": "#171f33",
+                    "inverse-on-surface": "#283044",
+                    "surface-container-highest": "#2d3449",
+                    "surface-container-high": "#222a3d"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "16px",
+                    "container-padding": "24px",
+                    "unit": "8px",
+                    "stack-gap": "12px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "code-md": ["JetBrains Mono"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "code-md": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for web view */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-lowest text-on-surface font-body-md overflow-x-hidden antialiased selection:bg-primary/20 selection:text-primary">
+<!-- Ambient Background: Deep Space Aesthetic -->
+<div class="fixed inset-0 z-[-1] bg-cover bg-center pointer-events-none" data-alt="A deep space cosmic scene with glowing ethereal nebula clouds in deep purples and vibrant cyan blues. The scene features a central glowing geometric sphere emitting light pulses, set against a star-studded vast void. The overall aesthetic is dark, premium, futuristic, and highly immersive, fitting a high-end spatial computing interface." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDvP6w06gK7OFl1uJvjz6_6oEQ_-PFLHY3ryu_TwDDeD8ml3FBhsdgm3jk38r_piKfr8hYsc5VOJLi0bQ3pHgLGpJFHOmTILvgUC7rnCApcMWrXYpKysTRQNbIZmo1XP0PAjew0W28wAVSUzHqOiq9bFTDCBUH7eTjfMEKcMYIddmaaOSQgDkWdN-XpppimDwEGW2PPzMdq4BM0hnyytXD5gDGlrD10gtDVEMCZrTlCkWtUKKNj119c')"></div>
+<div class="fixed inset-0 z-[-1] bg-surface-container-lowest/70 backdrop-blur-[10px] pointer-events-none"></div>
+<!-- TopAppBar Component -->
+<header class="fixed top-0 w-full z-50 bg-surface-container/50 dark:bg-surface-container/50 backdrop-blur-[40px] border-b border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+<div class="flex justify-between items-center px-gutter h-16">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5 transition-colors active:scale-95 duration-200 text-on-surface-variant">
+<span class="material-symbols-outlined" style="transform: scaleX(-1);">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Notifications</h1>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container hover:bg-white/5 transition-colors ring-1 ring-white/10 overflow-hidden active:scale-95 duration-200">
+<span class="material-symbols-outlined text-outline">person</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-[88px] pb-[104px] px-gutter max-w-2xl mx-auto flex flex-col gap-stack-gap">
+<!-- Tab Switcher (Level 3 Glass) -->
+<nav class="flex items-center gap-2 p-1 bg-surface-container/30 backdrop-blur-[60px] rounded-full border border-white/5 shadow-[0_4px_12px_rgba(0,0,0,0.2)] mb-2 overflow-x-auto no-scrollbar">
+<button class="flex-1 whitespace-nowrap px-4 py-2 rounded-full font-label-sm text-label-sm font-bold bg-white/10 text-primary ring-1 ring-white/20 transition-all shadow-sm">
+                الكل
+            </button>
+<button class="flex-1 whitespace-nowrap px-4 py-2 rounded-full font-label-sm text-label-sm text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all">
+                الأمان
+            </button>
+<button class="flex-1 whitespace-nowrap px-4 py-2 rounded-full font-label-sm text-label-sm text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all">
+                النظام
+            </button>
+<button class="flex-1 whitespace-nowrap px-4 py-2 rounded-full font-label-sm text-label-sm text-on-surface-variant hover:bg-white/5 hover:text-on-surface transition-all">
+                الفريق
+            </button>
+</nav>
+<!-- Notification List -->
+<div class="flex flex-col gap-unit">
+<!-- Notification Card 1: Security (High Priority) -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container/40 backdrop-blur-[40px] border border-white/10 p-4 flex gap-4 items-start shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/5 transition-all group cursor-pointer">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-error shadow-[0_0_10px_rgba(255,180,171,0.5)]"></div>
+<div class="w-10 h-10 rounded-full bg-error-container/20 flex items-center justify-center shrink-0 border border-error/20 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<div class="flex flex-col flex-1">
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-sm text-label-sm text-error font-bold tracking-wider">تنبيه أمني</span>
+<span class="text-xs text-outline-variant">الآن</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-tight">
+                        تم اكتشاف ثغرة خطيرة في حزمة <span class="font-code-md text-code-md text-error/80 bg-error/10 px-1 rounded">three.js</span>
+</p>
+</div>
+</div>
+<!-- Notification Card 2: System Update -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container/40 backdrop-blur-[40px] border border-white/10 p-4 flex gap-4 items-start shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/5 transition-all group cursor-pointer">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-secondary shadow-[0_0_10px_rgba(76,215,246,0.3)] opacity-50"></div>
+<div class="w-10 h-10 rounded-full bg-secondary-container/20 flex items-center justify-center shrink-0 border border-secondary/20 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+</div>
+<div class="flex flex-col flex-1">
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-sm text-label-sm text-secondary font-bold tracking-wider">تحديث النظام</span>
+<span class="text-xs text-outline-variant">منذ ٢ دقيقة</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-tight opacity-90">
+                        نجح البناء السحابي لمشروع ألفا
+                    </p>
+</div>
+</div>
+<!-- Notification Card 3: Team -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container/40 backdrop-blur-[40px] border border-white/10 p-4 flex gap-4 items-start shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:bg-white/5 transition-all group cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center shrink-0 border border-primary/20 group-hover:scale-105 transition-transform overflow-hidden relative">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+<div class="flex flex-col flex-1">
+<div class="flex justify-between items-center mb-1">
+<span class="font-label-sm text-label-sm text-primary font-bold tracking-wider">الفريق</span>
+<span class="text-xs text-outline-variant">منذ ١٥ دقيقة</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-tight opacity-90">
+                        تركت سارة تعليقاً على <span class="font-code-md text-code-md text-primary/80 bg-primary/10 px-1 rounded">Shader.glsl</span>
+</p>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar Component -->
+<nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container/30 dark:bg-surface-container/30 backdrop-blur-[20px] border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.2)] md:hidden">
+<div class="flex justify-around items-center h-20 px-4">
+<!-- Item 1: Inactive -->
+<button class="flex flex-col items-center justify-center text-outline opacity-70 hover:opacity-100 hover:text-primary active:scale-90 transition-transform duration-150 gap-1 w-16">
+<span class="material-symbols-outlined">deployed_code</span>
+<span class="font-label-sm text-label-sm">Editor</span>
+</button>
+<!-- Item 2: Inactive -->
+<button class="flex flex-col items-center justify-center text-outline opacity-70 hover:opacity-100 hover:text-primary active:scale-90 transition-transform duration-150 gap-1 w-16">
+<span class="material-symbols-outlined">layers</span>
+<span class="font-label-sm text-label-sm">Assets</span>
+</button>
+<!-- Item 3: Active -->
+<button class="flex flex-col items-center justify-center text-secondary font-bold bg-white/10 rounded-xl px-3 py-1 ring-1 ring-white/20 hover:opacity-100 hover:text-primary active:scale-90 transition-transform duration-150 gap-1 min-w-[64px]">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="font-label-sm text-label-sm">Alerts</span>
+</button>
+<!-- Item 4: Inactive -->
+<button class="flex flex-col items-center justify-center text-outline opacity-70 hover:opacity-100 hover:text-primary active:scale-90 transition-transform duration-150 gap-1 w-16">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-sm text-label-sm">Team</span>
+</button>
+</div>
+</nav>
+</body></html>

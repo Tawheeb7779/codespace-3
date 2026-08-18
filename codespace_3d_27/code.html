@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cloud Deployment System - CodeSpace 3D</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "on-error-container": "#ffdad6",
+                "on-background": "#dae2fd",
+                "on-primary-container": "#00285d",
+                "primary": "#adc6ff",
+                "inverse-surface": "#dae2fd",
+                "surface-container-high": "#222a3d",
+                "background": "#0b1326",
+                "primary-fixed-dim": "#adc6ff",
+                "primary-fixed": "#d8e2ff",
+                "on-surface-variant": "#c2c6d6",
+                "secondary-container": "#03b5d3",
+                "on-tertiary": "#3c0091",
+                "on-secondary-fixed-variant": "#004e5c",
+                "primary-container": "#4d8eff",
+                "tertiary-container": "#a078ff",
+                "surface-bright": "#31394d",
+                "on-tertiary-container": "#340080",
+                "surface-tint": "#adc6ff",
+                "surface-dim": "#0b1326",
+                "error": "#ffb4ab",
+                "secondary-fixed-dim": "#4cd7f6",
+                "surface-container": "#171f33",
+                "on-primary": "#002e6a",
+                "on-error": "#690005",
+                "on-primary-fixed-variant": "#004395",
+                "on-secondary-fixed": "#001f26",
+                "tertiary": "#d0bcff",
+                "on-surface": "#dae2fd",
+                "secondary": "#4cd7f6",
+                "tertiary-fixed-dim": "#d0bcff",
+                "inverse-primary": "#005ac2",
+                "surface-container-highest": "#2d3449",
+                "outline": "#8c909f",
+                "on-tertiary-fixed": "#23005c",
+                "on-secondary": "#003640",
+                "surface-variant": "#2d3449",
+                "outline-variant": "#424754",
+                "tertiary-fixed": "#e9ddff",
+                "inverse-on-surface": "#283044",
+                "secondary-fixed": "#acedff",
+                "surface": "#0b1326",
+                "surface-container-low": "#131b2e",
+                "on-tertiary-fixed-variant": "#5516be",
+                "surface-container-lowest": "#060e20",
+                "on-primary-fixed": "#001a42",
+                "error-container": "#93000a",
+                "on-secondary-container": "#00424e"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "unit": "8px",
+                "container-padding": "24px",
+                "stack-gap": "12px",
+                "gutter": "16px"
+        },
+        "fontFamily": {
+                "body-lg": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-md": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ],
+                "code-md": [
+                        "JetBrains Mono"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "display-lg": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "1.6",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "1.3",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "1.2",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "code-md": [
+                        "14px",
+                        {
+                                "lineHeight": "1.5",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "1.2",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg": [
+                        "48px",
+                        {
+                                "lineHeight": "1.1",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ]
+        },
+        "keyframes": {
+            "slideUpFade": {
+                "0%": { opacity: 0, transform: "translateY(20px)" },
+                "100%": { opacity: 1, transform: "translateY(0)" }
+            },
+            "flowPulse": {
+                "0%": { strokeDashoffset: "301.59" },
+                "100%": { strokeDashoffset: "60.3" }
+            },
+            "pulseSoft": {
+                "0%, 100%": { transform: "scale(1)", opacity: 1 },
+                "50%": { transform: "scale(1.2)", opacity: 0.7 }
+            }
+        },
+        "animation": {
+            "slideUpFade": "slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+            "flowPulse": "flowPulse 2s ease-in-out infinite alternate",
+            "pulseSoft": "pulseSoft 2s ease-in-out infinite"
+        }
+},
+    },
+  }
+</script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+            overflow-x: hidden;
+        }
+        
+        /* Glassmorphism Levels */
+        .glass-level-1 {
+            background-color: rgba(11, 19, 38, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .glass-level-2 {
+            background-color: rgba(23, 31, 51, 0.5);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+        
+        .glass-level-3 {
+            background-color: rgba(45, 52, 73, 0.7);
+            backdrop-filter: blur(60px);
+            -webkit-backdrop-filter: blur(60px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .glass-level-4 {
+            background-color: rgba(173, 198, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+        }
+        
+        .glass-panel-cut {
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+        }
+
+        /* Animated background elements */
+        .ambient-glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .glow-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: theme('colors.primary'); }
+        .glow-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: theme('colors.tertiary'); }
+        .glow-3 { top: 40%; left: 30%; width: 30vw; height: 30vw; background: theme('colors.secondary'); }
+
+        .stagger-1 { animation-delay: 100ms; opacity: 0; }
+        .stagger-2 { animation-delay: 200ms; opacity: 0; }
+        .stagger-3 { animation-delay: 300ms; opacity: 0; }
+        .stagger-4 { animation-delay: 400ms; opacity: 0; }
+
+        .provider-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .provider-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(173, 198, 255, 0.2);
+            border-color: rgba(173, 198, 255, 0.5);
+        }
+        .provider-card.active {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(173, 198, 255, 0.2);
+        }
+
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-md text-body-md antialiased selection:bg-primary/20 selection:text-primary relative">
+<!-- Ambient Background -->
+<div class="ambient-glow glow-1"></div>
+<div class="ambient-glow glow-2"></div>
+<div class="ambient-glow glow-3"></div>
+<!-- TopNavBar -->
+<header class="bg-surface-container-low/80 backdrop-blur-xl font-body-md text-body-md docked full-width top-0 sticky z-50 border-b border-outline-variant/30 flat no shadows hidden md:block">
+<div class="flex justify-between items-center px-container-padding py-unit w-full h-[64px]">
+<!-- Brand -->
+<div class="flex items-center gap-gutter">
+<span class="font-headline-md text-headline-md font-bold tracking-tight text-primary">CodeSpace 3D</span>
+</div>
+<!-- Navigation -->
+<nav class="flex items-center gap-gutter h-full">
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 active:scale-95 transition-transform px-unit h-full flex items-center" href="#">Projects</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-0 h-full flex items-center hover:text-primary transition-colors duration-200 active:scale-95 transition-transform px-unit" href="#">Deployments</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 active:scale-95 transition-transform px-unit h-full flex items-center" href="#">Analytics</a>
+<a class="text-on-surface-variant font-medium hover:text-primary transition-colors duration-200 active:scale-95 transition-transform px-unit h-full flex items-center" href="#">Settings</a>
+</nav>
+<!-- Actions -->
+<div class="flex items-center gap-gutter">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200 active:scale-95 transition-transform p-unit">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200 active:scale-95 transition-transform p-unit">
+<span class="material-symbols-outlined">account_tree</span>
+</button>
+<button class="glass-level-4 text-primary px-gutter py-unit rounded hover:bg-primary/10 transition-colors duration-200 active:scale-95 transition-transform font-label-sm text-label-sm">
+                    Deploy to Cloud
+                </button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A futuristic metallic avatar sphere floating in a dark digital void, rendered with hyper-realistic cinematic lighting and deep blue accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPxFtu_WNn_hSqDOuhVd_caeYZX5NEbUV9eEglYBuCICUN6YPC_gqAf3MZayn-9AajDfqsuMbElcZNL_R_iTsJ-1zdd9khxqCI1tmGm83nt7rBrI1QU1C3Ghe-CLwCHwNL7Tdo-Wa5T3PabBIQpiA9PxpDmzgRYK4EvZTpDqle0dVgce4Nj1w8wovYGtJ81chb_uJD4ZZmME4NHSXvJElimb541HxRyYps1RTmAsVzQ7LUrV0oig5k"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden relative">
+<!-- SideNavBar -->
+<aside class="bg-surface-container-lowest/90 backdrop-blur-md font-label-caps text-label-caps fixed left-0 top-0 h-full w-[280px] border-r border-outline-variant/20 flat no shadows flex flex-col h-full py-container-padding z-40 hidden lg:flex mt-[64px]">
+<!-- Header -->
+<div class="px-container-padding mb-gutter pb-gutter border-b border-outline-variant/10">
+<div class="flex items-center gap-stack-gap mb-unit">
+<div class="w-10 h-10 rounded overflow-hidden border border-outline-variant/30">
+<img alt="Project Icon" class="w-full h-full object-cover" data-alt="A sleek, geometric abstract icon representing a software project, composed of glowing translucent blue and purple polygons on a pitch-black background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKS4t-02BoDboxccEd47mcUBk2tT0274uC0VYTGUzucZx0-TZ3Oj9WfVbm3hnle0SwlGV6qrS8tdQkMLLX0wOMb2y4-02E-PiNGmm-eJPat6O_deq7ld6UkoecHaKC46SmZ0UQtJJLFbObZiFvTMkNffdnk2nExzqqZXY1ZIBEeMsgF1JfkoCuier10fDYVI_tYeUtVndT58kg0q7rud62v93RNYVnoymOiiQQ-hoLpwusfq3MnBx9"/>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary leading-tight">Project Alpha</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Production v2.4</p>
+</div>
+</div>
+</div>
+<!-- Main Tabs -->
+<nav class="flex-1 overflow-y-auto px-unit space-y-1">
+<a class="flex items-center gap-stack-gap px-gutter py-stack-gap rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/10 transition-all group-hover:translate-x-1 duration-200 group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">space_dashboard</span>
+<span class="font-label-sm text-label-sm">Workspace</span>
+</a>
+<a class="flex items-center gap-stack-gap px-gutter py-stack-gap rounded bg-secondary-container/20 text-primary border-r-4 border-primary hover:bg-surface-variant/10 transition-all group-hover:translate-x-1 duration-200 group" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">cloud_sync</span>
+<span class="font-label-sm text-label-sm">Cloud Config</span>
+</a>
+<a class="flex items-center gap-stack-gap px-gutter py-stack-gap rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/10 transition-all group-hover:translate-x-1 duration-200 group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">terminal</span>
+<span class="font-label-sm text-label-sm">Logs</span>
+</a>
+<a class="flex items-center gap-stack-gap px-gutter py-stack-gap rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/10 transition-all group-hover:translate-x-1 duration-200 group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">query_stats</span>
+<span class="font-label-sm text-label-sm">Monitoring</span>
+</a>
+<a class="flex items-center gap-stack-gap px-gutter py-stack-gap rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/10 transition-all group-hover:translate-x-1 duration-200 group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">group</span>
+<span class="font-label-sm text-label-sm">Team</span>
+</a>
+</nav>
+<!-- Footer Tabs -->
+<div class="px-unit mt-auto pt-gutter border-t border-outline-variant/10">
+<a class="flex items-center gap-stack-gap px-gutter py-stack-gap rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/10 transition-all group-hover:translate-x-1 duration-200 group" href="#">
+<span class="material-symbols-outlined text-[20px]">help_outline</span>
+<span class="font-label-sm text-label-sm">Help</span>
+</a>
+<a class="flex items-center gap-stack-gap px-gutter py-stack-gap rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/10 transition-all group-hover:translate-x-1 duration-200 group" href="#">
+<span class="material-symbols-outlined text-[20px]">description</span>
+<span class="font-label-sm text-label-sm">Docs</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 lg:ml-[280px] p-container-padding overflow-y-auto relative z-10">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-stack-gap animate-slideUpFade stagger-1">
+<div>
+<h1 class="font-display-lg text-display-lg text-primary mb-2">Cloud Configuration</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">Configure your deployment environment, select providers, and manage resource allocation for Project Alpha across spatial networks.</p>
+</div>
+<div class="flex items-center gap-stack-gap">
+<button class="glass-level-2 text-on-surface px-gutter py-unit rounded flex items-center gap-2 hover:bg-surface-variant/50 transition-colors">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span class="font-label-sm text-label-sm">Rollback</span>
+</button>
+<button class="glass-level-4 text-primary px-gutter py-unit rounded flex items-center gap-2 hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+<span class="font-label-sm text-label-sm">Deploy Now</span>
+</button>
+</div>
+</div>
+<!-- Grid Layout -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-container-padding">
+<!-- Left Column (Providers & Regions) -->
+<div class="xl:col-span-2 flex flex-col gap-container-padding">
+<!-- Provider Selection -->
+<section class="glass-level-2 rounded-xl p-container-padding relative overflow-hidden group animate-slideUpFade stagger-2">
+<!-- Decorative top edge light -->
+<div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+<div class="flex items-center justify-between mb-gutter border-b border-white/5 pb-stack-gap">
+<h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">dns</span>
+                                Infrastructure Provider
+                            </h3>
+<span class="glass-level-3 px-3 py-1 rounded-full font-label-sm text-label-sm text-primary">Active: AWS</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-stack-gap">
+<!-- AWS Card -->
+<div class="provider-card active glass-level-3 rounded-lg p-gutter border border-primary/40 bg-primary/5 cursor-pointer relative overflow-hidden">
+<div class="absolute top-2 right-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="w-12 h-12 mb-4 bg-surface-container/50 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-2xl text-primary">cloud</span>
+</div>
+<h4 class="font-headline-md text-[18px] text-on-surface mb-1">Amazon Web Services</h4>
+<p class="font-body-md text-[14px] text-on-surface-variant">High-performance spatial compute nodes.</p>
+</div>
+<!-- GCP Card -->
+<div class="provider-card glass-level-2 rounded-lg p-gutter border border-outline-variant/30 cursor-pointer">
+<div class="w-12 h-12 mb-4 bg-surface-container/50 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-2xl text-secondary">database</span>
+</div>
+<h4 class="font-headline-md text-[18px] text-on-surface mb-1">Google Cloud Platform</h4>
+<p class="font-body-md text-[14px] text-on-surface-variant">Optimized for machine learning pipelines.</p>
+</div>
+<!-- Vercel Card -->
+<div class="provider-card glass-level-2 rounded-lg p-gutter border border-outline-variant/30 cursor-pointer">
+<div class="w-12 h-12 mb-4 bg-surface-container/50 rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-2xl text-on-surface">change_history</span>
+</div>
+<h4 class="font-headline-md text-[18px] text-on-surface mb-1">Vercel Edge</h4>
+<p class="font-body-md text-[14px] text-on-surface-variant">Global edge network for static assets.</p>
+</div>
+</div>
+</section>
+<!-- Region & Networking -->
+<section class="glass-level-2 rounded-xl p-container-padding animate-slideUpFade stagger-3">
+<div class="flex items-center justify-between mb-gutter border-b border-white/5 pb-stack-gap">
+<h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">public</span>
+                                Global Distribution
+                            </h3>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-container-padding">
+<!-- Map Visualization area -->
+<div class="glass-level-1 rounded-lg border border-outline-variant/20 h-[200px] relative overflow-hidden flex items-center justify-center group">
+<!-- Abstract map placeholder -->
+<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 2px 2px, theme('colors.primary') 1px, transparent 0); background-size: 20px 20px;"></div>
+<div class="relative z-10 text-center">
+<span class="material-symbols-outlined text-4xl text-primary/50 mb-2 group-hover:text-primary transition-colors">map</span>
+<p class="font-label-sm text-label-sm text-primary/50 uppercase tracking-widest group-hover:text-primary transition-colors">Global Network Map Active</p>
+</div>
+<!-- Nodes -->
+<div class="absolute top-1/4 left-1/4 w-3 h-3 bg-primary rounded-full shadow-[0_0_15px_theme('colors.primary')] animate-pulseSoft"></div>
+<div class="absolute top-1/2 right-1/3 w-2 h-2 bg-secondary rounded-full shadow-[0_0_10px_theme('colors.secondary')] animate-pulseSoft" style="animation-delay: 0.5s;"></div>
+<div class="absolute bottom-1/3 left-1/2 w-2 h-2 bg-tertiary rounded-full shadow-[0_0_10px_theme('colors.tertiary')] opacity-50 animate-pulseSoft" style="animation-delay: 1s;"></div>
+</div>
+<!-- Settings -->
+<div class="space-y-stack-gap">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-unit">Primary Region</label>
+<div class="glass-level-1 border border-outline-variant/30 rounded px-gutter py-unit flex items-center justify-between focus-within:border-primary focus-within:shadow-[0_0_0_1px_theme('colors.primary')] transition-all">
+<select class="bg-transparent border-none text-on-surface w-full focus:ring-0 p-0 font-body-md text-body-md appearance-none">
+<option class="bg-surface text-on-surface" value="us-east-1">us-east-1 (N. Virginia)</option>
+<option class="bg-surface text-on-surface" value="eu-west-1">eu-west-1 (Ireland)</option>
+<option class="bg-surface text-on-surface" value="ap-northeast-1">ap-northeast-1 (Tokyo)</option>
+</select>
+<span class="material-symbols-outlined text-outline pointer-events-none">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-unit">Edge Caching</label>
+<div class="flex items-center gap-3 glass-level-1 border border-outline-variant/30 rounded px-gutter py-stack-gap">
+<div class="w-10 h-5 bg-primary/20 rounded-full relative cursor-pointer border border-primary/50">
+<div class="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow-[0_0_5px_theme('colors.primary')]"></div>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Enabled globally</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column (Status & Logs) -->
+<div class="flex flex-col gap-container-padding">
+<!-- Deployment Status -->
+<section class="glass-level-2 rounded-xl p-container-padding h-[300px] flex flex-col animate-slideUpFade stagger-2">
+<div class="flex items-center justify-between mb-gutter border-b border-white/5 pb-stack-gap">
+<h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary">analytics</span>
+                                Pipeline Status
+                            </h3>
+</div>
+<div class="flex-1 flex flex-col justify-center items-center relative">
+<!-- Circular Progress Indicator Abstract -->
+<div class="w-32 h-32 rounded-full border-4 border-surface-container-highest relative flex items-center justify-center">
+<svg class="absolute inset-0 w-full h-full -rotate-90" viewbox="0 0 100 100">
+<circle class="text-primary animate-flowPulse" cx="50" cy="50" fill="none" r="48" stroke="currentColor" stroke-dasharray="301.59" stroke-dashoffset="60.3" stroke-width="4"></circle>
+</svg>
+<div class="text-center">
+<span class="block font-display-lg text-[32px] text-primary">80%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Building</span>
+</div>
+</div>
+<div class="w-full mt-6 space-y-2">
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface">Provisioning DB</span>
+<span class="text-secondary">Done</span>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm">
+<span class="text-on-surface">Compiling Assets</span>
+<span class="text-primary animate-pulse">In Progress...</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Terminal/Logs -->
+<section class="glass-level-3 rounded-xl p-0 overflow-hidden flex-1 border border-outline-variant/20 flex flex-col min-h-[250px] animate-slideUpFade stagger-4">
+<div class="bg-surface-container-lowest/80 px-gutter py-unit border-b border-outline-variant/20 flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-error/80"></span>
+<span class="w-3 h-3 rounded-full bg-secondary/80"></span>
+<span class="w-3 h-3 rounded-full bg-primary/80"></span>
+<span class="font-code-md text-code-md text-outline ml-2 text-[12px]">build-log-tty1</span>
+</div>
+<div class="p-gutter font-code-md text-[13px] text-on-surface-variant overflow-y-auto flex-1 space-y-1">
+<p><span class="text-primary">→</span> Initializing build environment...</p>
+<p><span class="text-primary">→</span> Fetching dependencies (v2.4.1)</p>
+<p class="text-secondary">  ✓ Resolved 142 packages in 1.2s</p>
+<p><span class="text-primary">→</span> Compiling spatial shaders...</p>
+<p class="text-secondary">  ✓ Shader compilation complete</p>
+<p><span class="text-primary">→</span> Optimizing glassmorphic textures...</p>
+<p class="text-outline">  [WARN] Texture resolution exceeds target for low-tier devices.</p>
+<p class="text-primary animate-pulse">_</p>
+</div>
+</section>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeSpace 3D - Voice Assistant</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#d6e5ff",
+                        "inverse-on-surface": "#2b303b",
+                        "outline": "#8c909f",
+                        "on-secondary": "#00315d",
+                        "on-primary-fixed": "#001a42",
+                        "secondary-container": "#0267b8",
+                        "on-tertiary": "#502400",
+                        "on-primary": "#002e6a",
+                        "on-surface": "#dee2f1",
+                        "on-secondary-fixed-variant": "#004883",
+                        "surface-dim": "#0e131d",
+                        "surface-container": "#1b202a",
+                        "inverse-surface": "#dee2f1",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "surface-variant": "#303540",
+                        "on-secondary-fixed": "#001c39",
+                        "on-background": "#dee2f1",
+                        "background": "#0e131d",
+                        "surface-tint": "#adc6ff",
+                        "primary": "#adc6ff",
+                        "primary-fixed-dim": "#adc6ff",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "tertiary-container": "#df7412",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "surface-bright": "#343944",
+                        "tertiary-fixed": "#ffdcc6",
+                        "primary-fixed": "#d8e2ff",
+                        "surface": "#0e131d",
+                        "on-primary-container": "#00285d",
+                        "primary-container": "#4d8eff",
+                        "tertiary": "#ffb786",
+                        "surface-container-low": "#171c26",
+                        "surface-container-lowest": "#090e18",
+                        "on-primary-fixed-variant": "#004395",
+                        "secondary-fixed": "#d4e3ff",
+                        "surface-container-highest": "#303540",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed": "#311400",
+                        "inverse-primary": "#005ac2",
+                        "on-tertiary-container": "#461f00",
+                        "secondary": "#a4c9ff",
+                        "outline-variant": "#424754",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-container-high": "#252a35",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#723600"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "xl": "40px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "gutter": "20px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "code-sm": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "code-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background-color: rgba(9, 13, 22, 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(140, 144, 159, 0.1);
+        }
+        .glow-accent {
+            box-shadow: 0 0 15px rgba(173, 198, 255, 0.15);
+        }
+        .tech-list-item:hover {
+            background-color: rgba(52, 57, 68, 0.4);
+        }
+        /* Custom scrollbar for tech feel */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090e18;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #303540;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-body-md overflow-hidden">
+<!-- TopNavBar -->
+<nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-surface-container-low/80 dark:bg-surface-container-low/80 backdrop-blur-xl border-b border-outline-variant/10">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings: 'FILL' 1;">3d_rotation</span>
+<span class="font-headline-md text-headline-md text-primary tracking-tight">CodeSpace 3D</span>
+</div>
+<div class="flex-1 flex justify-start pl-xl">
+<!-- Search bar omitted per instruction (search_bar: "on_left" but no specific search UI requested, focusing on layout) -->
+<div class="relative w-64 hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full bg-surface-container-highest/50 border border-outline-variant/20 rounded-full py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 text-on-surface placeholder:text-on-surface-variant transition-all font-code-sm" placeholder="Search codebase..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-bright/20 transition-colors">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-bright/20 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-bright/20 transition-colors">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 bottom-0 w-[280px] flex flex-col p-md z-40 bg-surface-dim/90 dark:bg-surface-dim/90 backdrop-blur-md border-r border-outline-variant/10 hidden md:flex">
+<div class="mb-lg p-sm flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant/20 flex items-center justify-center shrink-0">
+<img class="w-full h-full object-cover" data-alt="A stylized, low-poly 3D render of a futuristic avatar face in neon blue and dark grey tones. The lighting is dramatic and cyberpunk-inspired, fitting a developer profile picture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8t_5m7_S_50Jsd2QPagjPSSMGbHoFfQtfyosVIYrm4KSomA7ROJs8vc83pqamsDD0b3C0zpfeM20vSG0eVMsBAKdc4y0gnUo3WoANT_m5W276PVzV0AzzYqsVIpwSoXj3il8RMrJZo4LD3Bk4jDHdlzTMHuV7jvBi7BQeeWQ6vpIVIR5QyHJuO1VJOhiqxULtZyi2LgWludG5sxY-uUrDI_zb5Y1sOfvGYvnzw0CpP-XcAj7V90tR"/>
+</div>
+<div class="flex flex-col overflow-hidden">
+<span class="font-label-caps text-label-caps text-on-surface truncate">Project Alpha</span>
+<span class="text-[11px] text-on-surface-variant truncate font-code-sm">Node.js v20.1</span>
+</div>
+</div>
+<nav class="flex flex-col gap-sm flex-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high/40 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">deployed_code</span>
+<span class="font-label-caps text-label-caps">Workspace</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high/40 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">package_2</span>
+<span class="font-label-caps text-label-caps">Packages</span>
+</a>
+<!-- Using intent fallback for "Voice Assistant" highlighting an active state for demonstration, though it's not a tab. We'll leave them inactive to show canvas focus -->
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high/40 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">database</span>
+<span class="font-label-caps text-label-caps">Registry</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high/40 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">security</span>
+<span class="font-label-caps text-label-caps">Security</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high/40 rounded-lg transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">description</span>
+<span class="font-label-caps text-label-caps">Logs</span>
+</a>
+</nav>
+<div class="mt-auto pt-md border-t border-outline-variant/10">
+<button class="w-full flex items-center justify-center gap-2 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 hover:border-primary/40 py-2 rounded-lg transition-all font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[16px]">rocket_launch</span>
+                Deploy Project
+            </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-[280px] pt-16 min-h-screen relative overflow-hidden bg-surface-container-lowest">
+<!-- Subtle background grid -->
+<div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(#424754 1px, transparent 1px); background-size: 32px 32px;"></div>
+<div class="relative z-10 p-lg lg:p-xl h-[calc(100vh-64px)] overflow-y-auto">
+<header class="mb-lg flex justify-between items-end">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-2 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[32px]">mic</span>
+                        Voice Command Center
+                    </h1>
+<p class="text-on-surface-variant text-sm font-code-sm">Neural-linguistic programming interface active.</p>
+</div>
+<div class="flex gap-2">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant/20 font-code-sm text-[12px] text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        Model: CS-V4.2
+                    </span>
+</div>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-md h-full pb-xl">
+<!-- 1. Voice Status Central Hub (Hero) -->
+<div class="lg:col-span-8 glass-panel rounded-xl overflow-hidden relative flex flex-col items-center justify-center min-h-[400px] glow-accent">
+<!-- The Shader Waveform -->
+<div class="absolute inset-0 z-0 opacity-60">
+<!-- STITCH_SHADER_START:ANIMATION_45 class="absolute inset-0 w-full h-full" -->
+<div class="absolute inset-0 w-full h-full" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_45" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_45');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+
+varying vec2 v_texCoord;
+
+void main() {
+    vec2 uv = v_texCoord;
+    vec2 p = uv * 2.0 - 1.0;
+    p.x *= u_resolution.x / u_resolution.y;
+
+    float t = u_time * 2.0;
+    
+    // Create multiple waves
+    float wave = 0.0;
+    for(float i = 1.0; i < 5.0; i++) {
+        wave += sin(p.x * 2.0 * i + t + i) * 0.1 / i;
+    }
+    
+    // Wave thickness and glow
+    float dist = abs(p.y - wave);
+    float glow = 0.02 / (dist + 0.01);
+    
+    // Color palette based on design system blue
+    vec3 color = vec3(0.23, 0.51, 0.96); // #3b82f6
+    color *= glow;
+    
+    // Fade out edges
+    float edge = 1.0 - smoothstep(0.5, 1.5, abs(p.x));
+    color *= edge;
+
+    gl_FragColor = vec4(color, color.r * 0.8);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_45 -->
+</div>
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-24 h-24 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(173,198,255,0.2)] animate-[pulse_3s_ease-in-out_infinite]">
+<span class="material-symbols-outlined text-primary text-[48px]" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+</div>
+<h2 class="font-display-lg text-display-lg text-on-surface tracking-tight mb-2">Listening...</h2>
+<p class="text-primary font-code-sm text-sm opacity-80">Awaiting your instruction...</p>
+</div>
+<!-- Floating subtle transcription -->
+<div class="absolute bottom-6 left-6 right-6 flex justify-center">
+<div class="bg-surface-container/80 backdrop-blur-md border border-outline-variant/20 rounded-lg px-4 py-2 flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">short_text</span>
+<span class="font-code-sm text-sm text-on-surface opacity-60 italic">"create a new component..."</span>
+</div>
+</div>
+</div>
+<!-- Right Column Stack -->
+<div class="lg:col-span-4 flex flex-col gap-md">
+<!-- 3. Voice Settings Panel -->
+<div class="glass-panel rounded-xl p-md flex flex-col">
+<div class="flex items-center justify-between mb-4 border-b border-outline-variant/10 pb-3">
+<h3 class="font-headline-md text-headline-md text-on-surface text-[18px]">Audio Config</h3>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">tune</span></button>
+</div>
+<div class="space-y-4">
+<div>
+<label class="font-label-caps text-label-caps text-on-surface-variant mb-2 block">Input Device</label>
+<div class="relative">
+<select class="w-full bg-surface-container-high border border-outline-variant/20 rounded-lg py-2 pl-3 pr-8 font-code-sm text-sm text-on-surface appearance-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50">
+<option>Neural Mic Array (Default)</option>
+<option>Studio Condenser</option>
+<option>System Default</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">expand_more</span>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant">Sensitivity</label>
+<span class="font-code-sm text-xs text-primary">85%</span>
+</div>
+<input class="w-full h-1 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-primary" max="100" min="0" type="range" value="85"/>
+</div>
+<div class="flex items-center justify-between pt-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">record_voice_over</span>
+                                    Wake Word Active
+                                </label>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- 4. Command Suggestions -->
+<div class="glass-panel rounded-xl p-md flex-1 flex flex-col">
+<div class="flex items-center gap-2 mb-4 border-b border-outline-variant/10 pb-3">
+<span class="material-symbols-outlined text-secondary text-[18px]">lightbulb</span>
+<h3 class="font-headline-md text-headline-md text-on-surface text-[18px]">Context Suggestions</h3>
+</div>
+<div class="flex flex-col gap-2 font-code-sm text-sm">
+<button class="text-left px-3 py-2 rounded-lg border border-outline-variant/10 hover:border-secondary/40 hover:bg-secondary/5 text-on-surface-variant hover:text-on-surface transition-all group flex items-center justify-between">
+<span>"Refactor active function"</span>
+<span class="material-symbols-outlined text-[14px] opacity-0 group-hover:opacity-100 text-secondary">arrow_forward</span>
+</button>
+<button class="text-left px-3 py-2 rounded-lg border border-outline-variant/10 hover:border-secondary/40 hover:bg-secondary/5 text-on-surface-variant hover:text-on-surface transition-all group flex items-center justify-between">
+<span>"Run test suite --watch"</span>
+<span class="material-symbols-outlined text-[14px] opacity-0 group-hover:opacity-100 text-secondary">arrow_forward</span>
+</button>
+<button class="text-left px-3 py-2 rounded-lg border border-outline-variant/10 hover:border-secondary/40 hover:bg-secondary/5 text-on-surface-variant hover:text-on-surface transition-all group flex items-center justify-between">
+<span>"Open dependency graph"</span>
+<span class="material-symbols-outlined text-[14px] opacity-0 group-hover:opacity-100 text-secondary">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 2. Active Commands Feed (Bottom Full Width) -->
+<div class="lg:col-span-12 glass-panel rounded-xl flex flex-col h-48 mt-md">
+<div class="px-md py-3 border-b border-outline-variant/10 bg-surface-container-high/30 flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-on-surface text-[16px] flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">history</span>
+                            Execution Log
+                        </h3>
+<span class="font-code-sm text-[11px] text-on-surface-variant">Live Feed</span>
+</div>
+<div class="flex-1 overflow-y-auto p-2 font-code-sm text-sm">
+<div class="tech-list-item px-3 py-2 rounded flex items-center gap-3 text-on-surface-variant transition-colors border-l-2 border-transparent">
+<span class="text-[10px] opacity-50 w-12 shrink-0">14:02:11</span>
+<span class="material-symbols-outlined text-green-400 text-[16px] shrink-0">check_circle</span>
+<span class="text-on-surface">"Commit changes with message 'Update sidebar'"</span>
+<span class="ml-auto text-[11px] opacity-50">git commit -m...</span>
+</div>
+<div class="tech-list-item px-3 py-2 rounded flex items-center gap-3 text-on-surface-variant transition-colors border-l-2 border-transparent">
+<span class="text-[10px] opacity-50 w-12 shrink-0">14:01:45</span>
+<span class="material-symbols-outlined text-green-400 text-[16px] shrink-0">check_circle</span>
+<span class="text-on-surface">"Format current file"</span>
+<span class="ml-auto text-[11px] opacity-50">prettier --write...</span>
+</div>
+<div class="tech-list-item px-3 py-2 rounded flex items-center gap-3 text-on-surface-variant transition-colors border-l-2 border-primary bg-primary/5">
+<span class="text-[10px] opacity-50 w-12 shrink-0">14:05:00</span>
+<span class="material-symbols-outlined text-primary text-[16px] shrink-0 animate-spin">sync</span>
+<span class="text-primary">"Create new component TopNav"</span>
+<span class="ml-auto text-[11px] opacity-50">Generating AST...</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

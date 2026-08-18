@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>إدارة المهام - CodeSpace 3D</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface-variant": "#c2c6d6",
+                    "on-primary-container": "#00285d",
+                    "primary": "#adc6ff",
+                    "on-background": "#dee2f1",
+                    "on-primary-fixed": "#001a42",
+                    "on-surface": "#dee2f1",
+                    "on-primary": "#002e6a",
+                    "error-container": "#93000a",
+                    "on-error-container": "#ffdad6",
+                    "secondary-fixed-dim": "#a4c9ff",
+                    "on-tertiary-container": "#461f00",
+                    "surface": "#0e131d",
+                    "on-tertiary": "#502400",
+                    "background": "#0e131d",
+                    "outline": "#8c909f",
+                    "primary-fixed": "#d8e2ff",
+                    "tertiary": "#ffb786",
+                    "primary-container": "#4d8eff",
+                    "surface-variant": "#303540",
+                    "error": "#ffb4ab",
+                    "surface-container-low": "#171c26",
+                    "surface-dim": "#0e131d",
+                    "inverse-surface": "#dee2f1",
+                    "surface-container-high": "#252a35",
+                    "secondary-container": "#0267b8",
+                    "on-tertiary-fixed": "#311400",
+                    "outline-variant": "#424754",
+                    "surface-container-highest": "#303540",
+                    "primary-fixed-dim": "#adc6ff",
+                    "on-secondary-container": "#d6e5ff",
+                    "on-error": "#690005",
+                    "secondary": "#a4c9ff",
+                    "tertiary-container": "#df7412",
+                    "surface-tint": "#adc6ff",
+                    "on-tertiary-fixed-variant": "#723600",
+                    "on-secondary-fixed-variant": "#004883",
+                    "tertiary-fixed": "#ffdcc6",
+                    "surface-bright": "#343944",
+                    "inverse-on-surface": "#2b303b",
+                    "on-secondary-fixed": "#001c39",
+                    "surface-container": "#1b202a",
+                    "surface-container-lowest": "#090e18",
+                    "on-primary-fixed-variant": "#004395",
+                    "inverse-primary": "#005ac2",
+                    "secondary-fixed": "#d4e3ff",
+                    "on-secondary": "#00315d",
+                    "tertiary-fixed-dim": "#ffb786"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "lg": "24px",
+                    "container-max": "1440px",
+                    "xs": "4px",
+                    "xl": "40px",
+                    "gutter": "20px",
+                    "md": "16px",
+                    "unit": "4px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": [
+                            "Inter"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "headline-lg": [
+                            "Inter"
+                    ],
+                    "display-lg": [
+                            "Inter"
+                    ],
+                    "code-sm": [
+                            "JetBrains Mono"
+                    ],
+                    "headline-md": [
+                            "Inter"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "label-caps": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "code-sm": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        /* Base / Environment */
+        body {
+            background-color: #05070D; /* Environment base from Style Guidance */
+            color: #dee2f1;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            padding-bottom: 96px; /* space for bottom nav */
+            padding-top: 80px; /* space for top app bar */
+        }
+        
+        /* Typography overrides for Arabic */
+        body, input, button {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        }
+
+        /* Glassmorphic Utilities */
+        .glass-panel {
+            background-color: #090D16;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.5rem;
+        }
+        .glass-elevated {
+            background-color: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 0.5rem;
+        }
+        .active-glow:focus-within, .active-glow.active {
+            box-shadow: 0 0 8px 2px rgba(173, 198, 255, 0.15); /* accent_glow derived from primary */
+            border-color: rgba(173, 198, 255, 0.3);
+        }
+
+        /* Custom Scrollbar for chips */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Component specific */
+        .tech-input {
+            background-color: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #dee2f1;
+            transition: all 0.2s ease;
+        }
+        .tech-input:focus {
+            outline: none;
+            border-color: #adc6ff;
+            box-shadow: 0 0 8px 2px rgba(173, 198, 255, 0.15);
+        }
+        
+        .chip {
+            background-color: #1b202a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #c2c6d6;
+            transition: all 0.2s ease;
+        }
+        .chip.active {
+            background-color: rgba(173, 198, 255, 0.1);
+            border-color: #adc6ff;
+            color: #adc6ff;
+        }
+        
+        .card-divider {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-white/10 flex justify-between items-center px-lg h-16 w-full flat no shadows">
+<button class="text-primary dark:text-primary-fixed-dim active:scale-95 transition-transform hover:opacity-80 transition-opacity flex items-center justify-center p-sm rounded-full">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">keyboard_command_key</span>
+</button>
+<h1 class="font-headline-md text-headline-md-mobile font-bold tracking-tight text-primary">إدارة المهام</h1>
+<button class="text-primary dark:text-primary-fixed-dim active:scale-95 transition-transform hover:opacity-80 transition-opacity flex items-center justify-center p-sm rounded-full">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings_voice</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="w-full px-md md:px-lg max-w-container-max mx-auto pb-24 md:pb-0">
+<!-- Search Section -->
+<div class="mt-md mb-lg relative active-glow rounded-xl">
+<span class="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 text-on-surface-variant z-10 pointer-events-none">search</span>
+<input class="w-full h-12 pl-md pr-12 rounded-xl tech-input font-body-md text-body-md" placeholder="البحث في المهام..." type="text"/>
+<button class="absolute left-md top-1/2 -translate-y-1/2 text-primary hover:text-primary-fixed transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-sm overflow-x-auto hide-scrollbar mb-lg pb-sm -mx-md px-md md:mx-0 md:px-0">
+<button class="chip active flex items-center justify-center h-8 px-md rounded-full font-code-sm text-code-sm whitespace-nowrap">الكل</button>
+<button class="chip flex items-center justify-center h-8 px-md rounded-full font-code-sm text-code-sm whitespace-nowrap">
+<span class="w-2 h-2 rounded-full bg-secondary-container ml-sm animate-pulse"></span>
+                قيد التنفيذ
+            </button>
+<button class="chip flex items-center justify-center h-8 px-md rounded-full font-code-sm text-code-sm whitespace-nowrap">
+<span class="w-2 h-2 rounded-full bg-primary ml-sm"></span>
+                مكتمل
+            </button>
+<button class="chip flex items-center justify-center h-8 px-md rounded-full font-code-sm text-code-sm whitespace-nowrap">
+<span class="w-2 h-2 rounded-full bg-error ml-sm"></span>
+                متأخر
+            </button>
+</div>
+<!-- Task List -->
+<div class="flex flex-col gap-md">
+<!-- Task Card 1 (High Priority, In Progress) -->
+<article class="glass-panel p-md hover:bg-surface-bright/50 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-sm card-divider pb-sm">
+<div class="flex items-center gap-sm">
+<span class="px-2 py-1 rounded bg-error-container/30 border border-error-container text-error font-code-sm text-[10px] leading-tight">عالي</span>
+<h3 class="font-headline-md text-[18px] leading-[24px] font-semibold text-on-surface group-hover:text-primary transition-colors">تحديث محرك الصير (Renderer)</h3>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant font-code-sm text-code-sm mb-md">
+<span class="material-symbols-outlined text-[16px]">folder</span>
+<span class="text-xs">core/graphics</span>
+</div>
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span class="font-code-sm text-[12px]">غداً, 14:00</span>
+</div>
+<div class="flex items-center gap-xs text-secondary-fixed-dim">
+<span class="material-symbols-outlined text-[16px] animate-pulse">sync</span>
+<span class="font-code-sm text-[12px]">قيد التنفيذ</span>
+</div>
+</div>
+<div class="flex -space-x-2 -space-x-reverse">
+<img alt="Assignee" class="w-8 h-8 rounded-full border-2 border-background object-cover bg-surface-container-high" data-alt="A small, stylized avatar portrait of a developer with futuristic cyberpunk neon lighting, highly detailed face, dark background, 8k resolution, minimalist sleek tech aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYDQ_8-BBNK7FC0LxExyZg-6tPcavrtlO09CUIx8YnVyH3759N8BjuZ5KNaDlpWkCd7NbIwKdNaoo2sEYKFWPXo8aLUamPYmrQXq_6hhDa-piZ-nqkl-7GSXQUm4fgb7g24Y9YhFfFWxEXt2RyO5aKC7S8d9JATxSGe1suV52YoHeu1sZpj4wO-frzYukue6KJuTylzin1CDmAy0hE6gHyEv9YaXo2-gf8Wp8o4J1mR8fw9c7rPGjh"/>
+</div>
+</div>
+</article>
+<!-- Task Card 2 (Medium Priority, Overdue) -->
+<article class="glass-panel p-md hover:bg-surface-bright/50 transition-colors cursor-pointer group border-error/30">
+<div class="flex justify-between items-start mb-sm card-divider pb-sm">
+<div class="flex items-center gap-sm">
+<span class="px-2 py-1 rounded bg-tertiary-container/30 border border-tertiary-container text-tertiary font-code-sm text-[10px] leading-tight">متوسط</span>
+<h3 class="font-headline-md text-[18px] leading-[24px] font-semibold text-on-surface group-hover:text-primary transition-colors">إصلاح ثغرة Node.js</h3>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant font-code-sm text-code-sm mb-md">
+<span class="material-symbols-outlined text-[16px]">folder</span>
+<span class="text-xs">backend/api</span>
+</div>
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-xs text-error">
+<span class="material-symbols-outlined text-[16px]">error</span>
+<span class="font-code-sm text-[12px]">متأخر (يومين)</span>
+</div>
+</div>
+<div class="flex -space-x-2 -space-x-reverse">
+<img alt="Assignee" class="w-8 h-8 rounded-full border-2 border-background object-cover bg-surface-container-high" data-alt="A small, stylized avatar portrait of a security engineer with red and blue warning lights reflecting on their face, dark high-tech background, crisp focus, cinematic lighting, sleek UI design style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgjfppMIrm-rWBvEfzB-wvcKb52vmpH6PIRiq5lcCFjcU1reg3URKOGq_AWUve-QcVp0aVGJRqmfL-6LbcJiA7Z33v7LdiPyU2C83AIFsHUEb2SPyAL0fo8N500-PPBYnAj-eF6nYlu7p_SWdGnFLxNVCW1GCnvsK-Kwh9uEr9KflTVAMLsPFQAcJJCb4cFvk4icyoKTKuG6UXmWfwAYaZQCU53zfwb-09ReIwTOHFJF3L0h31gLkz"/>
+<div class="w-8 h-8 rounded-full border-2 border-background bg-surface-container flex items-center justify-center text-on-surface-variant font-code-sm text-[10px]">+1</div>
+</div>
+</div>
+</article>
+<!-- Task Card 3 (Low Priority, Completed) -->
+<article class="glass-panel p-md hover:bg-surface-bright/50 transition-colors cursor-pointer group opacity-70">
+<div class="flex justify-between items-start mb-sm card-divider pb-sm">
+<div class="flex items-center gap-sm">
+<span class="px-2 py-1 rounded bg-surface-container/50 border border-outline-variant text-on-surface-variant font-code-sm text-[10px] leading-tight">منخفض</span>
+<h3 class="font-headline-md text-[18px] leading-[24px] font-semibold text-on-surface-variant line-through">تحسين ضغط الأنسجة</h3>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant font-code-sm text-code-sm mb-md">
+<span class="material-symbols-outlined text-[16px]">folder</span>
+<span class="text-xs">assets/textures</span>
+</div>
+<div class="flex justify-between items-end">
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-xs text-primary">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+<span class="font-code-sm text-[12px]">تم الانتهاء</span>
+</div>
+</div>
+<div class="flex -space-x-2 -space-x-reverse">
+<img alt="Assignee" class="w-8 h-8 rounded-full border-2 border-background object-cover bg-surface-container-high" data-alt="A small, minimalist icon representing an automated system bot or AI avatar, clean lines, glowing blue elements, set against a dark void background, high tech aesthetic, sharp edges." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDflM3ZPRR0khq3x4HM9DI54RaQzKehirWwidKTVE9mu1xaYxDyXVXz4qcAybugTA8fCPxj7qcyof0hjafNQdfTNqhl1d9D2Yic1KpH8T8xwhw5ebms2C_3n20SrlFGhQRVHx69aWfsdUmkhJOKedL5r1rglk1hHjVEieE--3IRl3UgBdHzqChm74pwqO-4s6MLLe-XrGZM16VCZcjK7jdgvR0ynNEkFUDaL_J2EWeHLnYefvuUASlf"/>
+</div>
+</div>
+</article>
+</div>
+</main>
+<!-- FAB (Floating Action Button) -->
+<!-- Suppressed based on FAB rules: Tasks list is a primary screen, but instructions say "Use BottomNavBar with Tasks active". A task management screen *could* warrant a FAB for adding tasks, and the prompt specifically requests it: "Floating Action Button (FAB) with a '+' icon to add a new task." Therefore, include it. -->
+<button class="fixed bottom-[100px] left-md md:left-lg w-14 h-14 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(173,198,255,0.4)] hover:scale-105 active:scale-95 transition-all z-40 md:hidden">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'wght' 600;">add</span>
+</button>
+<!-- BottomNavBar (Mobile Only based on rules) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container-low/90 dark:bg-surface-container-low/90 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-20 px-md w-full pb-safe flat no shadows">
+<!-- Dashboard -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant pt-2 hover:text-primary-fixed transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<!-- Tasks (Active) -->
+<a class="flex flex-col items-center justify-center text-primary border-t-2 border-primary pt-2 hover:text-primary-fixed transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span class="font-label-caps text-label-caps">Tasks</span>
+</a>
+<!-- Deployments -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant pt-2 hover:text-primary-fixed transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">rocket_launch</span>
+<span class="font-label-caps text-label-caps">Deployments</span>
+</a>
+<!-- Settings -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant pt-2 hover:text-primary-fixed transition-colors active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-label-caps text-label-caps">Settings</span>
+</a>
+</nav>
+<script>
+        // Simple interactivity for chips
+        document.querySelectorAll('.chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body></html>

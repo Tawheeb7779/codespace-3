@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeSpace 3D - Export System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#303540",
+                    "surface-dim": "#0e131d",
+                    "secondary": "#a4c9ff",
+                    "on-primary-container": "#00285d",
+                    "outline": "#8c909f",
+                    "tertiary-container": "#df7412",
+                    "on-primary-fixed": "#001a42",
+                    "tertiary-fixed-dim": "#ffb786",
+                    "inverse-primary": "#005ac2",
+                    "on-primary": "#002e6a",
+                    "primary-fixed": "#d8e2ff",
+                    "surface-bright": "#343944",
+                    "primary-container": "#4d8eff",
+                    "surface-container": "#1b202a",
+                    "on-surface-variant": "#c2c6d6",
+                    "error-container": "#93000a",
+                    "secondary-container": "#0267b8",
+                    "on-tertiary-fixed": "#311400",
+                    "on-secondary": "#00315d",
+                    "error": "#ffb4ab",
+                    "primary-fixed-dim": "#adc6ff",
+                    "inverse-on-surface": "#2b303b",
+                    "surface-tint": "#adc6ff",
+                    "on-surface": "#dee2f1",
+                    "on-tertiary": "#502400",
+                    "on-error": "#690005",
+                    "background": "#0e131d",
+                    "secondary-fixed": "#d4e3ff",
+                    "on-error-container": "#ffdad6",
+                    "surface-container-low": "#171c26",
+                    "on-background": "#dee2f1",
+                    "on-secondary-fixed-variant": "#004883",
+                    "inverse-surface": "#dee2f1",
+                    "surface": "#0e131d",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-tertiary-container": "#461f00",
+                    "tertiary": "#ffb786",
+                    "secondary-fixed-dim": "#a4c9ff",
+                    "tertiary-fixed": "#ffdcc6",
+                    "surface-container-lowest": "#090e18",
+                    "outline-variant": "#424754",
+                    "surface-container-high": "#252a35",
+                    "on-tertiary-fixed-variant": "#723600",
+                    "on-secondary-fixed": "#001c39",
+                    "surface-variant": "#303540",
+                    "primary": "#adc6ff",
+                    "on-secondary-container": "#d6e5ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "20px",
+                    "md": "16px",
+                    "container-max": "1440px",
+                    "sm": "8px",
+                    "xl": "40px",
+                    "lg": "24px",
+                    "unit": "4px",
+                    "xs": "4px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Inter"],
+                    "body-md": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "code-sm": ["JetBrains Mono"],
+                    "body-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "headline-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "code-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(14, 19, 29, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(140, 144, 159, 0.12);
+        }
+        .glow-active {
+            box-shadow: 0 0 12px rgba(173, 198, 255, 0.2);
+            border-color: rgba(173, 198, 255, 0.4);
+        }
+        .pulse-primary {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(77, 142, 255, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(77, 142, 255, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(77, 142, 255, 0); }
+        }
+        .audio-bar {
+            width: 4px;
+            background-color: #adc6ff;
+            border-radius: 2px;
+            animation: equalize 1s infinite alternate ease-in-out;
+        }
+        @keyframes equalize {
+            0% { height: 4px; }
+            100% { height: 24px; }
+        }
+        .audio-bar:nth-child(1) { animation-delay: 0.1s; }
+        .audio-bar:nth-child(2) { animation-delay: 0.4s; }
+        .audio-bar:nth-child(3) { animation-delay: 0.2s; }
+        .audio-bar:nth-child(4) { animation-delay: 0.5s; }
+        .audio-bar:nth-child(5) { animation-delay: 0.3s; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md overflow-hidden relative selection:bg-primary-container selection:text-on-primary-container"><div class="fixed top-16 right-4 z-[60] flex flex-col gap-sm pointer-events-none" id="notification-overlay"><div class="glass-panel rounded-xl p-md border-primary/30 shadow-[0_0_20px_rgba(173,198,255,0.3)] flex items-center gap-md animate-pulse pointer-events-auto"><div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary"><span class="material-symbols-outlined">check_circle</span></div><div><h4 class="font-body-md font-semibold text-on-surface">Build Successful</h4><p class="font-code-sm text-on-surface-variant">Assets compressed and ready</p></div><button class="ml-auto text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[18px]">close</span></button></div></div>
+<!-- Background Decoration -->
+<div class="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+<div class="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary-container/10 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[-20%] right-[-10%] w-[40%] h-[40%] bg-secondary-container/10 rounded-full blur-[100px]"></div>
+<div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiLz48L3N2Zz4=')] [mask-image:linear-gradient(to_bottom,black_40%,transparent_100%)] z-0"></div>
+</div>
+<!-- TopNavBar -->
+<nav class="bg-surface-container/60 backdrop-blur-xl w-full h-14 border-b border-outline-variant/30 flex items-center justify-between px-gutter sticky top-0 z-50">
+<div class="flex items-center gap-lg">
+<div class="font-headline-md text-headline-md font-bold tracking-tight text-primary flex items-center gap-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">view_in_ar</span>
+                CodeSpace 3D
+            </div>
+<div class="hidden md:flex items-center gap-md ml-lg">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md px-sm py-xs rounded hover:bg-white/5 transition-all duration-200 ease-in-out" href="#">Build</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md px-sm py-xs rounded hover:bg-white/5 transition-all duration-200 ease-in-out" href="#">Debug</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-body-md text-body-md px-sm py-xs" href="#">Deploy</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-on-surface p-xs rounded hover:bg-white/5 transition-all duration-200 ease-in-out flex items-center justify-center relative">
+<span class="material-symbols-outlined">notifications</span>
+<div class="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border border-surface-dim"></div></button>
+<button class="text-on-surface-variant hover:text-on-surface p-xs rounded hover:bg-white/5 transition-all duration-200 ease-in-out flex items-center justify-center">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/50 ml-sm">
+<img alt="Developer Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfKUeQsSuu4zklZYc1umWj6DbbgAIhPJeLZfSSgmwSYzchjgLvoNUrGn50SyNSX0K0uO8tSOE64uGxW00TwXSGzB8xfOPSWiYpJxSLAG13qpavoLM4TG1USNmyJG7qNl9fLiNc33LCaoRCXmUeSqxEOomGwHkwc4GzrPcrg7SzgXAd67x9EJBLtKlncC99piX_q00i2CeCthRelzj58lnT3vqIH5p_NM5RxLvNPdq4XyQjzFRQSqdh"/>
+</div>
+</div>
+</nav>
+<div class="flex flex-1 overflow-hidden relative z-10 w-full max-w-container-max mx-auto">
+<!-- SideNavBar -->
+<aside class="bg-surface-container-low/80 backdrop-blur-md w-[280px] h-full border-r border-outline-variant/20 hidden md:flex flex-col flex-shrink-0">
+<div class="p-lg border-b border-outline-variant/20 flex items-center gap-md">
+<div class="w-10 h-10 rounded bg-primary-container/20 border border-primary/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">dataset</span>
+</div>
+<div>
+<h2 class="font-body-md text-body-md font-semibold text-on-surface">Project Alpha</h2>
+<p class="font-code-sm text-code-sm text-on-surface-variant">V3.2.0</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto py-md">
+<nav class="flex flex-col gap-unit px-sm">
+<a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant/70 hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">folder_open</span>
+<span class="font-label-caps text-label-caps tracking-wider">Workspace</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant/70 hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">inventory_2</span>
+<span class="font-label-caps text-label-caps tracking-wider">Assets</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant/70 hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">terminal</span>
+<span class="font-label-caps text-label-caps tracking-wider">Terminal</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant/70 hover:text-on-surface hover:bg-surface-variant/30 transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">settings</span>
+<span class="font-label-caps text-label-caps tracking-wider">Settings</span>
+</a>
+</nav>
+</div>
+<div class="p-md border-t border-outline-variant/20">
+<button class="w-full flex items-center justify-center gap-sm bg-transparent border border-outline hover:border-primary text-on-surface hover:text-primary py-sm px-md rounded transition-all duration-300 font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    New Asset
+                </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto p-lg lg:p-xl flex flex-col xl:flex-row gap-lg xl:gap-xl">
+<!-- Canvas / Left Column -->
+<div class="flex-1 flex flex-col gap-lg max-w-4xl">
+<header class="mb-sm">
+<h1 class="font-headline-lg text-headline-lg text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">outbox</span>
+                        Export Project
+                    </h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-unit">Configure build parameters and generate production assets.</p>
+</header>
+<!-- Target Platform Cards -->
+<section>
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-md tracking-wider">Target Platform</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<!-- Option 1: Web -->
+<div class="glass-panel rounded-xl p-md cursor-pointer glow-active flex flex-col items-center justify-center gap-md text-center transition-all duration-300 group relative overflow-hidden">
+<div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center text-primary mb-xs">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">language</span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface font-semibold">Web Build</h4>
+<p class="font-code-sm text-code-sm text-on-surface-variant mt-unit">WebGL / WebGPU</p>
+</div>
+<div class="absolute top-sm right-sm text-primary">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+</div>
+<!-- Option 2: Mobile -->
+<div class="glass-panel rounded-xl p-md cursor-pointer hover:border-outline hover:bg-surface-variant/30 flex flex-col items-center justify-center gap-md text-center transition-all duration-300 group">
+<div class="w-12 h-12 rounded-full bg-surface-bright flex items-center justify-center text-on-surface-variant mb-xs group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[28px]">smartphone</span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface font-semibold">Native Mobile</h4>
+<p class="font-code-sm text-code-sm text-on-surface-variant mt-unit">iOS / Android</p>
+</div>
+</div>
+<!-- Option 3: Desktop -->
+<div class="glass-panel rounded-xl p-md cursor-pointer hover:border-outline hover:bg-surface-variant/30 flex flex-col items-center justify-center gap-md text-center transition-all duration-300 group">
+<div class="w-12 h-12 rounded-full bg-surface-bright flex items-center justify-center text-on-surface-variant mb-xs group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[28px]">desktop_windows</span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface font-semibold">Desktop App</h4>
+<p class="font-code-sm text-code-sm text-on-surface-variant mt-unit">Windows / macOS / Linux</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Quality Settings -->
+<section class="glass-panel rounded-xl p-lg flex flex-col gap-md">
+<div class="flex items-center justify-between border-b border-outline-variant/20 pb-sm">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant tracking-wider">Quality Presets</h3>
+<div class="flex gap-sm">
+<button class="font-code-sm text-code-sm px-sm py-xs rounded bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-colors">Low</button>
+<button class="font-code-sm text-code-sm px-sm py-xs rounded bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-colors">Medium</button>
+<button class="font-code-sm text-code-sm px-sm py-xs rounded bg-primary-container/20 border border-primary text-primary font-semibold">High</button>
+<button class="font-code-sm text-code-sm px-sm py-xs rounded bg-surface border border-outline-variant/30 text-on-surface-variant hover:text-on-surface transition-colors">Ultra</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-lg gap-y-md mt-sm">
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-on-surface">Texture Resolution</span>
+<span class="font-code-sm text-code-sm text-primary">4096 x 4096</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-on-surface">Mesh Compression</span>
+<span class="font-code-sm text-code-sm text-primary">Draco (Aggressive)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-on-surface">Shader Model</span>
+<span class="font-code-sm text-code-sm text-primary">PBR (High-End)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-on-surface">Minification</span>
+<span class="font-code-sm text-code-sm text-primary">Terser (Full)</span>
+</div>
+</div>
+</section>
+<!-- Action Area -->
+<section class="mt-auto pt-lg border-t border-outline-variant/20 flex items-center justify-between">
+<div class="flex items-center gap-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px] text-tertiary">warning</span>
+<span class="font-code-sm text-code-sm">Estimated build time: ~2m 45s</span>
+</div>
+<button class="bg-primary hover:bg-primary-fixed text-on-primary font-body-md text-body-md font-semibold py-sm px-lg rounded-lg flex items-center gap-sm transition-all duration-300 shadow-[0_0_20px_rgba(173,198,255,0.3)] pulse-primary">
+<span class="material-symbols-outlined">rocket_launch</span>
+                        Initialize Export
+                    </button>
+</section>
+</div>
+<!-- AI Voice Assistant Sidebar -->
+<aside class="w-full xl:w-[360px] flex-shrink-0 flex flex-col gap-md">
+<div class="glass-panel rounded-xl p-lg flex-1 flex flex-col relative overflow-hidden">
+<!-- Top Gradient Glow -->
+<div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none"></div>
+<header class="flex items-center gap-sm border-b border-outline-variant/20 pb-md relative z-10">
+<div class="w-8 h-8 rounded-full bg-primary/20 border border-primary/50 flex items-center justify-center text-primary relative">
+<span class="material-symbols-outlined text-[18px]">graphic_eq</span>
+<div class="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full border-2 border-surface-dim animate-pulse"></div>
+</div>
+<div>
+<h2 class="font-body-md text-body-md font-semibold text-on-surface">Nexus AI</h2>
+<p class="font-label-caps text-label-caps text-primary/80">Voice Assistant Ready</p>
+</div>
+</header>
+<div class="flex-1 py-lg flex flex-col justify-end gap-lg relative z-10">
+<!-- Status & Waveform -->
+<div class="flex flex-col items-center justify-center py-lg mb-auto">
+<div class="flex items-end h-8 gap-1 mb-md">
+<div class="audio-bar"></div>
+<div class="audio-bar"></div>
+<div class="audio-bar"></div>
+<div class="audio-bar"></div>
+<div class="audio-bar"></div>
+</div>
+<p class="font-code-sm text-code-sm text-primary animate-pulse text-center">Nexus AI: Your production build is ready. Would you like to download it now?</p>
+</div>
+<!-- Live Transcription -->
+<div class="bg-surface-container-highest/50 border border-outline-variant/30 rounded-lg p-md relative">
+<div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-surface-container-highest/50 border-l border-b border-outline-variant/30 rotate-45"></div>
+<p class="font-body-md text-body-md text-on-surface italic leading-relaxed">
+                                "Export the project for production with high quality settings."
+                            </p>
+<div class="flex items-center justify-between mt-sm pt-sm border-t border-outline-variant/20">
+<span class="font-code-sm text-code-sm text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">mic</span> Processing command
+                                </span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Just now</span>
+</div>
+</div>
+<!-- Suggestions -->
+<div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant mb-sm tracking-wider">Suggested Commands</h4>
+<div class="flex flex-col gap-sm">
+<button class="w-full text-left font-code-sm text-code-sm text-on-surface bg-surface-container/50 hover:bg-surface-variant/50 border border-outline-variant/20 hover:border-primary/50 py-sm px-md rounded transition-all flex items-center gap-sm group">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:text-primary transition-colors">play_arrow</span>
+                                    "Start production build"
+                                </button>
+<button class="w-full text-left font-code-sm text-code-sm text-on-surface bg-surface-container/50 hover:bg-surface-variant/50 border border-outline-variant/20 hover:border-primary/50 py-sm px-md rounded transition-all flex items-center gap-sm group">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:text-primary transition-colors">download</span>
+                                    "Download last export"
+                                </button>
+<button class="w-full text-left font-code-sm text-code-sm text-on-surface bg-surface-container/50 hover:bg-surface-variant/50 border border-outline-variant/20 hover:border-primary/50 py-sm px-md rounded transition-all flex items-center gap-sm group">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:text-primary transition-colors">swap_horiz</span>
+                                    "Change export format to Web"
+                                </button>
+<button class="w-full text-left font-code-sm text-code-sm text-on-surface bg-surface-container/50 hover:bg-surface-variant/50 border border-outline-variant/20 hover:border-primary/50 py-sm px-md rounded transition-all flex items-center gap-sm group"><span class="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:text-primary transition-colors">notification_important</span>"Show last export alert"</button><button class="w-full text-left font-code-sm text-code-sm text-on-surface bg-surface-container/50 hover:bg-surface-variant/50 border border-outline-variant/20 hover:border-primary/50 py-sm px-md rounded transition-all flex items-center gap-sm group"><span class="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:text-primary transition-colors">notifications_off</span>"Silence export notifications"</button></div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="relative mt-sm z-10">
+<input class="w-full bg-surface border border-outline-variant/30 rounded-lg py-sm pl-md pr-10 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="Type or speak command..." type="text"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary p-xs transition-colors">
+<span class="material-symbols-outlined text-[20px]">mic</span>
+</button>
+</div>
+</div>
+</aside>
+</main>
+</div>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest/90 backdrop-blur-lg w-full h-8 border-t border-outline-variant/30 fixed bottom-0 left-0 flex items-center justify-between px-4 z-50">
+<div class="font-headline-md text-headline-md text-primary hidden">CodeSpace 3D</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">
+            System Health: Optimal | Latency: 24ms
+        </div>
+<div class="flex items-center gap-md">
+<a class="font-code-sm text-code-sm text-tertiary-fixed font-bold transition-opacity duration-150 hover:text-primary flex items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[16px] animate-pulse">mic</span> Voice Assistant Ready
+            </a>
+<a class="font-code-sm text-code-sm text-on-surface-variant transition-opacity duration-150 hover:text-primary" href="#">
+                Documentation
+            </a>
+</div>
+</footer>
+</body></html>

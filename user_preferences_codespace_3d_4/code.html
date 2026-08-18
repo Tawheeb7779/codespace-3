@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeSpace 3D - Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error-container": "#ffdad6",
+                      "on-background": "#dae2fd",
+                      "on-primary-container": "#00285d",
+                      "primary": "#adc6ff",
+                      "inverse-surface": "#dae2fd",
+                      "surface-container-high": "#222a3d",
+                      "background": "#0b1326",
+                      "primary-fixed-dim": "#adc6ff",
+                      "primary-fixed": "#d8e2ff",
+                      "on-surface-variant": "#c2c6d6",
+                      "secondary-container": "#03b5d3",
+                      "on-tertiary": "#3c0091",
+                      "on-secondary-fixed-variant": "#004e5c",
+                      "primary-container": "#4d8eff",
+                      "tertiary-container": "#a078ff",
+                      "surface-bright": "#31394d",
+                      "on-tertiary-container": "#340080",
+                      "surface-tint": "#adc6ff",
+                      "surface-dim": "#0b1326",
+                      "error": "#ffb4ab",
+                      "secondary-fixed-dim": "#4cd7f6",
+                      "surface-container": "#171f33",
+                      "on-primary": "#002e6a",
+                      "on-error": "#690005",
+                      "on-primary-fixed-variant": "#004395",
+                      "on-secondary-fixed": "#001f26",
+                      "tertiary": "#d0bcff",
+                      "on-surface": "#dae2fd",
+                      "secondary": "#4cd7f6",
+                      "tertiary-fixed-dim": "#d0bcff",
+                      "inverse-primary": "#005ac2",
+                      "surface-container-highest": "#2d3449",
+                      "outline": "#8c909f",
+                      "on-tertiary-fixed": "#23005c",
+                      "on-secondary": "#003640",
+                      "surface-variant": "#2d3449",
+                      "outline-variant": "#424754",
+                      "tertiary-fixed": "#e9ddff",
+                      "inverse-on-surface": "#283044",
+                      "secondary-fixed": "#acedff",
+                      "surface": "#0b1326",
+                      "surface-container-low": "#131b2e",
+                      "on-tertiary-fixed-variant": "#5516be",
+                      "surface-container-lowest": "#060e20",
+                      "on-primary-fixed": "#001a42",
+                      "error-container": "#93000a",
+                      "on-secondary-container": "#00424e"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "container-padding": "24px",
+                      "stack-gap": "12px",
+                      "gutter": "16px"
+              },
+              "fontFamily": {
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "code-md": [
+                              "JetBrains Mono"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "code-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        
+        .glass-level-1 {
+            background: rgba(11, 19, 38, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .glass-level-2 {
+            background: rgba(23, 31, 51, 0.5);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-level-3 {
+            background: rgba(45, 52, 73, 0.7);
+            backdrop-filter: blur(60px);
+            -webkit-backdrop-filter: blur(60px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .glass-level-4 {
+            background: rgba(45, 52, 73, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .glow-active {
+            box-shadow: 0 0 20px theme('colors.primary'), inset 0 0 0 1px theme('colors.primary');
+            border-color: theme('colors.primary');
+        }
+        
+        .input-glow {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .input-glow:focus {
+            box-shadow: 0 0 15px rgba(173, 198, 255, 0.25), inset 0 0 0 1px theme('colors.primary');
+            border-color: theme('colors.primary');
+            transform: translateY(-1px);
+            outline: none;
+        }
+
+        .glass-card-header-divider {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes float-gentle {
+            0%, 100% { transform: translateY(0); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+            50% { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(173, 198, 255, 0.1); }
+        }
+
+        .hover-float {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hover-float:hover {
+            animation: float-gentle 3s ease-in-out infinite;
+            border-color: rgba(173, 198, 255, 0.3);
+        }
+
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stagger-fade-1 { animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; animation-delay: 0.1s; }
+        .stagger-fade-2 { animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; animation-delay: 0.2s; }
+        .stagger-fade-3 { animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; animation-delay: 0.3s; }
+        
+        /* Custom Scrollbar for inner content */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+      </style>
+</head>
+<body class="font-body-md text-body-md antialiased overflow-hidden w-screen h-screen">
+<!-- Ambient Background -->
+<div class="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+<div class="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-primary/20 rounded-full blur-[120px] mix-blend-screen transition-all duration-1000"></div>
+<div class="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-tertiary-container/10 rounded-full blur-[150px] mix-blend-screen transition-all duration-1000"></div>
+</div>
+<!-- Main Application Shell -->
+<div class="flex h-full w-full">
+<!-- SideNavBar Component -->
+<nav class="w-[280px] h-full fixed left-0 top-0 border-r border-outline-variant bg-surface-container-low/50 backdrop-blur-xl flex flex-col py-lg px-md z-20 transition-all duration-300">
+<!-- Brand / Header -->
+<div class="mb-12 px-4">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary">CodeSpace 3D</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">v2.4.0-stable</p>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 space-y-2">
+<!-- Inactive Tab 1 -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:text-on-surface hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined transition-transform duration-300 group-hover:scale-110" data-weight="regular">palette</span>
+<span class="font-body-md text-body-md">Appearance</span>
+</a>
+<!-- Inactive Tab 2 -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:text-on-surface hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined transition-transform duration-300 group-hover:scale-110" data-weight="regular">code</span>
+<span class="font-body-md text-body-md">Editor</span>
+</a>
+<!-- Inactive Tab 3 -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:text-on-surface hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined transition-transform duration-300 group-hover:scale-110" data-weight="regular">keyboard</span>
+<span class="font-body-md text-body-md">Keybindings</span>
+</a>
+<!-- Active Tab -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary font-bold bg-secondary-container/20 border-r-2 border-primary hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined transition-transform duration-300 group-hover:scale-110" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-body-md text-body-md">Account</span>
+</a>
+<!-- Inactive Tab 5 -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant font-medium hover:text-on-surface hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined transition-transform duration-300 group-hover:scale-110" data-weight="regular">settings</span>
+<span class="font-body-md text-body-md">System</span>
+</a>
+</div>
+<!-- Bottom CTA -->
+<div class="mt-auto pt-6 px-4">
+<button class="w-full glass-level-4 text-primary font-label-sm text-label-sm py-3 px-4 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/20 hover:border-primary/30 hover:shadow-[0_0_15px_rgba(173,198,255,0.15)] transition-all duration-300 cursor-pointer active:scale-95 group">
+<span class="material-symbols-outlined text-[18px] group-hover:rotate-12 transition-transform duration-300">save</span>
+                    Save Changes
+                </button>
+</div>
+</nav>
+<!-- Main Content Area (Offset by SideNav) -->
+<main class="ml-[280px] flex-1 flex flex-col h-full relative">
+<!-- TopAppBar Component -->
+<header class="fixed top-0 right-0 left-[280px] h-16 border-b border-outline-variant bg-surface/80 backdrop-blur-md flex items-center justify-between px-lg w-full z-10">
+<div class="flex-1">
+<!-- Search / Command Palette Trigger -->
+<div class="relative w-96 max-w-md group cursor-pointer glass-level-1 rounded-full px-4 py-2 border border-outline-variant/50 hover:border-primary/50 transition-all duration-300 hover:shadow-[0_0_15px_rgba(173,198,255,0.1)] flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors duration-300">search</span>
+<span class="text-on-surface-variant text-sm font-code-md">Type / to search settings...</span>
+<div class="ml-auto flex gap-1">
+<span class="glass-level-3 px-2 py-0.5 rounded text-xs text-on-surface-variant border border-outline-variant/30">⌘</span>
+<span class="glass-level-3 px-2 py-0.5 rounded text-xs text-on-surface-variant border border-outline-variant/30">K</span>
+</div>
+</div>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/50 transition-all duration-300 rounded-full">
+<span class="material-symbols-outlined hover:scale-110 transition-transform">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/50 transition-all duration-300 rounded-full">
+<span class="material-symbols-outlined hover:scale-110 transition-transform">help</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/50 transition-all duration-300 rounded-full">
+<span class="material-symbols-outlined hover:scale-110 transition-transform">logout</span>
+</button>
+</div>
+<div class="w-px h-8 bg-outline-variant/50 mx-2"></div>
+<!-- Profile -->
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant hover:border-primary/50 transition-colors duration-300 cursor-pointer relative group">
+<img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-alt="A detailed headshot portrait of a software engineer in a futuristic, low-light setting with subtle neon cyan reflections on their face, high-quality, sharp focus, capturing a highly professional yet slightly cyberpunk aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP5YpsxIV9LEN6YMoeP1Yq1PEa6VB2sWHu1CXySBZvz746KfxwBq4zb6O2oGUXmSEZAhbpEgckZm-3NfC50QRvX0Jm74R_tef3wE6C5hp5ghpPGOXbk1bMitMVpX-f0WVhSpSa41rLTuBZTqaagek8B8XRuknMRv33xgwjUuqi8CbPVNV6mHdc5i7jWP6inQF1sc3U3_cIQlBGllKTSfMDF1IBaWkZKADbI9zNeHhBECuSaqV-eeFX"/>
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+</div>
+</div>
+</header>
+<!-- Scrollable Content Canvas -->
+<div class="flex-1 overflow-y-auto mt-16 p-container-padding scroll-smooth">
+<!-- Page Header -->
+<div class="max-w-5xl mx-auto mb-10 stagger-fade-1">
+<h2 class="font-display-lg text-display-lg text-on-surface">Account Settings</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-2 max-w-2xl">Manage your personal information, security preferences, and workspace integration settings.</p>
+</div>
+<!-- Settings Grid -->
+<div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 pb-20">
+<!-- Left Column: Profile Card -->
+<div class="lg:col-span-1 space-y-6 stagger-fade-2">
+<div class="glass-level-2 rounded-xl p-6 flex flex-col items-center text-center hover-float">
+<div class="relative w-32 h-32 rounded-full overflow-hidden border-2 border-primary/30 mb-4 group cursor-pointer transition-transform duration-500 hover:scale-105 hover:border-primary/60">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="A detailed headshot portrait of a software engineer in a futuristic, low-light setting with subtle neon cyan reflections on their face, high-quality, sharp focus, capturing a highly professional yet slightly cyberpunk aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGep_o2h69T9zysZsIO1cIuGNhh9213yH_L0CYfoPd01Stk338-UWi2WJ6y-pgtNyu_4z2VECOLJ_j2qK-dhsD3rg5Oyy5F-39iNPU-YUdMg0r1eAvMSnTK_NJhFavJS9PSO3s_8dxdrplyojYzxRYF_6In9u9wRsV81fW5VA3ChhA5Tza_cHnxfzzmrGGMpvc3Dr6Uxx2K-12f40oAR6IJ1QA-5vo8IF7pcpvH3kCtOVGVrMkKC0_"/>
+<div class="absolute inset-0 bg-surface/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm">
+<span class="material-symbols-outlined text-on-surface transform scale-75 group-hover:scale-100 transition-transform duration-300">photo_camera</span>
+</div>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Alex Mercer</h3>
+<p class="font-body-md text-body-md text-primary mt-1">Senior Architect</p>
+<div class="w-full mt-6 space-y-3">
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/30">
+<span class="text-on-surface-variant text-sm">Status</span>
+<span class="flex items-center gap-2 text-sm text-secondary"><span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_theme('colors.secondary')] animate-pulse"></span> Online</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/30">
+<span class="text-on-surface-variant text-sm">Workspace</span>
+<span class="text-on-surface text-sm">Alpha Sector</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-on-surface-variant text-sm">Joined</span>
+<span class="text-on-surface text-sm">Oct 2023</span>
+</div>
+</div>
+</div>
+<!-- Voice Control Widget -->
+<div class="glass-level-2 rounded-xl overflow-hidden relative group hover:border-tertiary/30 transition-colors duration-300">
+<div class="absolute inset-0 bg-gradient-to-br from-tertiary-container/10 to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="p-5 glass-card-header-divider flex items-center justify-between">
+<h3 class="font-headline-md text-base font-semibold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary">mic</span>
+                                    Voice Commands
+                                </h3>
+<div class="w-12 h-6 bg-surface-container-highest rounded-full relative cursor-pointer shadow-inner transition-colors duration-300 hover:bg-surface-container-highest/80">
+<div class="absolute left-1 top-1 w-4 h-4 bg-tertiary rounded-full shadow-[0_0_10px_theme('colors.tertiary')] transform translate-x-6 transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1)"></div>
+</div>
+</div>
+<div class="p-5">
+<p class="text-sm text-on-surface-variant mb-4">Listening for activation phrase "Computer..."</p>
+<div class="h-12 w-full glass-level-1 rounded-lg border border-outline-variant/30 flex items-center justify-center relative overflow-hidden group-hover:border-tertiary/20 transition-colors duration-300">
+<!-- Simulated Voice Waveform using CSS -->
+<div class="flex items-center gap-1.5 h-8">
+<div class="w-1 bg-tertiary/60 rounded-full animate-[pulse_0.8s_ease-in-out_infinite]" style="height: 40%"></div>
+<div class="w-1 bg-tertiary/80 rounded-full animate-[pulse_1.1s_ease-in-out_infinite_0.1s]" style="height: 70%"></div>
+<div class="w-1 bg-tertiary rounded-full animate-[pulse_0.9s_ease-in-out_infinite_0.2s]" style="height: 100%"></div>
+<div class="w-1 bg-tertiary/80 rounded-full animate-[pulse_1.2s_ease-in-out_infinite_0.3s]" style="height: 80%"></div>
+<div class="w-1 bg-tertiary/60 rounded-full animate-[pulse_1s_ease-in-out_infinite_0.4s]" style="height: 50%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Form Settings -->
+<div class="lg:col-span-2 space-y-6 stagger-fade-3">
+<!-- General Info Card -->
+<div class="glass-level-2 rounded-xl transition-all duration-300 hover:border-outline-variant/80">
+<div class="p-6 glass-card-header-divider">
+<h3 class="font-headline-md text-xl text-on-surface">General Information</h3>
+<p class="text-sm text-on-surface-variant mt-1">Update your basic profile details.</p>
+</div>
+<div class="p-6 space-y-5">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+<div class="space-y-2 group">
+<label class="font-label-sm text-label-sm text-on-surface-variant block group-focus-within:text-primary transition-colors">First Name</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg px-4 py-2.5 text-on-surface font-body-md input-glow" type="text" value="Alex"/>
+</div>
+<div class="space-y-2 group">
+<label class="font-label-sm text-label-sm text-on-surface-variant block group-focus-within:text-primary transition-colors">Last Name</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg px-4 py-2.5 text-on-surface font-body-md input-glow" type="text" value="Mercer"/>
+</div>
+</div>
+<div class="space-y-2 group">
+<label class="font-label-sm text-label-sm text-on-surface-variant block group-focus-within:text-primary transition-colors">Email Address</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-on-surface-variant text-[20px] group-focus-within:text-primary transition-colors">mail</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg pl-10 pr-4 py-2.5 text-on-surface font-body-md input-glow" type="email" value="alex.mercer@codespace.dev"/>
+</div>
+</div>
+<div class="space-y-2 group">
+<label class="font-label-sm text-label-sm text-on-surface-variant block group-focus-within:text-primary transition-colors">Bio</label>
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-lg px-4 py-2.5 text-on-surface font-body-md input-glow resize-none" rows="3">Architecting the next generation of spatial computing interfaces.</textarea>
+</div>
+</div>
+</div>
+<!-- Security & Authentication Card -->
+<div class="glass-level-2 rounded-xl transition-all duration-300 hover:border-outline-variant/80">
+<div class="p-6 glass-card-header-divider flex justify-between items-center">
+<div>
+<h3 class="font-headline-md text-xl text-on-surface">Security</h3>
+<p class="text-sm text-on-surface-variant mt-1">Manage credentials and devices.</p>
+</div>
+<span class="glass-level-3 px-3 py-1 rounded-full text-xs font-label-sm text-secondary border border-secondary/30 flex items-center gap-1 shadow-[0_0_10px_rgba(76,215,246,0.1)]">
+<span class="material-symbols-outlined text-[14px]">shield</span> Secured
+                                </span>
+</div>
+<div class="p-6 space-y-6">
+<!-- Password Change Section -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-surface-container-lowest/50 border border-outline-variant/30 hover:border-primary/30 transition-colors duration-300 group">
+<div>
+<h4 class="font-body-md font-medium text-on-surface group-hover:text-primary transition-colors">Password</h4>
+<p class="text-sm text-on-surface-variant mt-1">Last changed 45 days ago</p>
+</div>
+<button class="glass-level-4 px-4 py-2 rounded-lg text-sm text-on-surface hover:text-primary hover:border-primary/50 hover:shadow-[0_0_10px_rgba(173,198,255,0.15)] transition-all duration-300 active:scale-95">
+                                        Update Password
+                                    </button>
+</div>
+<!-- 2FA Section -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-surface-container-lowest/50 border border-outline-variant/30 hover:border-primary/30 transition-colors duration-300">
+<div class="flex items-start gap-3">
+<div class="p-2 rounded-full bg-primary/10 text-primary mt-1 shadow-[0_0_10px_rgba(173,198,255,0.1)]">
+<span class="material-symbols-outlined text-[20px]">smartphone</span>
+</div>
+<div>
+<h4 class="font-body-md font-medium text-on-surface">Two-Factor Authentication</h4>
+<p class="text-sm text-on-surface-variant mt-1">Authenticator app configured</p>
+</div>
+</div>
+<div class="w-12 h-6 bg-surface-container-highest rounded-full relative cursor-pointer shadow-inner hover:bg-surface-container-highest/80 transition-colors">
+<div class="absolute left-1 top-1 w-4 h-4 bg-primary rounded-full shadow-[0_0_10px_theme('colors.primary')] transform translate-x-6 transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1)"></div>
+</div>
+</div>
+<!-- Active Sessions -->
+<div>
+<h4 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-3">Active Sessions</h4>
+<div class="space-y-3">
+<div class="flex items-center justify-between py-2 border-b border-outline-variant/20 hover:bg-surface-container-lowest/30 px-2 rounded-lg transition-colors duration-200">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">desktop_mac</span>
+<div>
+<p class="text-sm text-on-surface">MacBook Pro - San Francisco, CA</p>
+<p class="text-xs text-secondary mt-0.5">Current Session</p>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between py-2 hover:bg-surface-container-lowest/30 px-2 rounded-lg transition-colors duration-200 group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">terminal</span>
+<div>
+<p class="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Linux Server - AWS US-East</p>
+<p class="text-xs text-on-surface-variant/70 mt-0.5">Last active: 2 hours ago</p>
+</div>
+</div>
+<button class="text-error/80 text-sm hover:text-error hover:underline transition-colors active:scale-95">Revoke</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

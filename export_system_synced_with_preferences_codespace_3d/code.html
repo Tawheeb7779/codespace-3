@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>نظام تصدير المشروع - CodeSpace 3D</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;family=Cairo:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#004395",
+                        "on-secondary-container": "#d6e5ff",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "secondary": "#a4c9ff",
+                        "surface-container-lowest": "#090e18",
+                        "on-background": "#dee2f1",
+                        "surface": "#0e131d",
+                        "surface-container-high": "#252a35",
+                        "on-error": "#690005",
+                        "inverse-on-surface": "#2b303b",
+                        "inverse-primary": "#005ac2",
+                        "primary-fixed": "#d8e2ff",
+                        "inverse-surface": "#dee2f1",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "tertiary-container": "#df7412",
+                        "on-primary-container": "#00285d",
+                        "outline-variant": "#424754",
+                        "surface-container-low": "#171c26",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#0267b8",
+                        "background": "#0e131d",
+                        "secondary-fixed": "#d4e3ff",
+                        "outline": "#8c909f",
+                        "on-primary": "#002e6a",
+                        "on-secondary": "#00315d",
+                        "surface-container-highest": "#303540",
+                        "on-surface": "#dee2f1",
+                        "surface-variant": "#303540",
+                        "surface-tint": "#adc6ff",
+                        "on-tertiary": "#502400",
+                        "error-container": "#93000a",
+                        "primary": "#adc6ff",
+                        "primary-container": "#4d8eff",
+                        "tertiary-fixed": "#ffdcc6",
+                        "on-secondary-fixed": "#001c39",
+                        "on-tertiary-fixed": "#311400",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#004883",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "on-primary-fixed": "#001a42",
+                        "surface-bright": "#343944",
+                        "surface-dim": "#0e131d",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-container": "#1b202a",
+                        "on-surface-variant": "#c2c6d6",
+                        "on-tertiary-container": "#461f00",
+                        "tertiary": "#ffb786"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "md": "16px",
+                        "gutter": "20px",
+                        "container-max": "1440px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "code-sm": ["JetBrains Mono"],
+                        "body-md": ["Cairo", "Inter"],
+                        "display-lg": ["Cairo", "Inter"],
+                        "headline-md": ["Cairo", "Inter"],
+                        "headline-lg": ["Cairo", "Inter"],
+                        "label-caps": ["Cairo", "Inter"],
+                        "body-lg": ["Cairo", "Inter"],
+                        "headline-lg-mobile": ["Cairo", "Inter"]
+                    },
+                    "fontSize": {
+                        "code-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #05070D; color: #dee2f1; }
+        .glass-panel { background: rgba(9, 13, 22, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(140, 144, 159, 0.12); }
+        .glass-panel:hover { border-color: rgba(173, 198, 255, 0.3); box-shadow: 0 0 15px rgba(173, 198, 255, 0.1); transition: all 0.3s ease; }
+        .accent-glow { box-shadow: 0 0 20px rgba(77, 142, 255, 0.4); }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col font-body-md text-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface/80 backdrop-blur-xl fixed top-0 w-full h-14 border-b border-outline-variant/10 flex justify-between items-center px-lg z-50 transition-all duration-200 ease-in-out">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold tracking-tighter text-on-surface">CodeSpace 3D</span>
+</div>
+<nav class="hidden md:flex items-center gap-sm">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors px-md py-sm hover:bg-white/5 rounded" href="#">Editor</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors px-md py-sm hover:bg-white/5 rounded" href="#">Assets</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors px-md py-sm hover:bg-white/5 rounded" href="#">Debug</a>
+<a class="text-primary border-b-2 border-primary pb-1 px-md py-sm" href="#">Terminal</a>
+</nav>
+<div class="flex items-center gap-sm">
+<button class="text-on-surface-variant hover:text-on-surface hover:bg-white/5 p-sm rounded transition-colors" data-icon="settings"><span class="material-symbols-outlined">settings</span></button>
+<button class="text-on-surface-variant hover:text-on-surface hover:bg-white/5 p-sm rounded transition-colors" data-icon="cloud_done"><span class="material-symbols-outlined">cloud_done</span></button>
+<button class="text-on-surface-variant hover:text-on-surface hover:bg-white/5 p-sm rounded transition-colors" data-icon="notifications"><span class="material-symbols-outlined">notifications</span></button>
+<img alt="User avatar" class="w-8 h-8 rounded-full border border-outline-variant/30 ml-sm object-cover" data-alt="A small, stylized high-tech circular avatar image showing a glowing geometric shape on a dark blue background, suitable for a futuristic code editor profile icon." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFYKgLS8smzb76mmWRslSPRw9J35VeJes2erI_kjsT2EKfjuQ6sY9cTCvCRKVPk89PS97NTjBehFr9rpZie-ugYffFMG_VqcdSyq7T8luhvs0ga0YdrQeChJX6zlazZ_i1H8g5oJqLtUJo8CWzeDnMMCRavyNAXArelHe1xKrX-LVlibKY03VMej6gp1HddelgdCjsBsD-gfq2T_ijqH10dANH9EiCcYBTgyuWq3zMUJi8lxWmDDtM"/>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="bg-surface-container-low fixed left-0 top-14 bottom-0 w-16 md:w-20 border-r border-outline-variant/10 flex flex-col items-center py-md z-40 hidden md:flex">
+<div class="mb-lg hidden">
+<img alt="Project icon" class="w-10 h-10 rounded-lg" data-alt="A small project icon representing a 3D workspace, dark background with subtle blue glowing edges." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkqAfjQnoezX8Ctf9HEB8Oh0zRke8Ce3kN2ayhGzC4L67Ori_zGllArA06MLaH7FBg7nHrZdKbIokvVz_kpJi8AmNxIJUGQ_YcrrLmALoQ-x_9BlpuN6FB5CTTowGlho-5_41tgs9SAzplQnyMtlrVoI9YI2KcatiIOASdp_tIyoPCyg2ccbUgL8Q61DtK7h7i8bKA4MrHVXBswvdszwleJLKgATQ6bnoj_Mdjg6f0CKMopbK2Y04T"/>
+<div class="mt-sm text-center">
+<div class="font-label-caps text-label-caps text-on-surface">Project Alpha</div>
+<div class="text-[10px] text-outline">v2.4.0-stable</div>
+</div>
+</div>
+<nav class="flex-1 w-full flex flex-col items-center gap-sm">
+<button class="w-full aspect-square flex flex-col items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90 rounded-lg" title="Explorer">
+<span class="material-symbols-outlined mb-xs">folder_open</span>
+<span class="font-label-caps text-[10px] md:text-[11px] truncate w-full text-center px-xs">Explorer</span>
+</button>
+<button class="w-full aspect-square flex flex-col items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90 rounded-lg" title="Search">
+<span class="material-symbols-outlined mb-xs">search</span>
+<span class="font-label-caps text-[10px] md:text-[11px] truncate w-full text-center px-xs">Search</span>
+</button>
+<button class="w-full aspect-square flex flex-col items-center justify-center text-primary border-l-2 border-primary bg-primary/5 transition-transform scale-95 active:scale-90 rounded-lg" title="Source Control">
+<span class="material-symbols-outlined mb-xs">account_tree</span>
+<span class="font-label-caps text-[10px] md:text-[11px] truncate w-full text-center px-xs">Source Control</span>
+</button>
+<button class="w-full aspect-square flex flex-col items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90 rounded-lg" title="Extensions">
+<span class="material-symbols-outlined mb-xs">extension</span>
+<span class="font-label-caps text-[10px] md:text-[11px] truncate w-full text-center px-xs">Extensions</span>
+</button>
+<button class="w-full aspect-square flex flex-col items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90 rounded-lg" title="Debugger">
+<span class="material-symbols-outlined mb-xs">bug_report</span>
+<span class="font-label-caps text-[10px] md:text-[11px] truncate w-full text-center px-xs">Debugger</span>
+</button>
+</nav>
+<div class="mt-auto w-full flex flex-col items-center gap-sm pt-md border-t border-outline-variant/10">
+<button class="w-full aspect-square flex flex-col items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90 rounded-lg" title="Accounts">
+<span class="material-symbols-outlined mb-xs">account_circle</span>
+<span class="font-label-caps text-[10px] md:text-[11px] truncate w-full text-center px-xs">Accounts</span>
+</button>
+<button class="w-full aspect-square flex flex-col items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90 rounded-lg" title="Manage">
+<span class="material-symbols-outlined mb-xs">settings</span>
+<span class="font-label-caps text-[10px] md:text-[11px] truncate w-full text-center px-xs">Manage</span>
+</button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 mt-14 mb-6 md:ml-20 p-lg lg:p-xl flex justify-center">
+<div class="w-full max-w-5xl flex flex-col gap-xl">
+<!-- Header -->
+<div class="flex flex-col gap-unit">
+<h1 class="font-headline-lg text-headline-lg md:font-display-lg md:text-display-lg text-on-surface">نظام تصدير المشروع</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">حوّل إبداعك إلى حزمة جاهزة للنشر</p>
+<div class="flex items-center gap-xs mt-sm text-secondary font-label-caps text-label-caps bg-secondary/10 px-sm py-xs rounded-full w-fit border border-secondary/20">
+<span class="material-symbols-outlined text-[14px]">sync</span>
+<span>متزامن مع: جودة تقنية عالية (Technical High Quality)</span>
+</div></div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Project Summary Card -->
+<div class="glass-panel rounded-xl p-lg lg:col-span-1 flex flex-col gap-md h-full">
+<h2 class="font-headline-md text-headline-md text-on-surface border-b border-outline-variant/10 pb-sm mb-sm flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">info</span>
+                        تفاصيل المشروع
+                    </h2>
+<div class="flex justify-between items-center py-sm border-b border-outline-variant/5">
+<span class="text-on-surface-variant">الاسم</span>
+<span class="text-on-surface font-semibold">CityScape V3</span>
+</div>
+<div class="flex justify-between items-center py-sm border-b border-outline-variant/5">
+<span class="text-on-surface-variant">الحجم الكلي</span>
+<span class="font-code-sm text-code-sm text-secondary">142 MB</span>
+</div>
+<div class="flex justify-between items-center py-sm border-b border-outline-variant/5">
+<span class="text-on-surface-variant">عدد العناصر (3D)</span>
+<span class="font-code-sm text-code-sm text-secondary">34 Assets</span>
+</div>
+<div class="flex justify-between items-center py-sm">
+<span class="text-on-surface-variant">آخر تعديل</span>
+<span class="font-code-sm text-code-sm text-secondary">منذ ساعتين</span>
+</div>
+</div>
+<!-- Export Configuration -->
+<div class="glass-panel rounded-xl p-lg lg:col-span-2 flex flex-col gap-lg">
+<h2 class="font-headline-md text-headline-md text-on-surface border-b border-outline-variant/10 pb-sm flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">build</span>
+                        إعدادات التصدير
+                    </h2><div class="flex items-center justify-between p-md rounded-lg bg-primary/5 border border-primary/20">
+<div class="flex flex-col">
+<span class="text-on-surface font-semibold">استخدام تفضيلات الجودة</span>
+<span class="text-on-surface-variant text-[12px]">تطبيق إعدادات الجودة المحددة في ملفك الشخصي تلقائياً</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-10 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Format Selection -->
+<div>
+<h3 class="font-body-md text-body-md text-on-surface-variant mb-md">صيغة التصدير</h3>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-md">
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" name="format" type="radio"/>
+<div class="p-md rounded-lg border border-outline-variant/30 bg-surface/50 peer-checked:border-primary peer-checked:bg-primary/10 flex flex-col items-center gap-sm transition-all hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-on-surface peer-checked:text-primary">language</span>
+<span class="font-label-caps text-label-caps text-on-surface">Web (HTML/JS)</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="format" type="radio"/>
+<div class="p-md rounded-lg border border-outline-variant/30 bg-surface/50 peer-checked:border-primary peer-checked:bg-primary/10 flex flex-col items-center gap-sm transition-all hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-on-surface peer-checked:text-primary">folder_zip</span>
+<span class="font-label-caps text-label-caps text-on-surface">ZIP Archive</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="format" type="radio"/>
+<div class="p-md rounded-lg border border-outline-variant/30 bg-surface/50 peer-checked:border-primary peer-checked:bg-primary/10 flex flex-col items-center gap-sm transition-all hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-on-surface peer-checked:text-primary">view_in_ar</span>
+<span class="font-label-caps text-label-caps text-on-surface">3D Package (GLTF)</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Optimization Settings & Target -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div class="flex flex-col gap-sm">
+<h3 class="font-body-md text-body-md text-on-surface-variant mb-xs">تحسين الأداء</h3>
+<label class="flex items-center gap-sm cursor-pointer hover:bg-surface-container-high p-xs rounded transition-colors">
+<input checked="" class="form-checkbox rounded bg-surface border-outline-variant/50 text-primary focus:ring-primary focus:ring-offset-surface focus:ring-offset-2" type="checkbox"/>
+<span class="text-on-surface">ضغط الكود (Minify)</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer hover:bg-surface-container-high p-xs rounded transition-colors">
+<input checked="" class="form-checkbox rounded bg-surface border-outline-variant/50 text-primary focus:ring-primary focus:ring-offset-surface focus:ring-offset-2" type="checkbox"/>
+<span class="text-on-surface">ضغط خامات 3D</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer hover:bg-surface-container-high p-xs rounded transition-colors">
+<input class="form-checkbox rounded bg-surface border-outline-variant/50 text-primary focus:ring-primary focus:ring-offset-surface focus:ring-offset-2" type="checkbox"/>
+<span class="text-on-surface">تضمين Source Maps</span>
+</label>
+<div class="mt-sm">
+<h3 class="font-body-md text-body-md text-on-surface-variant mb-xs">وضع الأداء (Performance Mode)</h3>
+<select class="form-select w-full bg-surface border border-outline-variant/30 rounded-lg text-on-surface focus:border-primary focus:ring-1 focus:ring-primary px-md py-sm transition-colors outline-none" dir="rtl">
+<option value="high">أداء عالٍ (High Performance)</option>
+<option selected="" value="balanced">متوازن (Balanced)</option>
+<option value="power">توفير الطاقة (Power Saving)</option>
+</select>
+</div></div>
+<div class="flex flex-col gap-sm">
+<h3 class="font-body-md text-body-md text-on-surface-variant mb-xs">وجهة النشر</h3>
+<select class="form-select w-full bg-surface-elevated border border-outline-variant/30 rounded-lg text-on-surface focus:border-primary focus:ring-1 focus:ring-primary px-md py-sm transition-colors outline-none bg-surface" dir="rtl">
+<option value="local">تنزيل محلي (Local Download)</option>
+<option value="github">مستودع GitHub</option>
+<option value="cloud">استضافة سحابية (Cloud Hosting)</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Area -->
+<div class="glass-panel rounded-xl p-lg flex flex-col md:flex-row items-center justify-between gap-lg">
+<div class="w-full md:w-2/3 flex flex-col gap-sm">
+<div class="flex justify-between items-center">
+<span class="text-on-surface font-semibold flex items-center gap-sm"><span class="w-2 h-2 rounded-full bg-secondary pulse-dot"></span> جاهز للتصدير</span>
+<span class="font-code-sm text-code-sm text-secondary">0%</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden border border-outline-variant/10">
+<div class="bg-primary h-full w-0 transition-all duration-300"></div>
+</div>
+</div>
+<button class="w-full md:w-auto bg-primary text-on-primary font-headline-md text-headline-md px-xl py-md rounded-lg flex items-center justify-center gap-md hover:bg-primary/90 transition-all accent-glow active:scale-95 whitespace-nowrap">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">download</span>
+                    تصدير الآن
+                </button>
+</div>
+<!-- Recent Exports -->
+<div class="glass-panel rounded-xl p-lg flex flex-col gap-md">
+<h2 class="font-headline-md text-headline-md text-on-surface border-b border-outline-variant/10 pb-sm flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">history</span>
+                    سجل التصدير الحديث
+                </h2>
+<div class="overflow-x-auto">
+<table class="w-full text-right border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/10 text-on-surface-variant font-label-caps text-label-caps">
+<th class="py-sm px-md font-semibold">المشروع</th>
+<th class="py-sm px-md font-semibold">الصيغة</th>
+<th class="py-sm px-md font-semibold">الوقت</th>
+<th class="py-sm px-md font-semibold">الحالة</th>
+<th class="py-sm px-md font-semibold text-left">إجراء</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<tr class="border-b border-outline-variant/5 hover:bg-white/5 transition-colors group">
+<td class="py-md px-md">CityScape V3</td>
+<td class="py-md px-md font-code-sm text-code-sm">Web (HTML)</td>
+<td class="py-md px-md font-code-sm text-code-sm text-on-surface-variant">2023-10-27 14:30</td>
+<td class="py-md px-md">
+<span class="inline-flex items-center gap-xs px-sm py-xs rounded bg-surface border border-outline-variant/20 text-secondary font-code-sm text-[12px]">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> مكتمل
+                                    </span>
+</td>
+<td class="py-md px-md text-left">
+<button class="text-primary hover:text-primary-container p-sm rounded transition-colors opacity-0 group-hover:opacity-100"><span class="material-symbols-outlined">download</span></button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant/5 hover:bg-white/5 transition-colors group">
+<td class="py-md px-md">Character_Rig_01</td>
+<td class="py-md px-md font-code-sm text-code-sm">GLTF</td>
+<td class="py-md px-md font-code-sm text-code-sm text-on-surface-variant">2023-10-26 09:15</td>
+<td class="py-md px-md">
+<span class="inline-flex items-center gap-xs px-sm py-xs rounded bg-surface border border-outline-variant/20 text-error font-code-sm text-[12px]">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> فشل
+                                    </span>
+</td>
+<td class="py-md px-md text-left">
+<button class="text-primary hover:text-primary-container p-sm rounded transition-colors opacity-0 group-hover:opacity-100" title="إعادة المحاولة"><span class="material-symbols-outlined">refresh</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest fixed bottom-0 w-full h-6 border-t border-outline-variant/10 flex justify-between items-center px-md z-50 overflow-hidden font-code-sm text-code-sm text-secondary cursor-pointer" dir="ltr">
+<span>© 2024 CodeSpace 3D | System: Optimal</span>
+<div class="flex gap-md">
+<span class="text-outline hover:text-primary transition-colors">Logs</span>
+<span class="text-outline hover:text-primary transition-colors">Main Branch</span>
+<span class="text-outline hover:text-primary transition-colors">UTF-8</span>
+<span class="text-outline hover:text-primary transition-colors">Spaces: 4</span>
+</div>
+</footer>
+<style>
+        @keyframes pulse-dot {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); box-shadow: 0 0 8px currentColor; }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .pulse-dot { animation: pulse-dot 2s infinite ease-in-out; }
+    </style>
+</body></html>

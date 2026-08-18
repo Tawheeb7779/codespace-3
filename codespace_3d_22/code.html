@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>لوحة التحكم | CodeSpace 3D</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-container": "#d6e5ff",
+                      "inverse-on-surface": "#2b303b",
+                      "primary-fixed": "#d8e2ff",
+                      "primary-fixed-dim": "#adc6ff",
+                      "surface-container-lowest": "#090e18",
+                      "primary": "#adc6ff",
+                      "surface-dim": "#0e131d",
+                      "on-tertiary-container": "#461f00",
+                      "on-primary-fixed": "#001a42",
+                      "secondary-container": "#0267b8",
+                      "surface-variant": "#303540",
+                      "on-primary": "#002e6a",
+                      "secondary-fixed-dim": "#a4c9ff",
+                      "surface-bright": "#343944",
+                      "error": "#ffb4ab",
+                      "on-tertiary-fixed": "#311400",
+                      "on-background": "#dee2f1",
+                      "outline-variant": "#424754",
+                      "surface-container": "#1b202a",
+                      "on-secondary-fixed-variant": "#004883",
+                      "on-tertiary": "#502400",
+                      "tertiary-fixed-dim": "#ffb786",
+                      "on-primary-container": "#00285d",
+                      "on-tertiary-fixed-variant": "#723600",
+                      "secondary": "#a4c9ff",
+                      "surface-container-high": "#252a35",
+                      "secondary-fixed": "#d4e3ff",
+                      "inverse-primary": "#005ac2",
+                      "inverse-surface": "#dee2f1",
+                      "on-primary-fixed-variant": "#004395",
+                      "background": "#0e131d",
+                      "on-secondary-fixed": "#001c39",
+                      "on-secondary": "#00315d",
+                      "outline": "#8c909f",
+                      "on-surface-variant": "#c2c6d6",
+                      "surface-container-highest": "#303540",
+                      "surface": "#0e131d",
+                      "surface-tint": "#adc6ff",
+                      "primary-container": "#4d8eff",
+                      "error-container": "#93000a",
+                      "tertiary-fixed": "#ffdcc6",
+                      "on-surface": "#dee2f1",
+                      "tertiary-container": "#df7412",
+                      "tertiary": "#ffb786",
+                      "surface-container-low": "#171c26",
+                      "on-error-container": "#ffdad6",
+                      "on-error": "#690005"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "md": "16px",
+                      "sm": "8px",
+                      "lg": "24px",
+                      "xl": "40px",
+                      "container-max": "1440px",
+                      "unit": "4px",
+                      "gutter": "20px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "code-sm": [
+                              "JetBrains Mono"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "code-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .glass-panel {
+            background: rgba(14, 19, 29, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(140, 144, 159, 0.12);
+        }
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(173, 198, 255, 0.15);
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen pb-20">
+<!-- Top Navigation Bar -->
+<header class="glass-panel sticky top-0 z-50 px-md py-sm flex justify-between items-center w-full">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/30">
+<img alt="Profile" class="w-full h-full object-cover" data-alt="A highly detailed close-up portrait of a young professional wearing futuristic AR glasses. The lighting is moody and cinematic, with neon blue highlights reflecting off the dark surface of the glasses. The background is a blurred, dark high-tech environment. The overall style is cyberpunk-inspired realism." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6l18YzGlxOhBHHvDMx_smKU2VUpBNnv5OeeTx6mfHXcykhjgGUGsvhZrJTljvJF3Xic9ndtB1eCB_DQ2lLiiLW-8G8G4C4h8d_U_vgVi69aG-_TKo8vXzombuEN7Nayo6YyprVDeSviJHpnVNKyr6BbnIZ_a-2_ORlLcy1rWeF9P6Ilj0j8OviE4rrxAOTINr3oIrVbIRKaG1lmw85Z_jKqrLTtxETpqMRF6EviP3KDKI8EytTZ-6"/>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md text-primary font-bold">CodeSpace 3D</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">مساحة العمل</span>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-xs text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">search</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</button>
+</div>
+</header>
+<main class="p-md flex flex-col gap-md">
+<!-- Active Users Summary -->
+<section class="glass-panel rounded-xl p-md flex flex-col gap-sm">
+<div class="flex justify-between items-center">
+<h2 class="font-body-lg text-body-lg text-on-surface font-semibold">المستخدمون النشطون</h2>
+<span class="font-code-sm text-code-sm text-primary bg-primary/10 px-sm py-xs rounded">Live</span>
+</div>
+<div class="flex items-end gap-md">
+<span class="font-display-lg text-display-lg text-primary">1,248</span>
+<div class="h-12 flex-grow flex items-end gap-1 opacity-80">
+<div class="w-full bg-primary/20 rounded-t h-1/4"></div>
+<div class="w-full bg-primary/40 rounded-t h-2/4"></div>
+<div class="w-full bg-primary/30 rounded-t h-1/3"></div>
+<div class="w-full bg-primary/60 rounded-t h-3/4"></div>
+<div class="w-full bg-primary/50 rounded-t h-1/2"></div>
+<div class="w-full bg-primary rounded-t h-full neon-glow"></div>
+</div>
+</div>
+</section>
+<!-- System Health -->
+<section class="grid grid-cols-2 gap-md">
+<!-- CPU -->
+<div class="glass-panel rounded-xl p-md flex flex-col items-center justify-center gap-sm">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant">المعالج (CPU)</h3>
+<div class="relative w-20 h-20">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+<path class="text-surface-variant" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="100, 100" stroke-width="3"></path>
+<path class="text-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="65, 100" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center font-code-sm text-code-sm text-on-surface">65%</div>
+</div>
+</div>
+<!-- RAM -->
+<div class="glass-panel rounded-xl p-md flex flex-col items-center justify-center gap-sm">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant">الذاكرة (RAM)</h3>
+<div class="relative w-20 h-20">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+<path class="text-surface-variant" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="100, 100" stroke-width="3"></path>
+<path class="text-tertiary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="82, 100" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center font-code-sm text-code-sm text-on-surface">82%</div>
+</div>
+</div>
+</section>
+<!-- Deployment Status -->
+<section class="glass-panel rounded-xl p-md flex flex-col gap-md">
+<h2 class="font-body-lg text-body-lg text-on-surface font-semibold border-b border-outline-variant/10 pb-sm">حالة النشر</h2>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">AWS-us-east-1</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">v2.4.1 - قبل دقيقتين</span>
+</div>
+</div>
+<div class="flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-secondary neon-glow animate-pulse"></span>
+<span class="font-label-caps text-label-caps text-secondary">نشط</span>
+</div>
+</div>
+<button class="w-full py-sm bg-primary text-on-primary font-body-md text-body-md rounded-lg font-semibold hover:bg-primary-container transition-colors flex items-center justify-center gap-sm mt-sm">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">rocket_launch</span>
+                نشر تحديث جديد
+            </button>
+</section>
+<!-- Security Alerts -->
+<section class="glass-panel rounded-xl p-md flex flex-col gap-md">
+<h2 class="font-body-lg text-body-lg text-on-surface font-semibold border-b border-outline-variant/10 pb-sm flex justify-between">
+                تنبيهات الأمان
+                <span class="font-label-caps text-label-caps text-error bg-error/10 px-sm py-xs rounded">2 تحذيرات</span>
+</h2>
+<div class="flex flex-col gap-sm">
+<!-- Alert 1 -->
+<div class="flex gap-sm p-sm bg-error/5 rounded border border-error/20">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-error font-semibold">ثغرة في مكتبة Node.js</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant mt-1">تم اكتشافها قبل ساعة</span>
+</div>
+</div>
+<!-- Alert 2 -->
+<div class="flex gap-sm p-sm bg-tertiary/5 rounded border border-tertiary/20">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">info</span>
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-tertiary font-semibold">محاولات تسجيل دخول فاشلة متكررة</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant mt-1">IP: 192.168.1.45</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar (Generated logic based on standard mobile apps) -->
+<nav class="fixed bottom-0 w-full glass-panel h-16 flex justify-around items-center z-50 border-t-0 shadow-lg">
+<a class="flex flex-col items-center text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-caps text-label-caps mt-1">الرئيسية</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">monitoring</span>
+<span class="font-label-caps text-label-caps mt-1">تحليلات</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:text-primary transition-colors relative -top-4" href="#">
+<div class="bg-primary text-on-primary p-2 rounded-full shadow-lg neon-glow">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">rocket</span>
+</div>
+<span class="font-label-caps text-label-caps mt-1">نشر</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-label-caps text-label-caps mt-1">إعدادات</span>
+</a>
+</nav>
+</body></html>

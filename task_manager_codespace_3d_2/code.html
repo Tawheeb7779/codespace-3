@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>مدير المهام - CodeSpace 3D</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed-dim": "#ffb786",
+                      "surface-container-low": "#171c26",
+                      "on-error-container": "#ffdad6",
+                      "secondary-container": "#0267b8",
+                      "error-container": "#93000a",
+                      "surface-container": "#1b202a",
+                      "on-secondary-fixed-variant": "#004883",
+                      "on-primary-container": "#00285d",
+                      "on-secondary-container": "#d6e5ff",
+                      "on-tertiary-container": "#461f00",
+                      "on-surface": "#dee2f1",
+                      "on-tertiary-fixed-variant": "#723600",
+                      "surface-bright": "#343944",
+                      "surface-container-high": "#252a35",
+                      "tertiary-container": "#df7412",
+                      "secondary-fixed": "#d4e3ff",
+                      "primary-container": "#4d8eff",
+                      "on-secondary-fixed": "#001c39",
+                      "on-primary": "#002e6a",
+                      "surface-container-highest": "#303540",
+                      "on-secondary": "#00315d",
+                      "tertiary": "#ffb786",
+                      "error": "#ffb4ab",
+                      "outline": "#8c909f",
+                      "surface-variant": "#303540",
+                      "on-surface-variant": "#c2c6d6",
+                      "on-primary-fixed": "#001a42",
+                      "surface-dim": "#0e131d",
+                      "tertiary-fixed": "#ffdcc6",
+                      "surface-tint": "#adc6ff",
+                      "on-background": "#dee2f1",
+                      "inverse-surface": "#dee2f1",
+                      "background": "#0e131d",
+                      "outline-variant": "#424754",
+                      "surface-container-lowest": "#090e18",
+                      "on-tertiary-fixed": "#311400",
+                      "secondary": "#a4c9ff",
+                      "primary": "#adc6ff",
+                      "on-primary-fixed-variant": "#004395",
+                      "primary-fixed-dim": "#adc6ff",
+                      "inverse-primary": "#005ac2",
+                      "secondary-fixed-dim": "#a4c9ff",
+                      "inverse-on-surface": "#2b303b",
+                      "primary-fixed": "#d8e2ff",
+                      "surface": "#0e131d",
+                      "on-error": "#690005",
+                      "on-tertiary": "#502400"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "20px",
+                      "xl": "40px",
+                      "md": "16px",
+                      "container-max": "1440px",
+                      "lg": "24px",
+                      "unit": "4px",
+                      "xs": "4px",
+                      "sm": "8px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "code-sm": [
+                              "JetBrains Mono"
+                      ],
+                      "label-caps": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "code-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+            }
+          }
+      }
+    </script>
+<style>
+        /* Custom scrollbar for Kanban board */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #303540;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #424754;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-hidden antialiased">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full h-14 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/10 flex justify-between items-center px-lg z-50 transition-all duration-200 ease-in-out">
+<div class="flex items-center gap-6">
+<span class="font-headline-md text-headline-md font-bold tracking-tighter text-on-surface">CodeSpace 3D</span>
+<div class="hidden md:flex gap-4">
+<nav class="flex gap-2">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors px-3 py-1 hover:bg-white/5 rounded" href="#">المحرر</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors px-3 py-1 hover:bg-white/5 rounded" href="#">الأصول</a>
+<a class="font-body-md text-body-md text-primary border-b-2 border-primary pb-1 px-3 py-1 bg-white/5 rounded" href="#">مدير المهام</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors px-3 py-1 hover:bg-white/5 rounded" href="#">التصحيح</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-colors px-3 py-1 hover:bg-white/5 rounded" href="#">الطرفية</a>
+</nav>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">search</span>
+<input class="bg-surface-container text-on-surface border border-outline-variant/20 rounded-lg pl-10 pr-4 py-1.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 text-sm w-64 transition-all" placeholder="البحث في المهام..." type="text"/>
+</div>
+<div class="flex gap-2 text-on-surface-variant">
+<button class="p-1.5 hover:bg-white/5 rounded transition-colors"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span></button>
+<button class="p-1.5 hover:bg-white/5 rounded transition-colors"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">cloud_done</span></button>
+<button class="p-1.5 hover:bg-white/5 rounded transition-colors relative">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full"></span>
+</button>
+</div>
+<img alt="User avatar" class="w-8 h-8 rounded-full border border-outline-variant/30 object-cover" data-alt="A highly detailed close-up portrait of a professional software engineer with a neutral expression, dramatic rim lighting emphasizing tech focus, set against a dark futuristic background, cyberpunk aesthetic, high resolution, 8k, hyperrealistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGv4s8g1OMArNfH-lCVVb7zhWE0g1TzhoAYH75cC6ySTNHaNPv3YR4O62jee44DoCec_f3NkradYHKCkq1Q4pCMmRyz446sxQVHk7wgu6NmFIsBAaDmZRNJ8eUjqM90je-_5h8qKW6GxwzN70TjB4eezmVl_yCDbVzFZkvSFf80yYM4yeRvUQSHZG9dzn-Y1oEp5sxXQ2EK9QVa2mPNYy5ZEZC9Yp6vTsuFhBh6DVaRJ0B17kEo9Kj"/>
+</div>
+</header>
+<div class="flex h-screen pt-14 pb-6">
+<!-- Sidebar Filters -->
+<aside class="w-64 bg-surface-container-low border-l border-outline-variant/10 flex flex-col p-lg shrink-0 overflow-y-auto">
+<div class="mb-8">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-4 tracking-widest uppercase">تصفية المهام</h3>
+<div class="space-y-6">
+<!-- Projects -->
+<div>
+<h4 class="text-xs text-outline mb-2 font-semibold">المشاريع</h4>
+<div class="space-y-1">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="rounded border-outline-variant bg-surface-container text-primary focus:ring-primary/50" type="checkbox"/>
+<span class="text-sm text-on-surface group-hover:text-primary transition-colors">#Engine_Core</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="rounded border-outline-variant bg-surface-container text-primary focus:ring-primary/50" type="checkbox"/>
+<span class="text-sm text-on-surface group-hover:text-primary transition-colors">#UI-Design</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="rounded border-outline-variant bg-surface-container text-primary focus:ring-primary/50" type="checkbox"/>
+<span class="text-sm text-on-surface group-hover:text-primary transition-colors">#Physics</span>
+</label>
+</div>
+</div>
+<!-- Priority -->
+<div>
+<h4 class="text-xs text-outline mb-2 font-semibold">الأولوية</h4>
+<div class="space-y-1">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="rounded border-outline-variant bg-surface-container text-error focus:ring-error/50" type="checkbox"/>
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="text-sm text-on-surface group-hover:text-error transition-colors">حرجة</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="rounded border-outline-variant bg-surface-container text-tertiary focus:ring-tertiary/50" type="checkbox"/>
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="text-sm text-on-surface group-hover:text-tertiary transition-colors">عالية</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="rounded border-outline-variant bg-surface-container text-secondary focus:ring-secondary/50" type="checkbox"/>
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-sm text-on-surface group-hover:text-secondary transition-colors">متوسطة</span>
+</label>
+</div>
+</div>
+<!-- Assignee -->
+<div>
+<h4 class="text-xs text-outline mb-2 font-semibold">المعينون</h4>
+<div class="space-y-2">
+<div class="flex items-center gap-2 hover:bg-surface-container p-1 rounded cursor-pointer transition-colors">
+<img alt="Assignee" class="w-6 h-6 rounded-full" data-alt="A highly detailed 3D render avatar of a futuristic robot head with glowing blue eyes, metallic textures, dark background, cinematic lighting, cyberpunk style, high quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArZWRxjVFdXSOdrJgWLdPQIJXqL9MMgGp_gshtvq2rWJDYkv8a7Y_dyrYWqsOSWOUl-1rmekTEU0uVWb99E5jLmC0dAbztzlMdEESIO9afSMXafSWw8j9-5VdNfIC-WkNym6R4-L87gVQqeAcbDrDAMvzilvDyCJ0T6j5QzXeLSbPiS9g9h6Bk9YXdMm1sihtSvDtRmopnzSLpiJW1Dj_qMy6rBdSRscnwRc0FFf81t9pWfUf4Iesb"/>
+<span class="text-sm">أحمد.س</span>
+</div>
+<div class="flex items-center gap-2 hover:bg-surface-container p-1 rounded cursor-pointer transition-colors">
+<div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">FA</div>
+<span class="text-sm">فاطمة.ع</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-auto pt-6 border-t border-outline-variant/10">
+<button class="w-full py-2 bg-surface-container hover:bg-surface-bright border border-outline-variant/30 rounded text-sm text-on-surface transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">filter_alt_off</span>
+                    مسح الفلاتر
+                </button>
+</div>
+</aside>
+<!-- Main Content (Kanban Board) -->
+<main class="flex-1 flex flex-col min-w-0 bg-background overflow-hidden relative">
+<!-- Background Shader (Subtle atmospheric effect) -->
+<div class="absolute inset-0 opacity-20 pointer-events-none">
+<div class="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px]"></div>
+<div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[120px]"></div>
+</div>
+<!-- Board Header -->
+<div class="flex justify-between items-center px-8 py-6 z-10 border-b border-outline-variant/5">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-1">لوحة المحرك الرئيسي</h1>
+<p class="text-on-surface-variant text-sm">السباق الحالي: v2.4 التحسين</p>
+</div>
+<div class="flex items-center gap-4">
+<div class="bg-surface-container-low rounded-lg p-1 border border-outline-variant/20 flex">
+<button class="px-3 py-1.5 bg-surface-container-high rounded text-sm text-primary font-medium flex items-center gap-2 shadow-sm border border-outline-variant/10">
+<span class="material-symbols-outlined text-sm">view_kanban</span>
+                            لوحة
+                        </button>
+<button class="px-3 py-1.5 rounded text-sm text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">list</span>
+                            قائمة
+                        </button>
+<button class="px-3 py-1.5 rounded text-sm text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">calendar_month</span>
+                            تقويم
+                        </button>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(77,142,255,0.2)] hover:shadow-[0_0_20px_rgba(77,142,255,0.4)]">
+<span class="material-symbols-outlined text-sm font-bold" style="font-variation-settings: 'wght' 600;">add</span>
+                        مهمة جديدة
+                    </button>
+</div>
+</div>
+<!-- Kanban Columns -->
+<div class="flex-1 overflow-x-auto overflow-y-hidden p-8 z-10 flex gap-6 snap-x">
+<!-- Backlog Column -->
+<div class="w-80 flex flex-col flex-shrink-0 snap-start">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+<h2 class="font-semibold text-on-surface">المتأخرات</h2>
+<span class="text-xs bg-surface-container-highest px-2 py-0.5 rounded text-on-surface-variant">4</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-sm">more_horiz</span></button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 pr-1 pb-4">
+<!-- Task Card -->
+<div class="bg-surface-container-low border border-outline-variant/10 p-4 rounded-xl hover:border-outline-variant/30 hover:bg-surface-container transition-all cursor-grab active:cursor-grabbing group">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-code-sm text-outline border border-outline-variant/20 px-1.5 py-0.5 rounded">CS-104</span>
+<span class="bg-surface-container-highest text-secondary text-[10px] px-2 py-0.5 rounded-full font-medium border border-secondary/20">#Physics</span>
+</div>
+<h3 class="text-sm font-medium text-on-surface mb-3 group-hover:text-primary transition-colors leading-relaxed">تحديث نظام التصادم للكائنات المعقدة</h3>
+<div class="flex items-center gap-4 mb-4">
+<div class="flex-1">
+<div class="flex justify-between text-[10px] text-on-surface-variant mb-1">
+<span>المهام الفرعية</span>
+<span>0/3</span>
+</div>
+<div class="h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-outline w-0 rounded-full"></div>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-center mt-2">
+<div class="flex -space-x-2 -space-x-reverse">
+<img alt="Assignee" class="w-6 h-6 rounded-full border border-surface-container-low relative z-10" data-alt="A highly detailed 3D render avatar of a futuristic robot head with glowing blue eyes, metallic textures, dark background, cinematic lighting, cyberpunk style, high quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_yiyJaLtCrtIPKgnGQiZqv0eES-OmPGi9h4JMr3dS5-fE-Gdnz486B0LOMBAcm691LvoLbi6yCbIoFkYhkQdILTqacb5r8GvMAAebSSp62FvcrEzIIUVcmOICw_-7R-0Kol3ZOMtrL6VPTpv11ZoEBc7oeL1tsgY52RCcWViYRNY3zU2J7a8pL_2T9htoEvcjG7ZyDIe3Jpn6eWHSX5x-tVYW09prZ3QrZj-k_MFIqlyzeTbBgBGV"/>
+</div>
+<div class="flex items-center gap-1 text-outline">
+<span class="material-symbols-outlined text-[14px]">chat_bubble</span>
+<span class="text-xs">2</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- In Progress Column -->
+<div class="w-80 flex flex-col flex-shrink-0 snap-start">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<h2 class="font-semibold text-on-surface">قيد التنفيذ</h2>
+<span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">2</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-sm">more_horiz</span></button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 pr-1 pb-4">
+<!-- Task Card (Critical) -->
+<div class="bg-surface-elevated border border-error/30 p-4 rounded-xl shadow-[0_0_15px_rgba(255,180,171,0.05)] relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-1 h-full bg-error"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-code-sm text-error border border-error/20 px-1.5 py-0.5 rounded bg-error/5">CS-092</span>
+<div class="flex gap-1">
+<span class="bg-error/10 text-error text-[10px] px-2 py-0.5 rounded-full font-medium border border-error/20 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> حرجة
+                                    </span>
+<span class="bg-surface-container-highest text-primary text-[10px] px-2 py-0.5 rounded-full font-medium border border-primary/20">#Engine_Core</span>
+</div>
+</div>
+<h3 class="text-sm font-medium text-on-surface mb-3 leading-relaxed">إصلاح تسرب الذاكرة في مدير العرض 3D</h3>
+<div class="flex items-center gap-4 mb-4">
+<div class="flex-1">
+<div class="flex justify-between text-[10px] text-on-surface-variant mb-1">
+<span>المهام الفرعية</span>
+<span>2/5</span>
+</div>
+<div class="h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-2/5 rounded-full shadow-[0_0_5px_rgba(173,198,255,0.5)]"></div>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-center mt-2">
+<div class="flex -space-x-2 -space-x-reverse">
+<img alt="Assignee" class="w-6 h-6 rounded-full border-2 border-surface-container-low relative z-10" data-alt="A highly detailed close-up portrait of a professional female software engineer with glasses, focused expression, dramatic rim lighting emphasizing tech focus, set against a dark futuristic background, cyberpunk aesthetic, high resolution, 8k, hyperrealistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdS0m-cbMMeE18EmBSi3_0SYsVtoUifrvEisiPz-l23fsHfsOvuHJQxVeCP5V4iURVpJvwNdMbnY0PqByJNKrSXqCfaeWqzQlp9o9DII37iWRPvgWPKOLzYH0Kfaam1s_WwCLVnsFhw6zzqhodo6moopbC_9VSGhyayt3xHamVOjL0PPL9j04eBKSXR-I4CQb1xeRmfvAW7P4FNNP_MGdZSxg3lo5mUVK8UIMETHNf6-vTIcX8GqLC"/>
+</div>
+<div class="flex items-center gap-3 text-outline">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">attachment</span>
+<span class="text-xs">1</span>
+</div>
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span class="text-xs">اليوم</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Review Column -->
+<div class="w-80 flex flex-col flex-shrink-0 snap-start">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+<h2 class="font-semibold text-on-surface">المراجعة</h2>
+<span class="text-xs bg-tertiary/10 text-tertiary px-2 py-0.5 rounded">1</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-sm">more_horiz</span></button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 pr-1 pb-4">
+<!-- Add card here -->
+</div>
+</div>
+<!-- Completed Column -->
+<div class="w-80 flex flex-col flex-shrink-0 snap-start">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<h2 class="font-semibold text-on-surface">مكتمل</h2>
+<span class="text-xs bg-secondary/10 text-secondary px-2 py-0.5 rounded">12</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-sm">more_horiz</span></button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 pr-1 pb-4 opacity-70">
+<!-- Add card here -->
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="fixed bottom-0 w-full h-6 bg-surface-container-lowest border-t border-outline-variant/10 flex justify-between items-center px-md z-50 overflow-hidden">
+<span class="font-code-sm text-code-sm text-secondary">© 2024 CodeSpace 3D | System: Optimal</span>
+<div class="flex gap-4">
+<a class="font-code-sm text-code-sm text-outline hover:text-primary transition-colors cursor-pointer" href="#">Logs</a>
+<a class="font-code-sm text-code-sm text-outline hover:text-primary transition-colors cursor-pointer" href="#">Main Branch</a>
+<a class="font-code-sm text-code-sm text-outline hover:text-primary transition-colors cursor-pointer" href="#">UTF-8</a>
+<a class="font-code-sm text-code-sm text-outline hover:text-primary transition-colors cursor-pointer" href="#">Spaces: 4</a>
+</div>
+</footer>
+</body></html>

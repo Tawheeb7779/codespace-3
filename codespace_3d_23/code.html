@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeSpace 3D - Database</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#222a3d",
+                        "on-secondary-container": "#00424e",
+                        "surface-dim": "#0b1326",
+                        "primary-fixed": "#d8e2ff",
+                        "on-secondary-fixed": "#001f26",
+                        "on-primary": "#002e6a",
+                        "background": "#0b1326",
+                        "inverse-surface": "#dae2fd",
+                        "on-secondary-fixed-variant": "#004e5c",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-tertiary": "#3c0091",
+                        "surface-tint": "#adc6ff",
+                        "surface-container-lowest": "#060e20",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-variant": "#2d3449",
+                        "tertiary-fixed": "#e9ddff",
+                        "on-primary-fixed": "#001a42",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#03b5d3",
+                        "tertiary-container": "#a078ff",
+                        "on-background": "#dae2fd",
+                        "on-tertiary-fixed": "#23005c",
+                        "on-tertiary-container": "#340080",
+                        "tertiary": "#d0bcff",
+                        "primary-container": "#4d8eff",
+                        "secondary-fixed-dim": "#4cd7f6",
+                        "outline": "#8c909f",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#5516be",
+                        "surface-container": "#171f33",
+                        "surface-container-highest": "#2d3449",
+                        "on-error": "#690005",
+                        "on-secondary": "#003640",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-low": "#131b2e",
+                        "surface-bright": "#31394d",
+                        "tertiary-fixed-dim": "#d0bcff",
+                        "inverse-primary": "#005ac2",
+                        "secondary": "#4cd7f6",
+                        "on-primary-container": "#00285d",
+                        "secondary-fixed": "#acedff",
+                        "surface": "#0b1326",
+                        "primary-fixed-dim": "#adc6ff",
+                        "primary": "#adc6ff",
+                        "on-surface": "#dae2fd",
+                        "outline-variant": "#424754",
+                        "inverse-on-surface": "#283044"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-gap": "12px",
+                        "container-padding": "24px",
+                        "gutter": "16px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "code-md": ["JetBrains Mono"],
+                        "display-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "code-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-level-1 { backdrop-filter: blur(10px); background-color: rgba(11, 19, 38, 0.3); }
+        .glass-level-2 { backdrop-filter: blur(40px); background-color: rgba(34, 42, 61, 0.5); }
+        .glass-level-3 { backdrop-filter: blur(60px); background-color: rgba(23, 31, 51, 0.7); }
+        .glass-level-4 { backdrop-filter: blur(20px); background-color: rgba(76, 215, 246, 0.1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15); }
+        
+        .pulse-animation {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen relative font-body-md overflow-x-hidden pb-24 selection:bg-primary/20">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-surface-container/30 backdrop-blur-xl border-b border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+<div class="flex items-center justify-between px-container-padding py-unit w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary active:scale-95 transition-transform" style="font-variation-settings: 'FILL' 1;">blur_on</span>
+<h1 class="font-display-lg text-display-lg tracking-tighter text-secondary">CodeSpace 3D</h1>
+</div>
+<!-- Contextual Nexus AI Status -->
+<div class="hidden md:flex items-center gap-2 bg-secondary/10 px-3 py-1 rounded-full border border-secondary/30">
+<div class="w-2 h-2 rounded-full bg-secondary pulse-animation"></div>
+<span class="font-label-sm text-label-sm text-secondary">Nexus AI Listening</span>
+</div>
+<div class="flex items-center gap-4">
+<img alt="User profile photo" class="w-8 h-8 rounded-full border border-white/20 object-cover active:scale-95 transition-transform" data-alt="A futuristic, glowing avatar of a user profile in a high-tech 3D environment. Deep navy background with vibrant cyan lighting accents. Professional glassmorphic styling." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAG9CzPVW1hxS-yopn3qGON9bwjmhFrLpyv4hF0n0MkmzE2g2ujyDMHQ7-srfZ4Gnv1lz1kQKQoBrLBYBL8XwhRHas20rIjP_gFAAAix02IBAQw-lrCYLu4XZbsQLuRbejwSufWHtMoUDpDUW0QINB6AwcfuAFpb78mINqHOYZWFeLqnatjWILtbo6vf-bOvWQ-_qeAxRlzXxr8wbaezwqSeL7QQud_WVSGrr4dIIcq46jJaZ7SmH8J"/>
+</div>
+</div>
+</header>
+<main class="max-w-7xl mx-auto px-container-padding pt-6 pb-32 space-y-8 relative z-10">
+<!-- Section 1: Connection Status -->
+<section class="glass-level-2 border border-white/10 rounded-2xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/5 to-transparent pointer-events-none"></div>
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-1">Cluster: Production-Alpha</h2>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">public</span>
+                        Region: US-East
+                    </p>
+</div>
+<div class="flex items-center gap-3 glass-level-3 border border-white/10 px-4 py-2 rounded-full">
+<div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)] pulse-animation"></div>
+<span class="font-label-sm text-label-sm text-emerald-400 tracking-wider">STATUS: ONLINE</span>
+</div>
+</div>
+</section>
+<!-- Section 2: Real-time Metrics -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Latency Card -->
+<div class="glass-level-2 border border-white/10 rounded-2xl p-5 hover:bg-white/5 transition-colors group">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Query Latency</span>
+<span class="material-symbols-outlined text-secondary opacity-70 group-hover:opacity-100 transition-opacity">speed</span>
+</div>
+<div class="flex items-end gap-3">
+<span class="font-display-lg text-display-lg text-on-surface leading-none">14</span>
+<span class="font-body-md text-body-md text-secondary pb-1">ms</span>
+</div>
+<!-- Sparkline abstraction -->
+<div class="h-8 mt-4 w-full flex items-end gap-1 opacity-50">
+<div class="w-full bg-secondary/20 h-[20%] rounded-t-sm"></div>
+<div class="w-full bg-secondary/40 h-[40%] rounded-t-sm"></div>
+<div class="w-full bg-secondary/30 h-[30%] rounded-t-sm"></div>
+<div class="w-full bg-secondary/60 h-[50%] rounded-t-sm"></div>
+<div class="w-full bg-secondary/20 h-[15%] rounded-t-sm"></div>
+<div class="w-full bg-secondary/80 h-[70%] rounded-t-sm"></div>
+<div class="w-full bg-secondary h-[40%] rounded-t-sm"></div>
+</div>
+</div>
+<!-- Active Connections -->
+<div class="glass-level-2 border border-white/10 rounded-2xl p-5 hover:bg-white/5 transition-colors group">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Active Connections</span>
+<span class="material-symbols-outlined text-tertiary-container opacity-70 group-hover:opacity-100 transition-opacity">cable</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="font-display-lg text-display-lg text-on-surface leading-none">842</span>
+<div class="flex items-center text-emerald-400 font-label-sm text-label-sm bg-emerald-400/10 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-sm mr-1">trending_up</span>
+                        +5.2%
+                    </div>
+</div>
+<div class="h-8 mt-4 w-full flex items-center">
+<div class="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="w-[75%] h-full bg-tertiary-container rounded-full"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Tables List -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-headline-md text-headline-md text-on-surface">Data Structures</h3>
+<button class="glass-level-4 px-4 py-2 rounded-lg font-label-sm text-label-sm text-secondary hover:bg-secondary/20 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span> New Table
+                </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Table 1 -->
+<div class="glass-level-2 border border-white/10 rounded-xl p-4 hover:border-secondary/50 transition-colors cursor-pointer group">
+<div class="flex items-center gap-3 mb-3">
+<div class="p-2 bg-secondary/10 rounded-lg text-secondary">
+<span class="material-symbols-outlined">group</span>
+</div>
+<span class="font-body-lg text-body-lg font-semibold text-on-surface group-hover:text-secondary transition-colors">Users</span>
+</div>
+<div class="font-code-md text-code-md text-on-surface-variant flex justify-between items-center opacity-70">
+<span>12.4k rows</span>
+<span class="w-1 h-1 bg-white/20 rounded-full mx-2"></span>
+<span>2.1MB</span>
+</div>
+</div>
+<!-- Table 2 -->
+<div class="glass-level-2 border border-white/10 rounded-xl p-4 hover:border-secondary/50 transition-colors cursor-pointer group">
+<div class="flex items-center gap-3 mb-3">
+<div class="p-2 bg-tertiary-container/10 rounded-lg text-tertiary-container">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+<span class="font-body-lg text-body-lg font-semibold text-on-surface group-hover:text-tertiary-container transition-colors">Assets</span>
+</div>
+<div class="font-code-md text-code-md text-on-surface-variant flex justify-between items-center opacity-70">
+<span>8.2k rows</span>
+<span class="w-1 h-1 bg-white/20 rounded-full mx-2"></span>
+<span>4.5GB</span>
+</div>
+</div>
+<!-- Table 3 -->
+<div class="glass-level-2 border border-white/10 rounded-xl p-4 hover:border-secondary/50 transition-colors cursor-pointer group">
+<div class="flex items-center gap-3 mb-3">
+<div class="p-2 bg-emerald-400/10 rounded-lg text-emerald-400">
+<span class="material-symbols-outlined">receipt_long</span>
+</div>
+<span class="font-body-lg text-body-lg font-semibold text-on-surface group-hover:text-emerald-400 transition-colors">Transactions</span>
+</div>
+<div class="font-code-md text-code-md text-on-surface-variant flex justify-between items-center opacity-70">
+<span>145.2k rows</span>
+<span class="w-1 h-1 bg-white/20 rounded-full mx-2"></span>
+<span>18.4MB</span>
+</div>
+</div>
+<!-- Table 4 -->
+<div class="glass-level-2 border border-white/10 rounded-xl p-4 hover:border-secondary/50 transition-colors cursor-pointer group">
+<div class="flex items-center gap-3 mb-3">
+<div class="p-2 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">texture</span>
+</div>
+<span class="font-body-lg text-body-lg font-semibold text-on-surface group-hover:text-primary transition-colors">Shaders</span>
+</div>
+<div class="font-code-md text-code-md text-on-surface-variant flex justify-between items-center opacity-70">
+<span>420 rows</span>
+<span class="w-1 h-1 bg-white/20 rounded-full mx-2"></span>
+<span>1.2GB</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- AI Command Area (Floating) -->
+<div class="fixed bottom-24 left-1/2 transform -translate-x-1/2 w-[90%] max-w-lg z-40">
+<div class="glass-level-3 border border-secondary/30 rounded-full p-1 shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex items-center">
+<div class="pl-4 pr-2 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary pulse-animation">smart_toy</span>
+</div>
+<input class="w-full bg-transparent border-none text-on-surface font-body-md focus:ring-0 placeholder:text-on-surface-variant/50 h-10 px-2 outline-none" placeholder="Ask Nexus: 'Optimize Users table index' or 'Show slow queries'" type="text"/>
+<button class="bg-secondary text-on-secondary rounded-full p-2 mr-1 hover:bg-secondary/80 transition-colors">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+<!-- BottomNavBar (Mobile Only / Responsive Nav) -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container-high/50 backdrop-blur-[40px] border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.4)] md:hidden">
+<div class="flex justify-around items-center px-4 py-3 pb-safe w-full">
+<a class="flex flex-col items-center justify-center text-on-surface-variant/70 p-2 hover:text-secondary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">code_blocks</span>
+</a>
+<!-- Active State on Assets (closely aligns with DB/Inventory intent based on prompt logic) -->
+<a class="flex flex-col items-center justify-center bg-secondary-container/80 text-on-secondary-container rounded-xl p-2 ring-1 ring-white/20 hover:text-secondary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/70 p-2 hover:text-secondary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications_active</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/70 p-2 hover:text-secondary transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">groups</span>
+</a>
+</div>
+</nav>
+</body></html>

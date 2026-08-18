@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeSpace 3D - المساعد الصوتي Aether</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Design System Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#222a3d",
+                        "on-primary-fixed": "#001a42",
+                        "on-tertiary-fixed-variant": "#5516be",
+                        "primary-container": "#4d8eff",
+                        "on-surface-variant": "#c2c6d6",
+                        "on-tertiary-container": "#340080",
+                        "error-container": "#93000a",
+                        "tertiary": "#d0bcff",
+                        "on-surface": "#dae2fd",
+                        "on-tertiary-fixed": "#23005c",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-primary": "#002e6a",
+                        "surface-container-low": "#131b2e",
+                        "secondary-fixed": "#acedff",
+                        "error": "#ffb4ab",
+                        "surface-tint": "#adc6ff",
+                        "inverse-surface": "#dae2fd",
+                        "on-secondary-container": "#00424e",
+                        "tertiary-fixed-dim": "#d0bcff",
+                        "tertiary-fixed": "#e9ddff",
+                        "surface-dim": "#0b1326",
+                        "surface-variant": "#2d3449",
+                        "on-secondary-fixed-variant": "#004e5c",
+                        "outline-variant": "#424754",
+                        "surface": "#0b1326",
+                        "inverse-on-surface": "#283044",
+                        "on-secondary": "#003640",
+                        "background": "#0b1326",
+                        "outline": "#8c909f",
+                        "on-error": "#690005",
+                        "secondary-container": "#03b5d3",
+                        "on-background": "#dae2fd",
+                        "on-primary-container": "#00285d",
+                        "surface-bright": "#31394d",
+                        "primary-fixed": "#d8e2ff",
+                        "tertiary-container": "#a078ff",
+                        "on-secondary-fixed": "#001f26",
+                        "inverse-primary": "#005ac2",
+                        "secondary": "#4cd7f6",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-tertiary": "#3c0091",
+                        "surface-container-lowest": "#060e20",
+                        "surface-container-highest": "#2d3449",
+                        "secondary-fixed-dim": "#4cd7f6",
+                        "primary": "#adc6ff",
+                        "on-error-container": "#ffdad6",
+                        "surface-container": "#171f33"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "unit": "8px",
+                        "container-padding": "24px",
+                        "stack-gap": "12px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter", "sans-serif"],
+                        "headline-md": ["Inter", "sans-serif"],
+                        "display-lg": ["Inter", "sans-serif"],
+                        "code-md": ["JetBrains Mono", "monospace"],
+                        "label-sm": ["Inter", "sans-serif"],
+                        "headline-lg": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "code-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom Animations & Effects for Aether Glass System */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono&display=swap');
+
+        body {
+            background-color: #0b1326; /* bg-background */
+            overflow-x: hidden;
+        }
+
+        .floating-orb {
+            animation: float-orb 6s ease-in-out infinite;
+            box-shadow: 0 0 60px rgba(77, 142, 255, 0.4), inset 0 0 30px rgba(173, 198, 255, 0.6);
+        }
+
+        @keyframes float-orb {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .wave-bar {
+            width: 4px;
+            border-radius: 9999px;
+            background-color: #adc6ff; /* primary */
+            animation: waveform 1.2s ease-in-out infinite;
+            opacity: 0.8;
+            box-shadow: 0 0 10px rgba(173, 198, 255, 0.5);
+        }
+
+        @keyframes waveform {
+            0%, 100% { height: 16px; opacity: 0.4; }
+            50% { height: 48px; opacity: 1; }
+        }
+
+        .glass-particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            border-radius: 20%;
+            pointer-events: none;
+            animation: float-up linear infinite;
+        }
+
+        @keyframes float-up {
+            0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Ambient Background Glow */
+        .ambient-bg {
+            background: radial-gradient(circle at 50% 30%, rgba(77, 142, 255, 0.15) 0%, transparent 60%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="min-h-screen text-on-background font-body-md relative antialiased selection:bg-primary-container/30 selection:text-primary">
+<!-- Atmospheric Deep Space Background -->
+<div class="fixed inset-0 z-[-2] bg-background"></div>
+<div class="fixed inset-0 z-[-1] ambient-bg pointer-events-none"></div>
+<!-- Floating Glass Particles Layer -->
+<div class="fixed inset-0 z-0 pointer-events-none overflow-hidden" id="particle-container">
+<!-- Particles generated via JS -->
+</div>
+<!-- TopAppBar -->
+<header class="bg-surface/80 dark:bg-surface/80 fixed top-0 w-full z-50 backdrop-blur-xl border-b border-white/10 flex justify-between items-center px-[24px] h-16 w-full flat no shadows text-primary dark:text-primary-fixed-dim font-headline-md text-headline-md-mobile">
+<div class="flex items-center hover:opacity-80 transition-opacity active:scale-95 transition-transform cursor-pointer text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">keyboard_command_key</span>
+</div>
+<h1 class="font-headline-md text-headline-md-mobile font-bold tracking-tight text-primary">CodeSpace 3D</h1>
+<div class="flex items-center hover:opacity-80 transition-opacity active:scale-95 transition-transform cursor-pointer text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings_voice</span>
+</div>
+</header>
+<!-- Main Voice Assistant Canvas -->
+<main class="relative z-10 flex flex-col items-center justify-center min-h-screen pt-20 pb-28 px-container-padding">
+<!-- 3D Orb Visualizer -->
+<div class="relative w-64 h-64 mb-12 flex items-center justify-center">
+<!-- Ripple Rings -->
+<div class="absolute inset-[-40px] rounded-full border border-primary-container/20 animate-ping" style="animation-duration: 3s;"></div>
+<div class="absolute inset-[-20px] rounded-full border border-primary-container/40 animate-ping" style="animation-duration: 2s; animation-delay: 0.5s;"></div>
+<!-- Shader Aura Background -->
+<iframe class="absolute inset-[-60px] w-[calc(100%+120px)] h-[calc(100%+120px)] border-0 mix-blend-screen opacity-90 pointer-events-none z-0 rounded-full" src="{{DATA:ANIMATION:ANIMATION_1}}"></iframe>
+<!-- AI Core Image -->
+<img alt="AI Core" class="relative z-10 w-full h-full object-cover rounded-full floating-orb" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTcnLkvVrNFdQMRS9QMBckZ1Ye_Qv9HMVao0QccKxFBdQxz1WK_9kRCM2KVbOqh8OnCkai8gyrn3pyAt7MoRlZFZbyR9o3N_NIkE0QfJ8i04He8IC19zcIBP7rqOwVVumOB6KvUmeEQblhLqdMzo6t8VRDcD4ocviZmKkaXIsXysCfFeamqWY-f1yQb7hg6mh3XwGnH6ZVkKiMLDpRNHjI20wGvDeHR1exiCxqT5LgLcNPsCKzrZg5"/>
+</div>
+<!-- Listening Status & Waveform -->
+<div class="flex flex-col items-center mb-16 h-24">
+<h2 class="font-headline-lg text-primary tracking-wide mb-6">جاري الاستماع...</h2>
+<!-- Audio Waveform -->
+<div class="flex items-end gap-[6px] h-12">
+<div class="wave-bar" style="animation-delay: 0.0s;"></div>
+<div class="wave-bar" style="animation-delay: 0.2s;"></div>
+<div class="wave-bar" style="animation-delay: 0.4s;"></div>
+<div class="wave-bar" style="animation-delay: 0.1s;"></div>
+<div class="wave-bar" style="animation-delay: 0.5s;"></div>
+<div class="wave-bar" style="animation-delay: 0.3s;"></div>
+<div class="wave-bar" style="animation-delay: 0.6s;"></div>
+<div class="wave-bar" style="animation-delay: 0.2s;"></div>
+</div>
+</div>
+<!-- Suggested Commands Container (Bento/Glass Layout) -->
+<div class="w-full max-w-sm flex flex-col gap-unit"><p class="font-label-sm text-on-surface-variant uppercase tracking-widest text-center mb-2">الأوامر المقترحة</p>
+<!-- Command Card 1: Update 3D Engine -->
+<button class="w-full backdrop-blur-[40px] bg-surface-container-high/40 border border-white/10 rounded-xl p-4 flex items-center gap-4 hover:bg-surface-container-highest/60 hover:border-primary/50 active:scale-[0.98] transition-all duration-100 group">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest/50 border border-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
+<span class="material-symbols-outlined text-primary group-hover:text-primary-fixed drop-shadow-[0_0_8px_rgba(173,198,255,0.5)]">deployed_code</span>
+</div>
+<div class="flex flex-col items-start text-right">
+<span class="font-body-md text-on-surface">"تحديث المحرك ثلاثي الأبعاد"</span>
+<span class="font-label-sm text-on-surface-variant">تحسين أداء WebGL</span>
+</div>
+</button>
+<!-- Command Card 2: Scan Package Vulnerabilities -->
+<button class="w-full backdrop-blur-[40px] bg-surface-container-high/40 border border-white/10 rounded-xl p-4 flex items-center gap-4 hover:bg-surface-container-highest/60 hover:border-primary/50 active:scale-[0.98] transition-all duration-100 group">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest/50 border border-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
+<span class="material-symbols-outlined text-secondary group-hover:text-secondary-fixed drop-shadow-[0_0_8px_rgba(76,215,246,0.5)]">policy</span>
+</div>
+<div class="flex flex-col items-start text-right">
+<span class="font-body-md text-on-surface">"فحص ثغرات الحزم"</span>
+<span class="font-label-sm text-on-surface-variant">تدقيق أمني شامل</span>
+</div>
+</button>
+<!-- Command Card 3: Start Live Preview -->
+<button class="w-full backdrop-blur-[40px] bg-surface-container-high/40 border border-white/10 rounded-xl p-4 flex items-center gap-4 hover:bg-surface-container-highest/60 hover:border-primary/50 active:scale-[0.98] transition-all duration-100 group">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest/50 border border-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
+<span class="material-symbols-outlined text-tertiary group-hover:text-tertiary-fixed drop-shadow-[0_0_8px_rgba(208,188,255,0.5)]">play_circle</span>
+</div>
+<div class="flex flex-col items-start text-right">
+<span class="font-body-md text-on-surface">"بدء المعاينة الحية"</span>
+<span class="font-label-sm text-on-surface-variant">تشغيل الخادم المحلي</span>
+</div>
+</button>
+<!-- Command Card 4: Deploy Beta Version -->
+<button class="w-full backdrop-blur-[40px] bg-surface-container-high/40 border border-white/10 rounded-xl p-4 flex items-center gap-4 hover:bg-surface-container-highest/60 hover:border-primary/50 active:scale-[0.98] transition-all duration-100 group">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest/50 border border-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
+<span class="material-symbols-outlined text-primary group-hover:text-primary-fixed drop-shadow-[0_0_8px_rgba(173,198,255,0.5)]">cloud_sync</span>
+</div>
+<div class="flex flex-col items-start text-right">
+<span class="font-body-md text-on-surface">"نشر نسخة تجريبية"</span>
+<span class="font-label-sm text-on-surface-variant">رفع إلى السحابة</span>
+</div>
+</button></div>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface-container-low/90 dark:bg-surface-container-low/90 text-primary dark:text-primary-fixed-dim font-label-caps text-label-caps font-headline-md text-headline-md-mobile text-primary fixed bottom-0 w-full z-50 rounded-t-xl backdrop-blur-xl border-t border-white/10 flat no shadows flex justify-around items-center h-20 px-[16px] w-full pb-safe">
+<!-- Active Tab: Dashboard (Acting as Home base for the voice overlay) -->
+<div class="relative flex flex-col items-center justify-center text-primary border-t-2 border-primary pt-2 hover:text-primary-fixed transition-colors active:scale-90 transition-transform w-full h-full cursor-pointer">
+<div class="absolute top-0 w-12 h-1 bg-primary blur-[2px]"></div>
+<div class="absolute top-0 w-24 h-12 bg-primary/20 blur-xl rounded-full pointer-events-none"></div>
+<span class="material-symbols-outlined mb-1 drop-shadow-[0_0_12px_rgba(173,198,255,0.8)]" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="text-[10px] tracking-wide">لوحة القيادة</span>
+</div>
+<!-- Inactive Tab: Tasks -->
+<div class="flex flex-col items-center justify-center text-on-surface-variant pt-2 hover:text-primary-fixed transition-colors active:scale-90 transition-transform w-full h-full cursor-pointer">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">assignment</span>
+<span class="text-[10px] tracking-wide">المهام</span>
+</div>
+<!-- Inactive Tab: Deployments -->
+<div class="flex flex-col items-center justify-center text-on-surface-variant pt-2 hover:text-primary-fixed transition-colors active:scale-90 transition-transform w-full h-full cursor-pointer">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">rocket_launch</span>
+<span class="text-[10px] tracking-wide">عمليات النشر</span>
+</div>
+<!-- Inactive Tab: Settings -->
+<div class="flex flex-col items-center justify-center text-on-surface-variant pt-2 hover:text-primary-fixed transition-colors active:scale-90 transition-transform w-full h-full cursor-pointer">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="text-[10px] tracking-wide">الإعدادات</span>
+</div>
+</nav>
+<!-- Script for Atmospheric Particles -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('particle-container');
+            const particleCount = 15;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('glass-particle');
+                
+                // Randomize size, position, and animation duration
+                const size = Math.random() * 20 + 10; // 10px to 30px
+                const left = Math.random() * 100; // 0% to 100%
+                const duration = Math.random() * 10 + 10; // 10s to 20s
+                const delay = Math.random() * 10; // 0s to 10s
+
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${left}vw`;
+                particle.style.animationDuration = `${duration}s`;
+                particle.style.animationDelay = `${delay}s`;
+
+                container.appendChild(particle);
+            }
+        });
+    </script>
+</body></html>

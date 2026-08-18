@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeSpace 3D - Analytics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed-dim": "#4cd7f6",
+                      "surface-tint": "#adc6ff",
+                      "surface-container-lowest": "#060e20",
+                      "surface-container-high": "#222a3d",
+                      "inverse-primary": "#005ac2",
+                      "on-primary": "#002e6a",
+                      "on-tertiary-container": "#340080",
+                      "tertiary": "#d0bcff",
+                      "surface-bright": "#31394d",
+                      "tertiary-fixed-dim": "#d0bcff",
+                      "surface-dim": "#0b1326",
+                      "on-primary-fixed": "#001a42",
+                      "on-tertiary-fixed": "#23005c",
+                      "outline-variant": "#424754",
+                      "secondary-container": "#03b5d3",
+                      "on-surface-variant": "#c2c6d6",
+                      "error": "#ffb4ab",
+                      "on-surface": "#dae2fd",
+                      "primary-container": "#4d8eff",
+                      "surface-container-low": "#131b2e",
+                      "on-tertiary-fixed-variant": "#5516be",
+                      "on-secondary-container": "#00424e",
+                      "surface-container": "#171f33",
+                      "on-secondary-fixed-variant": "#004e5c",
+                      "on-secondary-fixed": "#001f26",
+                      "tertiary-container": "#a078ff",
+                      "surface": "#0b1326",
+                      "tertiary-fixed": "#e9ddff",
+                      "secondary-fixed": "#acedff",
+                      "surface-container-highest": "#2d3449",
+                      "on-error-container": "#ffdad6",
+                      "primary-fixed-dim": "#adc6ff",
+                      "inverse-surface": "#dae2fd",
+                      "on-tertiary": "#3c0091",
+                      "outline": "#8c909f",
+                      "on-error": "#690005",
+                      "primary-fixed": "#d8e2ff",
+                      "on-primary-fixed-variant": "#004395",
+                      "surface-variant": "#2d3449",
+                      "on-background": "#dae2fd",
+                      "inverse-on-surface": "#283044",
+                      "error-container": "#93000a",
+                      "on-primary-container": "#00285d",
+                      "on-secondary": "#003640",
+                      "secondary": "#4cd7f6",
+                      "primary": "#adc6ff",
+                      "background": "#0b1326"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "unit": "8px",
+                      "stack-gap": "12px",
+                      "container-padding": "24px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "code-md": [
+                              "JetBrains Mono"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "code-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        /* Aether Glass Styles */
+        .glass-level-1 {
+            background-color: rgba(6, 14, 32, 0.3); /* surface-container-lowest */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .glass-level-2 {
+            background-color: rgba(11, 19, 38, 0.5); /* surface-dim */
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .glass-level-3 {
+            background-color: rgba(23, 31, 51, 0.7); /* surface-container */
+            backdrop-filter: blur(60px);
+            -webkit-backdrop-filter: blur(60px);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .glass-level-4 {
+            background-color: rgba(34, 42, 61, 0.8); /* surface-container-high */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
+        }
+        
+        .transition-snappy {
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* Abstract Deep Space Background Animation */
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            z-index: -1;
+            animation: float 15s infinite ease-in-out;
+        }
+        .orb-1 { width: 400px; height: 400px; background: #005ac2; top: -100px; left: -100px; }
+        .orb-2 { width: 300px; height: 300px; background: #340080; bottom: 20%; right: -50px; animation-delay: -5s; }
+        .orb-3 { width: 250px; height: 250px; background: #03b5d3; top: 40%; left: 30%; animation-delay: -10s; opacity: 0.2;}
+        
+        body {
+            background-color: #060e20;
+            color: #dae2fd;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="min-h-screen relative overflow-x-hidden selection:bg-primary selection:text-on-primary">
+<!-- Ambient Background Elements -->
+<div class="ambient-orb orb-1"></div>
+<div class="ambient-orb orb-2"></div>
+<div class="ambient-orb orb-3"></div>
+<div class="fixed inset-0 glass-level-1 -z-10"></div> <!-- Global Blur -->
+<!-- TopAppBar -->
+<header class="bg-surface-dim/80 dark:bg-surface-dim/80 backdrop-blur-xl fixed top-0 w-full z-50 border-b border-outline-variant/10 flex justify-between items-center px-lg h-16 transition-all duration-300 ease-out flat no shadows md:hidden">
+<button aria-label="Terminal" class="text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-bright/20 p-2 rounded-full transition-snappy">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+</button>
+<div class="font-headline-md text-headline-md-mobile font-bold tracking-tighter text-primary dark:text-primary">
+            IDE Insights
+        </div>
+<button aria-label="Notifications" class="text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-bright/20 p-2 rounded-full transition-snappy">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Desktop Nav (Hidden on Mobile) -->
+<header class="hidden md:flex bg-surface-dim/80 dark:bg-surface-dim/80 backdrop-blur-xl fixed top-0 w-full z-50 border-b border-outline-variant/10 justify-between items-center px-container-padding h-16 transition-all duration-300 ease-out flat no shadows">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary" data-icon="terminal">terminal</span>
+<span class="font-headline-md text-headline-md font-bold tracking-tighter text-primary">IDE Insights</span>
+</div>
+<nav class="flex gap-6">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-snappy" href="#">Tracker</a>
+<a class="font-label-sm text-label-sm text-primary transition-snappy relative after:content-[''] after:absolute after:-bottom-5 after:left-0 after:w-full after:h-0.5 after:bg-primary" href="#">Metrics</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-snappy" href="#">Security</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-snappy" href="#">Platforms</a>
+</nav>
+<button class="text-on-surface-variant hover:bg-surface-bright/20 p-2 rounded-full transition-snappy">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-32 md:pt-24 md:pb-12 px-gutter md:px-container-padding max-w-7xl mx-auto space-y-unit">
+<!-- Dashboard Header -->
+<div class="mb-stack-gap md:mb-container-padding">
+<h1 class="font-display-lg text-headline-lg md:text-display-lg text-on-surface mb-2">Metrics Overview</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Real-time performance for CodeSpace 3D Engine.</p>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-unit md:gap-stack-gap">
+<!-- FPS Chart Card (Large) -->
+<div class="md:col-span-8 glass-level-2 rounded-xl p-stack-gap flex flex-col transition-snappy hover:border-primary/30 group">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h2 class="font-headline-md text-body-lg md:text-headline-md text-on-surface">Frame Rate</h2>
+<p class="font-code-md text-code-md text-outline">Target: 120 FPS</p>
+</div>
+<div class="glass-level-3 px-3 py-1 rounded-full border border-primary/20">
+<span class="font-code-md text-code-md text-primary animate-pulse">Live</span>
+</div>
+</div>
+<div class="flex-grow flex items-end gap-1 h-48 relative border-b border-white/5 pb-2">
+<!-- Faux Chart Bars -->
+<div class="w-full bg-primary/20 h-[80%] rounded-t-sm transition-snappy group-hover:bg-primary/40 relative group/bar cursor-crosshair">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 glass-level-4 px-2 py-1 rounded text-xs text-primary transition-snappy whitespace-nowrap z-10 pointer-events-none">115 FPS</div>
+</div>
+<div class="w-full bg-primary/20 h-[75%] rounded-t-sm transition-snappy group-hover:bg-primary/40 relative group/bar cursor-crosshair">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 glass-level-4 px-2 py-1 rounded text-xs text-primary transition-snappy whitespace-nowrap z-10 pointer-events-none">105 FPS</div>
+</div>
+<div class="w-full bg-primary/20 h-[90%] rounded-t-sm transition-snappy group-hover:bg-primary/40 relative group/bar cursor-crosshair">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 glass-level-4 px-2 py-1 rounded text-xs text-primary transition-snappy whitespace-nowrap z-10 pointer-events-none">120 FPS</div>
+</div>
+<div class="w-full bg-primary/20 h-[85%] rounded-t-sm transition-snappy group-hover:bg-primary/40 relative group/bar cursor-crosshair">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 glass-level-4 px-2 py-1 rounded text-xs text-primary transition-snappy whitespace-nowrap z-10 pointer-events-none">118 FPS</div>
+</div>
+<div class="w-full bg-secondary-fixed-dim/40 h-[60%] rounded-t-sm transition-snappy group-hover:bg-secondary-fixed-dim/60 relative group/bar cursor-crosshair">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 glass-level-4 px-2 py-1 rounded text-xs text-secondary transition-snappy whitespace-nowrap z-10 pointer-events-none">85 FPS (Dip)</div>
+</div>
+<div class="w-full bg-primary/20 h-[88%] rounded-t-sm transition-snappy group-hover:bg-primary/40 relative group/bar cursor-crosshair">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 glass-level-4 px-2 py-1 rounded text-xs text-primary transition-snappy whitespace-nowrap z-10 pointer-events-none">119 FPS</div>
+</div>
+<div class="w-full bg-primary/20 h-[95%] rounded-t-sm transition-snappy group-hover:bg-primary/40 relative group/bar cursor-crosshair">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 glass-level-4 px-2 py-1 rounded text-xs text-primary transition-snappy whitespace-nowrap z-10 pointer-events-none">125 FPS</div>
+</div>
+</div>
+<div class="mt-4 flex justify-between items-center">
+<span class="font-display-lg text-headline-lg md:text-display-lg text-on-surface">115 <span class="text-body-lg text-on-surface-variant font-body-md">avg</span></span>
+<button class="glass-level-4 hover:border-primary px-4 py-2 rounded-lg font-label-sm text-label-sm text-primary transition-snappy flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="open_in_new">open_in_new</span>
+                        Details
+                    </button>
+</div>
+</div>
+<!-- Stats Column -->
+<div class="md:col-span-4 flex flex-col gap-unit md:gap-stack-gap">
+<!-- Latency Card -->
+<div class="glass-level-2 rounded-xl p-stack-gap flex-1 flex flex-col justify-between transition-snappy hover:border-primary/30">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-outline" data-icon="router">router</span>
+<h3 class="font-body-md text-body-md text-on-surface-variant">Network Latency</h3>
+</div>
+<div>
+<div class="font-display-lg text-headline-lg md:text-display-lg text-secondary">24<span class="text-body-md font-body-md ml-1">ms</span></div>
+<div class="w-full bg-surface-container-highest h-1 mt-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[20%] rounded-full"></div>
+</div>
+</div>
+</div>
+<!-- Active Users Card -->
+<div class="glass-level-2 rounded-xl p-stack-gap flex-1 flex flex-col justify-between transition-snappy hover:border-primary/30">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-outline" data-icon="group">group</span>
+<h3 class="font-body-md text-body-md text-on-surface-variant">Active Sessions</h3>
+</div>
+<div class="flex justify-between items-end">
+<div class="font-display-lg text-headline-lg md:text-display-lg text-on-surface">1,024</div>
+<span class="font-label-sm text-label-sm text-secondary-fixed bg-secondary-fixed/10 px-2 py-1 rounded flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span> +12%
+                        </span>
+</div>
+</div>
+</div>
+<!-- Code Editor Mini View -->
+<div class="md:col-span-12 glass-level-2 rounded-xl p-0 overflow-hidden mt-unit md:mt-0 transition-snappy border border-white/5 relative group">
+<div class="glass-level-3 px-4 py-2 border-b border-white/5 flex items-center gap-4">
+<div class="flex gap-1.5">
+<div class="w-3 h-3 rounded-full bg-outline-variant/50"></div>
+<div class="w-3 h-3 rounded-full bg-outline-variant/50"></div>
+<div class="w-3 h-3 rounded-full bg-outline-variant/50"></div>
+</div>
+<span class="font-code-md text-code-md text-outline">engine_core.rs</span>
+</div>
+<div class="p-4 bg-surface-container-lowest/80 font-code-md text-code-md text-on-surface-variant whitespace-pre-wrap overflow-x-auto relative z-10 text-sm leading-relaxed">
+<span class="text-tertiary">pub fn</span> <span class="text-primary">update_physics</span>(dt: <span class="text-secondary">f32</span>, entities: &amp;mut <span class="text-secondary">Vec</span>&lt;Entity&gt;) {
+    <span class="text-outline italic">// Calculate spatial partitioning grid updates</span>
+<span class="text-tertiary">let</span> grid = SpatialGrid::<span class="text-primary">new</span>();
+    
+    <span class="text-tertiary">for</span> entity <span class="text-tertiary">in</span> entities.iter_mut() {
+        <span class="bg-primary/20 text-on-surface">entity.position += entity.velocity * dt;</span>
+        grid.<span class="text-primary">insert</span>(entity.id, entity.position);
+    }
+}
+                </div>
+<!-- Decorative glow behind code -->
+<div class="absolute top-1/2 left-1/4 w-32 h-32 bg-primary/20 rounded-full blur-3xl -z-0 opacity-0 group-hover:opacity-100 transition-snappy duration-700"></div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden bg-surface-container/60 dark:bg-surface-container/60 backdrop-blur-xl fixed bottom-0 w-full z-50 border-t border-white/10 shadow-2xl flex justify-around items-center h-20 px-md pb-safe transition-snappy duration-200">
+<a class="flex flex-col items-center justify-center text-on-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed-dim active:scale-95 transition-transform duration-200 group" href="#">
+<span class="material-symbols-outlined mb-1 transition-snappy group-hover:-translate-y-1" data-icon="analytics">analytics</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider">Tracker</span>
+</a>
+<!-- Active State -->
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary bg-primary/20 rounded-full py-1 px-4 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(173,198,255,0.4)] scale-110 hover:text-primary-fixed-dim active:scale-95 transition-all duration-200 font-medium" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="speed" data-weight="fill" style="font-variation-settings: 'FILL' 1;">speed</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider font-bold">Metrics</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed-dim active:scale-95 transition-transform duration-200 group" href="#">
+<span class="material-symbols-outlined mb-1 transition-snappy group-hover:-translate-y-1" data-icon="security">security</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider">Security</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed-dim active:scale-95 transition-transform duration-200 group" href="#">
+<span class="material-symbols-outlined mb-1 transition-snappy group-hover:-translate-y-1" data-icon="developer_board">developer_board</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider">Platforms</span>
+</a>
+</nav>
+</body></html>

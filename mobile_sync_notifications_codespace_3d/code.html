@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mobile Sync Settings - CodeSpace 3D</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#d4e3ff",
+                        "surface-container-highest": "#303540",
+                        "on-tertiary-container": "#461f00",
+                        "inverse-on-surface": "#2b303b",
+                        "outline": "#8c909f",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "secondary-container": "#0267b8",
+                        "surface-container-lowest": "#090e18",
+                        "on-primary-fixed-variant": "#004395",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed": "#ffdcc6",
+                        "tertiary": "#ffb786",
+                        "primary": "#adc6ff",
+                        "surface-bright": "#343944",
+                        "inverse-surface": "#dee2f1",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-primary-fixed": "#001a42",
+                        "secondary": "#a4c9ff",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary": "#00315d",
+                        "surface-container": "#1b202a",
+                        "error-container": "#93000a",
+                        "surface-container-high": "#252a35",
+                        "on-secondary-fixed-variant": "#004883",
+                        "on-primary-container": "#00285d",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "background": "#0e131d",
+                        "inverse-primary": "#005ac2",
+                        "surface": "#0e131d",
+                        "on-tertiary": "#502400",
+                        "outline-variant": "#424754",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "surface-variant": "#303540",
+                        "surface-dim": "#0e131d",
+                        "on-secondary-container": "#d6e5ff",
+                        "tertiary-container": "#df7412",
+                        "on-secondary-fixed": "#001c39",
+                        "primary-fixed": "#d8e2ff",
+                        "on-primary": "#002e6a",
+                        "on-background": "#dee2f1",
+                        "on-surface": "#dee2f1",
+                        "on-surface-variant": "#c2c6d6",
+                        "primary-container": "#4d8eff",
+                        "on-tertiary-fixed": "#311400",
+                        "surface-container-low": "#171c26",
+                        "surface-tint": "#adc6ff",
+                        "on-error": "#690005"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "xl": "40px",
+                        "sm": "8px",
+                        "gutter": "20px",
+                        "lg": "24px",
+                        "unit": "4px",
+                        "xs": "4px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "code-sm": ["JetBrains Mono"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "code-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background-color: rgba(9, 13, 22, 0.5); /* surface color with opacity */
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(140, 144, 159, 0.08); /* outline color with opacity */
+        }
+        .glow-active:focus-within {
+            box-shadow: 0 0 10px rgba(173, 198, 255, 0.2); /* primary color glow */
+            border-color: rgba(173, 198, 255, 0.3);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(9, 13, 22, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(140, 144, 159, 0.2);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(140, 144, 159, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col overflow-hidden">
+<!-- TopNavBar -->
+<nav class="bg-surface/80 dark:bg-surface/80 backdrop-blur-xl w-full h-16 border-b border-outline-variant/10 shadow-sm flex justify-between items-center px-lg sticky top-0 z-50">
+<div class="flex items-center gap-xl">
+<div class="font-headline-md text-headline-md font-bold text-primary">CodeSpace 3D</div>
+<div class="hidden md:flex items-center gap-md font-body-md text-body-md">
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Project</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Edit</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">View</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Go</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="bg-primary text-on-primary px-4 py-2 rounded font-label-caps text-label-caps hover:bg-primary-container transition-colors duration-200">Deploy</button>
+<div class="flex gap-sm">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</nav>
+<div class="flex flex-1 overflow-hidden">
+<!-- SideNavBar -->
+<aside class="bg-surface-container-low/50 dark:bg-surface-container-low/50 backdrop-blur-md w-[280px] h-[calc(100vh-64px)] border-l border-outline-variant/10 fixed right-0 top-16 z-40 flex flex-col transition-all duration-300 ease-in-out">
+<div class="p-md border-b border-outline-variant/10">
+<div class="flex items-center gap-sm mb-sm">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden">
+<img alt="User Profile" class="object-cover w-full h-full" data-alt="A highly detailed portrait of a senior developer in a futuristic laboratory setting. Neon blue lights reflecting off glasses, deep shadows, professional and technical atmosphere, minimalist background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7YSCi0xaUu25BN2wUPWEmnPTR7KzPyB97ZMhtTmgxCW3EpraVny4eOERTm7qsJpIrgEx4SwxqLb8WBrCvK3kA_R-NJ460KTs599Zr1AZoV57ZTtA6jndSod-SqNHNHX9q0VUQk44EnZ7KmrO0fn5uSV3z7zA-JWPmh48KG7lw6axzN2cvqiaTkCsD-pxrwVwyuJGWDkHt2dzaLCGSKBi3dZv3Zx-XvyjiV7LMQlFn7RdVDKoMAZKZ"/>
+</div>
+<div>
+<div class="font-headline-sm text-primary font-bold">Project Alpha</div>
+<div class="font-label-caps text-on-surface-variant">Active Session</div>
+</div>
+</div>
+<button class="w-full bg-primary/10 text-primary border border-primary/20 py-2 rounded font-label-caps text-label-caps hover:bg-primary/20 transition-colors">New Asset</button>
+</div>
+<div class="flex-1 overflow-y-auto py-sm custom-scrollbar">
+<a class="flex items-center gap-sm px-md py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">grid_view</span> Workspace
+                </a>
+<a class="flex items-center gap-sm px-md py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">layers</span> Assets
+                </a>
+<a class="flex items-center gap-sm px-md py-3 text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">terminal</span> Terminal
+                </a>
+<a class="flex items-center gap-sm px-md py-3 text-primary bg-primary/10 border-r-4 border-primary font-label-caps text-label-caps" href="#">
+<span class="material-symbols-outlined">settings</span> Settings
+                </a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 mr-[280px] p-lg overflow-y-auto custom-scrollbar bg-background">
+<div class="max-w-container-max mx-auto space-y-lg">
+<!-- Header -->
+<div class="flex justify-between items-end border-b border-outline-variant/10 pb-md">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary mb-xs">المزامنة مع الهاتف (Mobile Sync)</h1>
+<p class="text-on-surface-variant font-body-md text-body-md">إدارة الأجهزة المتصلة وتفضيلات الإشعارات.</p>
+</div>
+<div class="flex items-center gap-sm text-tertiary">
+<span class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-tertiary"></span>
+</span>
+<span class="font-code-sm text-code-sm">Relay: 98% (Stable)</span>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-lg">
+<!-- QR Pairing Section -->
+<div class="col-span-12 lg:col-span-4 glass-panel rounded-xl p-lg flex flex-col items-center justify-center text-center">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-md">ربط جهاز جديد</h2>
+<div class="w-48 h-48 bg-white p-2 rounded-lg mb-md flex items-center justify-center">
+<!-- Placeholder for QR Code, using an image for now -->
+<img alt="QR Code" class="object-cover w-full h-full" data-alt="A highly detailed, intricate futuristic QR code displayed on a glowing white square against a dark, technical background. Neon blue accents, sharp edges, digital artifact aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAVb0DGE5Ny4ahi8ovHxEvyDmU2JFjq46LZbj76neANtT67iJEnlhqPUs6afscu0C3c2Cgo0n96mXmJCQYQnhDETcMvTA3PSAeTyo63rGPdfA1G8Wua6OjkmnS9kgOU6QM8QtnON4mZ58rwHTqJf-MvWFxv3hrlQTwO7R_ydn9fBilJTYTDE8iXJ85Lw1r66D6X_eamRKLnEtZV9a6hLztJaHkbrjDuQiQJfRM9W_xjYF-RYFWAMeV"/>
+</div>
+<p class="text-on-surface-variant font-body-md text-body-md mb-md">قم بمسح الرمز باستخدام تطبيق CodeSpace 3D للهاتف المحمول.</p>
+<button class="flex items-center gap-xs px-4 py-2 border border-outline-variant/30 rounded text-on-surface hover:bg-surface-bright transition-colors font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-[16px]">refresh</span> تحديث الرمز
+                        </button>
+</div>
+<!-- Connected Devices & Preferences -->
+<div class="col-span-12 lg:col-span-8 space-y-lg">
+<!-- Connected Devices -->
+<div class="glass-panel rounded-xl p-lg">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">devices</span> الأجهزة المتصلة
+                            </h2>
+<div class="space-y-sm">
+<!-- Device 1 -->
+<div class="flex items-center justify-between p-sm border-b border-outline-variant/10 hover:bg-surface-bright/50 transition-colors">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant">smartphone</span>
+<div>
+<div class="font-body-md text-body-md text-on-surface">iPhone 15 Pro</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">آخر مزامنة: منذ دقيقتين</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<span class="px-2 py-1 bg-primary/10 border border-primary/20 text-primary font-code-sm text-code-sm rounded flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-primary"></span> Online
+                                        </span>
+<button class="text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<!-- Device 2 -->
+<div class="flex items-center justify-between p-sm border-b border-outline-variant/10 hover:bg-surface-bright/50 transition-colors">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant">phone_android</span>
+<div>
+<div class="font-body-md text-body-md text-on-surface">Pixel 8</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">آخر مزامنة: أمس</div>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<span class="px-2 py-1 bg-surface-variant border border-outline-variant/30 text-on-surface-variant font-code-sm text-code-sm rounded flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-outline"></span> Offline
+                                        </span>
+<button class="text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Sync Preferences -->
+<div class="glass-panel rounded-xl p-lg">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-md flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">tune</span> تفضيلات المزامنة
+                            </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- Toggle 1 -->
+<div class="flex items-center justify-between p-sm rounded hover:bg-surface-bright/50 transition-colors">
+<div>
+<div class="font-body-md text-body-md text-on-surface">إشعارات الدفع (Push)</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">تلقي تحديثات عامة</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Toggle 2 -->
+<div class="flex items-center justify-between p-sm rounded hover:bg-surface-bright/50 transition-colors">
+<div>
+<div class="font-body-md text-body-md text-on-surface">تنبيهات اكتمال التصدير</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">عند الانتهاء من الرندرة</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Toggle 3 -->
+<div class="flex items-center justify-between p-sm rounded hover:bg-surface-bright/50 transition-colors">
+<div>
+<div class="font-body-md text-body-md text-on-surface">تحذيرات أمنية</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">تنبيهات الثغرات الفورية</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-error"></div>
+</label>
+</div>
+<!-- Toggle 4 -->
+<div class="flex items-center justify-between p-sm rounded hover:bg-surface-bright/50 transition-colors">
+<div>
+<div class="font-body-md text-body-md text-on-surface">إشارات دردشة الفريق</div>
+<div class="font-code-sm text-code-sm text-on-surface-variant">عندما يتم الإشارة إليك (@)</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Nexus AI Assistant Sidebar (Placeholder) -->
+<div class="fixed left-0 top-1/4 w-64 glass-panel rounded-r-xl border-l-0 p-md z-30 transition-transform transform -translate-x-56 hover:translate-x-0 flex flex-col gap-sm">
+<div class="flex items-center justify-between text-secondary mb-2">
+<span class="font-headline-sm font-bold">Nexus AI</span>
+<span class="material-symbols-outlined">smart_toy</span>
+</div>
+<p class="font-code-sm text-code-sm text-on-surface-variant mb-2">كيف يمكنني المساعدة؟ جرب قول:</p>
+<button class="text-right text-on-surface font-body-md text-body-md p-2 rounded hover:bg-surface-bright transition-colors">"ربط جهاز جديد"</button>
+<button class="text-right text-on-surface font-body-md text-body-md p-2 rounded hover:bg-surface-bright transition-colors">"مزامنة الإشعارات"</button>
+<button class="text-right text-on-surface font-body-md text-body-md p-2 rounded hover:bg-surface-bright transition-colors">"عرض الأجهزة المتصلة"</button>
+<div class="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none group-hover:opacity-0 transition-opacity">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest dark:bg-surface-container-lowest w-full h-8 border-t border-outline-variant/20 fixed bottom-0 z-50 flex items-center justify-between px-md py-xs">
+<div class="font-bold text-primary font-code-sm text-code-sm">© 2024 CodeSpace 3D | System Healthy</div>
+<div class="flex gap-md font-code-sm text-code-sm">
+<a class="text-on-surface-variant hover:text-primary cursor-default" href="#">Docs</a>
+<a class="text-on-surface-variant hover:text-primary cursor-default" href="#">Support</a>
+<a class="text-on-surface-variant hover:text-primary cursor-default" href="#">Changelog</a>
+</div>
+</footer>
+</body></html>

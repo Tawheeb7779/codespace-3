@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Post-Launch Analytics - CodeSpace 3D</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#303540",
+                        "surface-container-high": "#252a35",
+                        "on-primary-fixed-variant": "#004395",
+                        "surface-container-lowest": "#090e18",
+                        "surface-variant": "#303540",
+                        "outline-variant": "#424754",
+                        "on-secondary-fixed": "#001c39",
+                        "surface-container-low": "#171c26",
+                        "secondary": "#a4c9ff",
+                        "tertiary": "#ffb786",
+                        "surface-tint": "#adc6ff",
+                        "inverse-on-surface": "#2b303b",
+                        "background": "#0e131d",
+                        "on-tertiary-fixed": "#311400",
+                        "on-surface": "#dee2f1",
+                        "tertiary-container": "#df7412",
+                        "on-secondary-container": "#d6e5ff",
+                        "on-primary-fixed": "#001a42",
+                        "tertiary-fixed": "#ffdcc6",
+                        "primary-fixed": "#d8e2ff",
+                        "surface": "#0e131d",
+                        "surface-dim": "#0e131d",
+                        "on-primary": "#002e6a",
+                        "on-surface-variant": "#c2c6d6",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "on-tertiary-container": "#461f00",
+                        "on-secondary": "#00315d",
+                        "primary-container": "#4d8eff",
+                        "on-tertiary": "#502400",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "outline": "#8c909f",
+                        "surface-container": "#1b202a",
+                        "on-error": "#690005",
+                        "surface-bright": "#343944",
+                        "on-secondary-fixed-variant": "#004883",
+                        "error": "#ffb4ab",
+                        "secondary-fixed": "#d4e3ff",
+                        "on-background": "#dee2f1",
+                        "on-error-container": "#ffdad6",
+                        "inverse-primary": "#005ac2",
+                        "inverse-surface": "#dee2f1",
+                        "primary-fixed-dim": "#adc6ff",
+                        "error-container": "#93000a",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "primary": "#adc6ff",
+                        "secondary-container": "#0267b8",
+                        "on-primary-container": "#00285d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "unit": "4px",
+                        "container-max": "1440px",
+                        "gutter": "20px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "xl": "40px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "code-sm": ["JetBrains Mono"],
+                        "display-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "code-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { direction: rtl; }
+        .glass-panel {
+            background: rgba(14, 19, 29, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(140, 144, 159, 0.12);
+        }
+        .glow-active {
+            box-shadow: 0 0 15px rgba(173, 198, 255, 0.15);
+            border-color: rgba(173, 198, 255, 0.3);
+        }
+        .grid-bg {
+            background-size: 24px 24px;
+            background-image: linear-gradient(to right, rgba(66, 71, 84, 0.1) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(66, 71, 84, 0.1) 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen w-screen overflow-hidden flex grid-bg">
+<!-- SideNavBar -->
+<nav class="w-[280px] h-full fixed right-0 top-0 border-l border-outline-variant bg-surface-container-low/50 backdrop-blur-xl flex flex-col py-lg px-md z-50">
+<div class="mb-xl flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-primary">view_in_ar</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary">CodeSpace 3D</h1>
+<p class="font-code-sm text-code-sm text-on-surface-variant">v2.4.0-stable</p>
+</div>
+</div>
+<div class="flex-1 space-y-sm">
+<a class="flex items-center gap-md p-md rounded-lg bg-secondary-container/20 border-l-2 border-primary text-primary font-bold cursor-pointer active:scale-95 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>لوحة القيادة</span>
+</a>
+<a class="flex items-center gap-md p-md rounded-lg text-on-surface-variant font-medium hover:text-on-surface hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="speed">speed</span>
+<span>الأداء</span>
+</a>
+<a class="flex items-center gap-md p-md rounded-lg text-on-surface-variant font-medium hover:text-on-surface hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>المستخدمين</span>
+</a>
+<a class="flex items-center gap-md p-md rounded-lg text-on-surface-variant font-medium hover:text-on-surface hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+<span>الأمان</span>
+</a>
+<a class="flex items-center gap-md p-md rounded-lg text-on-surface-variant font-medium hover:text-on-surface hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>الإعدادات</span>
+</a>
+</div>
+<button class="mt-auto w-full py-md px-lg bg-primary-container text-on-primary-container rounded-lg font-bold hover:bg-primary hover:text-on-primary transition-colors flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined">download</span>
+            تحميل التقرير
+        </button>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 mr-[280px] h-full flex flex-col relative overflow-hidden">
+<!-- TopAppBar -->
+<header class="h-16 border-b border-outline-variant bg-surface/80 backdrop-blur-md flex items-center justify-between px-lg w-full z-40 sticky top-0">
+<div class="flex items-center gap-md">
+<h2 class="font-headline-md text-headline-md tracking-tight text-primary">Project Alpha</h2>
+<span class="px-sm py-xs rounded-full bg-secondary-container/30 border border-secondary text-secondary font-label-caps text-label-caps flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+                    نشط الآن
+                </span>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-sm text-on-surface-variant hover:text-primary transition-all rounded-full hover:bg-surface-container-highest">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-sm text-on-surface-variant hover:text-primary transition-all rounded-full hover:bg-surface-container-highest">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant overflow-hidden ml-sm">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A highly detailed close-up portrait of a futuristic avatar, subtle blue neon lighting reflecting on a sleek visor, set against a dark minimal background. High quality digital painting style, dark mood, technical aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCBMWB37o_sgemQn3lM8QRoC1AVmqNNZ9JojhhM9rZRG6HmKpHb9tYYkRPpxFOu9-c-VCGnlhma4qwEQEZle-pkYO2rG-f04bwP5Pn6-V5dozCx4CqAo7g_wuFI9N0cv1gp5QeWzlMHHDjLGRU9-F3N8TVANwzPKXtFBj2tXl7e5pDfyOK5ePqnJbtNkpdveRLtPQ7YwS6K8MjHq2-TadlCNkP5lF_f8B7IWqSGVCXyhfeLzEejzIf"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<div class="flex-1 overflow-y-auto p-lg flex gap-lg">
+<!-- Main Grid -->
+<div class="flex-1 grid grid-cols-12 gap-lg auto-rows-min">
+<!-- Hero Metric -->
+<div class="col-span-12 glass-panel rounded-xl p-lg glow-active flex flex-col">
+<div class="flex justify-between items-start mb-md">
+<div>
+<h3 class="text-on-surface-variant font-medium mb-xs">المستخدمين النشطين</h3>
+<div class="font-display-lg text-display-lg text-on-surface">12,458</div>
+</div>
+<div class="flex items-center gap-xs text-[#4ade80] bg-[#4ade80]/10 px-sm py-xs rounded-md font-code-sm text-code-sm border border-[#4ade80]/20">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+                            +12.5%
+                        </div>
+</div>
+<div class="h-48 w-full mt-auto relative border-b border-outline-variant flex items-end">
+<!-- Placeholder for chart -->
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<path d="M0,80 Q10,70 20,75 T40,60 T60,50 T80,30 T100,20 L100,100 L0,100 Z" fill="rgba(173, 198, 255, 0.1)"></path>
+<path d="M0,80 Q10,70 20,75 T40,60 T60,50 T80,30 T100,20" fill="none" stroke="#adc6ff" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- Performance Cluster -->
+<div class="col-span-6 glass-panel rounded-xl p-lg flex flex-col relative overflow-hidden group hover:border-primary/50 transition-colors">
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h3 class="text-on-surface-variant font-medium mb-lg flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">speed</span>
+                        متوسط الإطارات (FPS)
+                    </h3>
+<div class="flex-1 flex items-center justify-center">
+<div class="relative w-32 h-32 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<circle cx="50" cy="50" fill="none" r="45" stroke="rgba(140, 144, 159, 0.2)" stroke-width="8"></circle>
+<circle class="drop-shadow-[0_0_8px_rgba(173,198,255,0.5)]" cx="50" cy="50" fill="none" r="45" stroke="#adc6ff" stroke-dasharray="283" stroke-dashoffset="70" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-headline-lg text-headline-lg text-on-surface">60</span>
+<span class="font-label-caps text-label-caps text-primary">مستقر</span>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-6 glass-panel rounded-xl p-lg flex flex-col relative overflow-hidden group hover:border-tertiary/50 transition-colors">
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-tertiary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h3 class="text-on-surface-variant font-medium mb-lg flex items-center gap-sm">
+<span class="material-symbols-outlined text-tertiary">memory</span>
+                        استهلاك الذاكرة
+                    </h3>
+<div class="flex-1 flex flex-col justify-center">
+<div class="font-headline-lg text-headline-lg text-on-surface mb-sm">145<span class="text-body-lg text-on-surface-variant">MB</span></div>
+<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-[45%] rounded-full shadow-[0_0_10px_rgba(255,183,134,0.5)]"></div>
+</div>
+<div class="flex justify-between mt-xs font-code-sm text-code-sm text-on-surface-variant">
+<span>0MB</span>
+<span>512MB (الحد)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Nexus AI Sidebar -->
+<aside class="w-[320px] shrink-0 glass-panel rounded-xl p-lg flex flex-col border-l border-primary/20 glow-active">
+<div class="flex items-center gap-sm mb-lg pb-md border-b border-outline-variant">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/40 animate-pulse">
+<span class="material-symbols-outlined text-primary text-[18px]">graphic_eq</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary">Nexus AI</h3>
+</div>
+<div class="flex-1 space-y-md">
+<div class="p-md bg-surface-container-low rounded-lg border border-outline-variant/50 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<p class="text-on-surface font-body-md">الأداء مستقر عبر جميع المناطق. لا توجد اختناقات ملحوظة في الخوادم الرئيسية.</p>
+<span class="text-on-surface-variant font-code-sm text-[12px] mt-sm block">منذ دقيقتين</span>
+</div>
+<div class="p-md bg-surface-container-low rounded-lg border border-outline-variant/50 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-tertiary"></div>
+<p class="text-on-surface font-body-md">زيادة في تفاعل مستخدمي الهواتف المحمولة بنسبة 15% بعد التحديث الأخير للواجهة.</p>
+<span class="text-on-surface-variant font-code-sm text-[12px] mt-sm block">منذ ساعة</span>
+</div>
+</div>
+<div class="mt-auto pt-lg border-t border-outline-variant flex gap-sm">
+<button class="flex-1 py-sm px-md rounded border border-outline-variant bg-transparent text-on-surface hover:bg-surface-container-highest transition-colors font-medium flex justify-center items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+                        عرض مباشر
+                    </button>
+<button class="flex-1 py-sm px-md rounded bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors font-medium flex justify-center items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">build</span>
+                        تحسين البناء
+                    </button>
+</div>
+</aside>
+</div>
+</main>
+</body></html>

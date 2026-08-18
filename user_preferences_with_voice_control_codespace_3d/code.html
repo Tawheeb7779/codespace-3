@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>User Preferences | CodeSpace 3D</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#a4c9ff",
+                        "error": "#ffb4ab",
+                        "surface-container-highest": "#303540",
+                        "on-surface": "#dee2f1",
+                        "surface-container-low": "#171c26",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "inverse-primary": "#005ac2",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-primary": "#002e6a",
+                        "outline": "#8c909f",
+                        "on-error": "#690005",
+                        "tertiary-container": "#df7412",
+                        "on-background": "#dee2f1",
+                        "tertiary": "#ffb786",
+                        "on-tertiary-fixed": "#311400",
+                        "on-secondary-fixed-variant": "#004883",
+                        "inverse-surface": "#dee2f1",
+                        "on-primary-container": "#00285d",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "primary": "#adc6ff",
+                        "primary-container": "#4d8eff",
+                        "on-primary-fixed-variant": "#004395",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "on-secondary-fixed": "#001c39",
+                        "on-secondary-container": "#d6e5ff",
+                        "secondary-fixed": "#d4e3ff",
+                        "surface-container": "#1b202a",
+                        "error-container": "#93000a",
+                        "secondary-container": "#0267b8",
+                        "surface": "#0e131d",
+                        "on-secondary": "#00315d",
+                        "tertiary-fixed": "#ffdcc6",
+                        "on-surface-variant": "#c2c6d6",
+                        "surface-variant": "#303540",
+                        "surface-dim": "#0e131d",
+                        "surface-container-lowest": "#090e18",
+                        "inverse-on-surface": "#2b303b",
+                        "surface-tint": "#adc6ff",
+                        "surface-bright": "#343944",
+                        "surface-container-high": "#252a35",
+                        "outline-variant": "#424754",
+                        "background": "#0e131d",
+                        "primary-fixed": "#d8e2ff",
+                        "on-primary-fixed": "#001a42",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary": "#502400",
+                        "on-tertiary-container": "#461f00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "unit": "4px",
+                        "container-max": "1440px",
+                        "gutter": "20px",
+                        "xl": "40px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "code-sm": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "code-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background-color: rgba(17, 24, 39, 0.4);
+            border: 1px solid rgba(140, 144, 159, 0.12);
+            backdrop-filter: blur(12px);
+        }
+        
+        .accent-glow:focus-within, .accent-glow:active, .accent-glow.active-card {
+            box-shadow: 0 0 8px 0px rgba(77, 142, 255, 0.4);
+            border-color: rgba(77, 142, 255, 0.6);
+        }
+        
+        /* Custom Checkbox / Toggle styling */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #4d8eff;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #4d8eff;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen flex overflow-hidden">
+<!-- TopAppBar (Semantic Intent: Settings/Preferences - Mobile Only or Hidden on Desktop if SideNav is present. Using as a top bar for small screens) -->
+<header class="md:hidden flex items-center justify-between px-lg w-full h-16 fixed top-0 z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant flat no shadows">
+<div class="font-headline-md text-headline-md tracking-tight text-primary">CodeSpace 3D</div>
+<div class="flex gap-sm">
+<button class="p-xs text-on-surface-variant hover:text-primary transition-all transition-transform duration-200">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-full py-lg px-md w-[280px] fixed left-0 top-0 bg-surface dark:bg-surface border-r border-outline-variant bg-surface-container-low/50 backdrop-blur-xl flat no shadows z-40">
+<div class="mb-xl flex items-center gap-sm px-sm">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container text-[20px]" style="font-variation-settings: 'FILL' 1;">terminal</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary leading-none">CodeSpace 3D</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-xs">v2.4.0-stable</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto">
+<ul class="space-y-unit"><li><a class="flex items-center gap-md px-md py-sm rounded text-primary font-bold bg-secondary-container/20 border-r-2 border-primary cursor-pointer active:scale-95 transition-colors duration-200 font-body-md text-body-md" href="#"><span class="material-symbols-outlined">palette</span>المظهر</a></li><li><a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant font-medium hover:text-on-surface hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95 font-body-md text-body-md" href="#"><span class="material-symbols-outlined">code</span>المحرر</a></li><li><a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant font-medium hover:text-on-surface hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95 font-body-md text-body-md" href="#"><span class="material-symbols-outlined">keyboard</span>اختصارات المفاتيح</a></li><li><a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant font-medium hover:text-on-surface hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95 font-body-md text-body-md" href="#"><span class="material-symbols-outlined">person</span>الحساب</a></li><li><a class="flex items-center gap-md px-md py-sm rounded text-on-surface-variant font-medium hover:text-on-surface hover:bg-surface-container-highest/50 transition-colors duration-200 cursor-pointer active:scale-95 font-body-md text-body-md" href="#"><span class="material-symbols-outlined">settings</span>النظام</a></li></ul>
+</div>
+<div class="mt-auto pt-lg"><div class="flex items-center justify-between mb-sm px-sm"><span class="text-label-caps text-on-surface-variant">VOICE STATUS</span><div class="flex items-center gap-xs"><span class="text-label-caps text-primary font-bold">VOICE ACTIVE</span><div class="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(173,198,255,0.8)]"></div></div></div>
+<button class="w-full bg-primary text-on-primary py-sm px-md rounded-DEFAULT font-bold hover:bg-primary-container transition-colors duration-200 cursor-pointer active:scale-95">حفظ التغييرات</button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-[280px] mt-16 md:mt-0 overflow-y-auto p-lg lg:p-xl relative">
+<!-- Ambient Background Effect -->
+<div class="absolute inset-0 z-0 pointer-events-none opacity-20" style="background: radial-gradient(circle at top right, rgba(77, 142, 255, 0.15) 0%, transparent 60%);"></div>
+<div class="max-w-4xl mx-auto relative z-10 space-y-xl">
+<header><h2 class="font-display-lg text-display-lg text-on-surface">المظهر</h2><p class="font-body-lg text-body-lg text-on-surface-variant mt-sm">تخصيص المظهر المرئي لمساحة العمل الخاصة بك.</p></header>
+<!-- Theme Selector (Bento Style) -->
+<section class="glass-panel rounded-xl p-lg"><h3 class="font-headline-md text-headline-md text-on-surface mb-md">السمة</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-md"><div class="bg-surface-container rounded-lg p-sm border border-primary/30 accent-glow active-card cursor-pointer group relative overflow-hidden transition-all"><div class="h-24 bg-[#05070D] rounded mb-sm border border-outline-variant/30 flex items-center justify-center relative"><div class="w-16 h-2 bg-primary/20 rounded absolute top-4 left-4"></div><div class="w-8 h-2 bg-secondary/20 rounded absolute top-8 left-4"></div></div><p class="font-body-md text-body-md font-bold text-primary group-hover:text-primary-container transition-colors">الفضاء العميق</p><span class="absolute top-2 right-2 material-symbols-outlined text-primary text-[16px]" style="font-variation-settings: 'FILL' 1;">check_circle</span></div><div class="bg-surface-container rounded-lg p-sm border border-outline-variant/30 hover:border-primary/50 cursor-pointer group transition-all"><div class="h-24 bg-[#090D16] rounded mb-sm border border-outline-variant/30 flex items-center justify-center relative overflow-hidden"><div class="absolute inset-0 bg-gradient-to-br from-tertiary/10 to-transparent"></div><div class="w-16 h-2 bg-tertiary/20 rounded absolute top-4 left-4"></div></div><p class="font-body-md text-body-md font-bold text-on-surface-variant group-hover:text-on-surface transition-colors">توهج سايبر</p></div><div class="bg-surface-container rounded-lg p-sm border border-outline-variant/30 hover:border-primary/50 cursor-pointer group transition-all"><div class="h-24 bg-[#f0f4f8] rounded mb-sm border border-outline-variant/30 flex items-center justify-center relative"><div class="w-16 h-2 bg-gray-400 rounded absolute top-4 left-4"></div></div><p class="font-body-md text-body-md font-bold text-on-surface-variant group-hover:text-on-surface transition-colors">تقني فاتح</p></div></div></section><section class="glass-panel rounded-xl p-lg space-y-xl"><div class="flex flex-col gap-sm"><label class="font-headline-md text-headline-md text-on-surface">حجم الخط</label><div class="flex items-center gap-md"><span class="text-label-caps text-on-surface-variant">12px</span><input class="flex-1 h-2 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary" max="24" min="12" type="range" value="16"/><span class="text-label-caps text-on-surface-variant">24px</span></div></div><div class="flex items-center justify-between"><div class="flex flex-col"><span class="font-headline-md text-headline-md text-on-surface">تأثيرات الزجاج</span><span class="text-body-md text-on-surface-variant">تفعيل الشفافية والتمويه في الواجهة</span></div><label class="relative inline-flex items-center cursor-pointer"><input checked="" class="sr-only peer" type="checkbox"/><div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div></label></div><div class="flex flex-col gap-sm"><label class="font-headline-md text-headline-md text-on-surface">لون التمييز</label><div class="flex gap-md"><button class="w-8 h-8 rounded-full bg-[#adc6ff] border-2 border-white ring-2 ring-primary/20"></button><button class="w-8 h-8 rounded-full bg-[#d0bcff] hover:scale-110 transition-transform"></button><button class="w-8 h-8 rounded-full bg-[#b4f0ad] hover:scale-110 transition-transform"></button><button class="w-8 h-8 rounded-full bg-[#ffdcc6] hover:scale-110 transition-transform"></button></div></div></section>
+</div>
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 glass-panel px-lg py-sm rounded-full flex items-center gap-md border border-primary/30 shadow-lg"><span class="material-symbols-outlined text-primary animate-pulse">graphic_eq</span><span class="text-body-md text-on-surface">Voice: "Switch to Cyber Glow theme"</span></div><button class="fixed bottom-8 right-8 z-50 w-16 h-16 rounded-full glass-panel flex items-center justify-center border border-primary/30 hover:scale-110 transition-transform active:scale-95 shadow-lg group"><span class="material-symbols-outlined text-primary text-[32px] group-hover:text-primary-container">mic</span></button></main>
+</body></html>

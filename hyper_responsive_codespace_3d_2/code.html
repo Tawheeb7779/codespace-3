@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>CodeSpace 3D - Tasks</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#4cd7f6",
+                        "surface-tint": "#adc6ff",
+                        "surface-container-lowest": "#060e20",
+                        "surface-container-high": "#222a3d",
+                        "inverse-primary": "#005ac2",
+                        "on-primary": "#002e6a",
+                        "on-tertiary-container": "#340080",
+                        "tertiary": "#d0bcff",
+                        "surface-bright": "#31394d",
+                        "tertiary-fixed-dim": "#d0bcff",
+                        "surface-dim": "#0b1326",
+                        "on-primary-fixed": "#001a42",
+                        "on-tertiary-fixed": "#23005c",
+                        "outline-variant": "#424754",
+                        "secondary-container": "#03b5d3",
+                        "on-surface-variant": "#c2c6d6",
+                        "error": "#ffb4ab",
+                        "on-surface": "#dae2fd",
+                        "primary-container": "#4d8eff",
+                        "surface-container-low": "#131b2e",
+                        "on-tertiary-fixed-variant": "#5516be",
+                        "on-secondary-container": "#00424e",
+                        "surface-container": "#171f33",
+                        "on-secondary-fixed-variant": "#004e5c",
+                        "on-secondary-fixed": "#001f26",
+                        "tertiary-container": "#a078ff",
+                        "surface": "#0b1326",
+                        "tertiary-fixed": "#e9ddff",
+                        "secondary-fixed": "#acedff",
+                        "surface-container-highest": "#2d3449",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed-dim": "#adc6ff",
+                        "inverse-surface": "#dae2fd",
+                        "on-tertiary": "#3c0091",
+                        "outline": "#8c909f",
+                        "on-error": "#690005",
+                        "primary-fixed": "#d8e2ff",
+                        "on-primary-fixed-variant": "#004395",
+                        "surface-variant": "#2d3449",
+                        "on-background": "#dae2fd",
+                        "inverse-on-surface": "#283044",
+                        "error-container": "#93000a",
+                        "on-primary-container": "#00285d",
+                        "on-secondary": "#003640",
+                        "secondary": "#4cd7f6",
+                        "primary": "#adc6ff",
+                        "background": "#0b1326"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "unit": "8px",
+                        "stack-gap": "12px",
+                        "container-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "code-md": ["JetBrains Mono"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "code-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-level-1 {
+            background-color: rgba(6, 14, 32, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .glass-level-2 {
+            background-color: rgba(23, 31, 51, 0.5);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+        }
+        .glass-level-3 {
+            background-color: rgba(45, 52, 73, 0.7);
+            backdrop-filter: blur(60px);
+            -webkit-backdrop-filter: blur(60px);
+        }
+        .glass-level-4 {
+            background-color: rgba(49, 57, 77, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+        }
+        .diamond-edge {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .snappy-transition {
+            transition: all 0.1s cubic-bezier(0.05, 0.7, 0.1, 1);
+        }
+        body {
+            background-color: #0b1326;
+            color: #dae2fd;
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(173, 198, 255, 0.2);
+            border-radius: 4px;
+        }
+        .ambient-shadow {
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col font-body-md text-body-md overflow-hidden relative">
+<!-- Background Space Shader Element placeholder -->
+<div class="fixed inset-0 z-0 pointer-events-none opacity-40">
+<!-- Assuming a shader or complex background pattern here -->
+<div class="w-full h-full bg-cover bg-center" data-alt="Deep space void background with subtle nebula clouds in dark navy and charcoal tones. Faint stars twinkle in the distance, providing a premium, technical atmosphere. Lighting is soft and ambient, emphasizing depth and spatial clarity in a luxury aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBt39aZaNeOBLSXbqb57z0jQIHZ7oCn-N0NiKv63XHnkgA_0Xy9m9ITUxY2fb7OqDsDfJgDKqFllvA6Ub4RW12zjfyzk95YcWu6P7QNSvrlqRAX2mPhlMX8dGjoS0IrZiEEGsD6Za04cQC2ElyJZg4huTsAi3qLhsVdMLhcLOKcvtQVXUvkZTDir7l_4LwqhsU0-2D1SwzNQuvakdKxVqBWLV5ooCYIUXafTZV-FG_m1s-urYsk86Jg')"></div>
+</div>
+<!-- TopAppBar -->
+<header class="bg-surface/80 dark:bg-surface/80 backdrop-blur-xl border-b border-white/10 flex justify-between items-center px-lg h-16 w-full fixed top-0 z-50 transition-opacity snappy-transition">
+<button class="text-primary dark:text-primary-fixed-dim hover:opacity-80 active:scale-95 transition-transform snappy-transition flex items-center justify-center p-2 rounded-full">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">keyboard_command_key</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold tracking-tight text-primary">CodeSpace 3D</h1>
+<button class="text-on-surface-variant hover:opacity-80 active:scale-95 transition-transform snappy-transition flex items-center justify-center p-2 rounded-full">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings_voice</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow z-10 pt-[80px] pb-[100px] px-gutter overflow-y-auto w-full max-w-md mx-auto relative">
+<!-- Search Bar (Level 1 Glass) -->
+<div class="mb-stack-gap glass-level-1 diamond-edge rounded-full px-4 py-3 flex items-center gap-3 focus-within:border-primary focus-within:shadow-[0_0_0_4px_rgba(173,198,255,0.2)] snappy-transition">
+<span class="material-symbols-outlined text-on-surface-variant text-opacity-70">search</span>
+<input class="bg-transparent border-none outline-none text-on-surface placeholder-on-surface-variant/50 w-full font-body-md text-body-md p-0 focus:ring-0" placeholder="Search tasks..." type="text"/>
+</div>
+<!-- Section Title -->
+<div class="flex justify-between items-end mb-stack-gap mt-unit">
+<h2 class="font-headline-md text-headline-md text-on-surface">Active Tasks</h2>
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest">4 Pending</span>
+</div>
+<!-- Task List (Bento-style Cards) -->
+<div class="flex flex-col gap-stack-gap">
+<!-- Task Card 1 (High Priority) -->
+<div class="glass-level-2 diamond-edge rounded-xl p-4 ambient-shadow active:scale-[0.98] snappy-transition group cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-error"></div>
+<div class="flex justify-between items-start mb-2 pl-2">
+<span class="glass-level-3 rounded-full px-2 py-0.5 font-label-sm text-label-sm text-error border border-error/20 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> High
+                    </span>
+<span class="text-on-surface-variant font-code-md text-code-md opacity-60 group-hover:opacity-100 snappy-transition">#CS-402</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface pl-2">Update Renderer</h3>
+<p class="text-on-surface-variant text-opacity-80 mt-1 pl-2 text-sm">Implement WebGL2 fallback for older devices.</p>
+<div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center pl-2">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full glass-level-4 border border-white/20 flex items-center justify-center text-xs text-primary">A</div>
+</div>
+<button class="glass-level-4 rounded-full p-1.5 hover:bg-white/10 snappy-transition text-primary">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Task Card 2 (Medium Priority) -->
+<div class="glass-level-2 diamond-edge rounded-xl p-4 ambient-shadow active:scale-[0.98] snappy-transition group cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-secondary-fixed-dim"></div>
+<div class="flex justify-between items-start mb-2 pl-2">
+<span class="glass-level-3 rounded-full px-2 py-0.5 font-label-sm text-label-sm text-secondary-fixed-dim border border-secondary-fixed-dim/20 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim"></span> Medium
+                    </span>
+<span class="text-on-surface-variant font-code-md text-code-md opacity-60 group-hover:opacity-100 snappy-transition">#CS-418</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface pl-2">Fix Node.js Bug</h3>
+<p class="text-on-surface-variant text-opacity-80 mt-1 pl-2 text-sm">Resolve memory leak in spatial data processing stream.</p>
+<div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center pl-2">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full glass-level-4 border border-white/20 flex items-center justify-center text-xs text-primary">M</div>
+<div class="w-6 h-6 rounded-full glass-level-4 border border-white/20 flex items-center justify-center text-xs text-primary">S</div>
+</div>
+<button class="glass-level-4 rounded-full p-1.5 hover:bg-white/10 snappy-transition text-primary">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Task Card 3 (Low Priority) -->
+<div class="glass-level-2 diamond-edge rounded-xl p-4 ambient-shadow active:scale-[0.98] snappy-transition group cursor-pointer relative overflow-hidden opacity-70 hover:opacity-100">
+<div class="absolute top-0 left-0 w-1 h-full bg-outline"></div>
+<div class="flex justify-between items-start mb-2 pl-2">
+<span class="glass-level-3 rounded-full px-2 py-0.5 font-label-sm text-label-sm text-outline border border-outline/20 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span> Low
+                    </span>
+<span class="text-on-surface-variant font-code-md text-code-md opacity-60 group-hover:opacity-100 snappy-transition">#CS-420</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface pl-2">Optimize Assets</h3>
+<p class="text-on-surface-variant text-opacity-80 mt-1 pl-2 text-sm">Compress 3D model textures for faster initial load.</p>
+<div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center pl-2">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full glass-level-4 border border-white/20 flex items-center justify-center text-xs text-primary">K</div>
+</div>
+<button class="glass-level-4 rounded-full p-1.5 hover:bg-white/10 snappy-transition text-primary">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Floating Action Button -->
+<button class="fixed bottom-[100px] right-gutter glass-level-4 diamond-edge text-primary rounded-xl p-4 ambient-shadow hover:brightness-110 active:scale-90 snappy-transition z-20 flex items-center justify-center group">
+<span class="material-symbols-outlined text-[24px] group-hover:rotate-90 snappy-transition" style="font-variation-settings: 'FILL' 1;">add</span>
+</button>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface-container-low/90 dark:bg-surface-container-low/90 backdrop-blur-xl border-t border-white/10 flex justify-around items-center h-20 px-md w-full pb-safe fixed bottom-0 z-50 rounded-t-xl md:hidden backdrop-blur-[24px]">
+<a class="flex flex-col items-center justify-center text-on-surface-variant pt-2 hover:text-primary-fixed transition-colors active:scale-90 snappy-transition group w-1/4" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:-translate-y-1 snappy-transition" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="font-label-sm text-label-sm font-medium">Dashboard</span>
+</a>
+<!-- Active State: Tasks -->
+<a class="flex flex-col items-center justify-center text-primary border-primary pt-2 hover:text-primary-fixed transition-colors active:scale-90 snappy-transition group w-1/4 bg-primary/20 rounded-full scale-110 shadow-[0_0_15px_rgba(173,198,255,0.3)]" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:-translate-y-1 snappy-transition" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span class="font-label-sm text-label-sm font-medium">Tasks</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant pt-2 hover:text-primary-fixed transition-colors active:scale-90 snappy-transition group w-1/4" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:-translate-y-1 snappy-transition" style="font-variation-settings: 'FILL' 0;">rocket_launch</span>
+<span class="font-label-sm text-label-sm font-medium">Deployments</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant pt-2 hover:text-primary-fixed transition-colors active:scale-90 snappy-transition group w-1/4" href="#">
+<span class="material-symbols-outlined mb-1 group-hover:-translate-y-1 snappy-transition" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-label-sm text-label-sm font-medium">Settings</span>
+</a>
+</nav>
+</body></html>

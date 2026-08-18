@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeSpace 3D - Assets Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-primary": "#005ac2",
+                        "on-primary-fixed-variant": "#004395",
+                        "tertiary": "#ffb786",
+                        "on-secondary": "#00315d",
+                        "primary-container": "#4d8eff",
+                        "surface-container-low": "#171c26",
+                        "surface-bright": "#343944",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#311400",
+                        "surface-container-high": "#252a35",
+                        "on-background": "#dee2f1",
+                        "primary-fixed": "#d8e2ff",
+                        "on-tertiary-container": "#461f00",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "on-primary-container": "#00285d",
+                        "background": "#0e131d",
+                        "tertiary-container": "#df7412",
+                        "secondary": "#a4c9ff",
+                        "on-primary": "#002e6a",
+                        "inverse-on-surface": "#2b303b",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "surface-variant": "#303540",
+                        "on-secondary-fixed-variant": "#004883",
+                        "primary": "#adc6ff",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "outline": "#8c909f",
+                        "surface-container-highest": "#303540",
+                        "outline-variant": "#424754",
+                        "surface-container": "#1b202a",
+                        "tertiary-fixed": "#ffdcc6",
+                        "surface": "#0e131d",
+                        "inverse-surface": "#dee2f1",
+                        "secondary-container": "#0267b8",
+                        "surface-tint": "#adc6ff",
+                        "error": "#ffb4ab",
+                        "surface-container-lowest": "#090e18",
+                        "on-error": "#690005",
+                        "on-surface-variant": "#c2c6d6",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-tertiary": "#502400",
+                        "on-surface": "#dee2f1",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#d6e5ff",
+                        "surface-dim": "#0e131d",
+                        "on-secondary-fixed": "#001c39",
+                        "on-primary-fixed": "#001a42",
+                        "secondary-fixed": "#d4e3ff"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.125rem",
+                        lg: "0.25rem",
+                        xl: "0.5rem",
+                        full: "0.75rem"
+                    },
+                    spacing: {
+                        unit: "4px",
+                        md: "16px",
+                        gutter: "20px",
+                        xs: "4px",
+                        lg: "24px",
+                        sm: "8px",
+                        "container-max": "1440px",
+                        xl: "40px"
+                    },
+                    fontFamily: {
+                        "label-caps": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "code-sm": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    fontSize: {
+                        "label-caps": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "code-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #05070D; color: #dee2f1; }
+        .glass-panel {
+            background-color: #090D16;
+            border: 1px solid rgba(140, 144, 159, 0.08);
+        }
+        .glass-elevated {
+            background-color: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(140, 144, 159, 0.12);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .active-glow {
+            box-shadow: 0 0 0 2px rgba(173, 198, 255, 0.2);
+            border-color: rgba(173, 198, 255, 0.3);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[style*="FILL' 1"] {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for technical look */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #303540; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #424754; }
+    </style>
+</head>
+<body class="overflow-hidden flex flex-col h-screen antialiased">
+<!-- TopAppBar -->
+<header class="bg-surface/80 backdrop-blur-xl fixed top-0 w-full h-14 border-b border-outline-variant/10 flex justify-between items-center px-lg z-50 transition-all duration-200 ease-in-out">
+<div class="flex items-center gap-xl h-full">
+<span class="font-headline-md text-headline-md font-bold tracking-tighter text-on-surface">CodeSpace 3D</span>
+<nav class="hidden md:flex items-center gap-lg h-full pt-1">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md h-full flex items-center hover:bg-white/5 px-sm" href="#">Editor</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-body-md text-body-md h-full flex items-center bg-white/5 px-sm" href="#">Assets</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md h-full flex items-center hover:bg-white/5 px-sm" href="#">Debug</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md h-full flex items-center hover:bg-white/5 px-sm" href="#">Terminal</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative hidden lg:flex items-center glass-elevated rounded-DEFAULT px-md py-xs w-64 focus-within:active-glow transition-all duration-200">
+<span class="material-symbols-outlined text-outline text-body-md mr-sm">search</span>
+<input class="bg-transparent border-none outline-none text-body-md font-body-md text-on-surface placeholder-outline-variant w-full p-0 focus:ring-0" placeholder="Search workspace..." type="text"/>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-sm rounded-DEFAULT hover:bg-white/5 text-on-surface-variant transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-body-lg">settings</span>
+</button>
+<button class="p-sm rounded-DEFAULT hover:bg-white/5 text-on-surface-variant transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-body-lg">cloud_done</span>
+</button>
+<button class="p-sm rounded-DEFAULT hover:bg-white/5 text-on-surface-variant transition-colors flex items-center justify-center relative">
+<span class="material-symbols-outlined text-body-lg">notifications</span>
+<span class="absolute top-sm right-sm w-2 h-2 bg-primary rounded-full"></span>
+</button>
+<div class="w-8 h-8 rounded-full ml-sm overflow-hidden border border-outline-variant/30">
+<img alt="User avatar" class="w-full h-full object-cover" data-alt="A small circular avatar image for a user profile in a highly technical dark-themed 3D development environment. The avatar depicts a stylized, glowing geometric cube rendered in deep blues and sharp neon highlights, conveying a professional, high-end software developer identity. The background of the avatar is pitch black, ensuring the glowing cube stands out starkly." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDC7DQV15-UWBU3asOOYDBMm9gsHObojicV8VZvb5YhsJyzxflnMk8HmcQxmyRmVSe5MNM3xd_6W-N1Wm3LRN_Hh500vpQAGQuS3V-bX00slaOm1sMqqM32Q4LcYm0paJJgxnGtWE4U-ULezZLd9RvN9jdVN94kXj0vanmXBJ3KUF7ZPWAiLwAkp2XxcvsdywQBnaZO2-prcYhbW1HTvP1S7lyyDj1u3dI5mQ_Q0G97T_3OCrPfGzHQ"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="bg-surface-container-low fixed left-0 top-14 bottom-0 w-16 md:w-20 border-r border-outline-variant/10 flex flex-col items-center py-md z-40">
+<div class="flex flex-col items-center gap-1 mb-xl px-sm text-center">
+<div class="w-10 h-10 rounded-DEFAULT bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center mb-xs">
+<span class="material-symbols-outlined text-primary text-headline-md">view_in_ar</span>
+</div>
+<span class="hidden font-label-caps text-label-caps text-on-surface w-full overflow-hidden text-ellipsis whitespace-nowrap">Project Alpha</span>
+</div>
+<div class="flex flex-col gap-sm w-full">
+<a class="w-full flex flex-col items-center justify-center py-sm text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90 group relative" href="#">
+<span class="material-symbols-outlined text-headline-md mb-1">folder_open</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-2">Explorer</span>
+</a>
+<a class="w-full flex flex-col items-center justify-center py-sm text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90 group relative" href="#">
+<span class="material-symbols-outlined text-headline-md mb-1">search</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-2">Search</span>
+</a>
+<a class="w-full flex flex-col items-center justify-center py-sm text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90 group relative" href="#">
+<span class="material-symbols-outlined text-headline-md mb-1">account_tree</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-2">Source</span>
+</a>
+<a class="w-full flex flex-col items-center justify-center py-sm text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90 group relative" href="#">
+<span class="material-symbols-outlined text-headline-md mb-1">extension</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-2">Plugins</span>
+</a>
+<a class="w-full flex flex-col items-center justify-center py-sm text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90 group relative" href="#">
+<span class="material-symbols-outlined text-headline-md mb-1">bug_report</span>
+<span class="font-label-caps text-[10px] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-2">Debug</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-sm w-full">
+<a class="w-full flex flex-col items-center justify-center py-sm text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined text-headline-md">account_circle</span>
+</a>
+<a class="w-full flex flex-col items-center justify-center py-sm text-outline hover:text-on-surface-variant hover:bg-surface-container-high transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined text-headline-md">settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Workspace -->
+<main class="ml-16 md:ml-20 mt-14 mb-6 h-[calc(100vh-80px)] flex flex-1 overflow-hidden bg-background">
+<!-- Assets Sidebar -->
+<aside class="w-64 glass-panel border-r border-t-0 border-b-0 border-l-0 flex flex-col flex-shrink-0 z-10">
+<div class="p-md border-b border-outline-variant/10 flex items-center justify-between">
+<h2 class="font-label-caps text-label-caps text-on-surface">Asset Library</h2>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-body-md">filter_list</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-sm flex flex-col gap-xs">
+<button class="w-full flex items-center gap-sm px-sm py-2 rounded-DEFAULT bg-primary/10 text-primary border border-primary/20 transition-colors text-left">
+<span class="material-symbols-outlined text-body-lg" style="font-variation-settings: 'FILL' 1;">dataset</span>
+<span class="font-body-md text-body-md font-semibold">All Assets</span>
+<span class="ml-auto font-code-sm text-code-sm text-primary/70">142</span>
+</button>
+<button class="w-full flex items-center gap-sm px-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-left border border-transparent">
+<span class="material-symbols-outlined text-body-lg">category</span>
+<span class="font-body-md text-body-md">Models</span>
+<span class="ml-auto font-code-sm text-code-sm text-outline">45</span>
+</button>
+<button class="w-full flex items-center gap-sm px-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-left border border-transparent">
+<span class="material-symbols-outlined text-body-lg">texture</span>
+<span class="font-body-md text-body-md">Textures</span>
+<span class="ml-auto font-code-sm text-code-sm text-outline">68</span>
+</button>
+<button class="w-full flex items-center gap-sm px-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-left border border-transparent">
+<span class="material-symbols-outlined text-body-lg">palette</span>
+<span class="font-body-md text-body-md">Materials</span>
+<span class="ml-auto font-code-sm text-code-sm text-outline">21</span>
+</button>
+<button class="w-full flex items-center gap-sm px-sm py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-left border border-transparent">
+<span class="material-symbols-outlined text-body-lg">public</span>
+<span class="font-body-md text-body-md">Environments</span>
+<span class="ml-auto font-code-sm text-code-sm text-outline">8</span>
+</button>
+<div class="mt-md mb-xs px-sm">
+<span class="font-label-caps text-[10px] text-outline uppercase tracking-widest">Collections</span>
+</div>
+<button class="w-full flex items-center gap-sm px-sm py-2 rounded-DEFAULT text-outline hover:bg-surface-container hover:text-on-surface transition-colors text-left border border-transparent">
+<span class="material-symbols-outlined text-body-md">folder</span>
+<span class="font-body-md text-code-sm">Sci-Fi Pack</span>
+</button>
+<button class="w-full flex items-center gap-sm px-sm py-2 rounded-DEFAULT text-outline hover:bg-surface-container hover:text-on-surface transition-colors text-left border border-transparent">
+<span class="material-symbols-outlined text-body-md">folder</span>
+<span class="font-body-md text-code-sm">Nature Assets</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<section class="flex-1 flex flex-col h-full bg-surface-container-lowest relative overflow-hidden">
+<!-- Action Bar -->
+<div class="h-16 border-b border-outline-variant/10 px-lg flex items-center justify-between flex-shrink-0 z-20 glass-panel border-x-0 border-t-0">
+<div class="flex items-center gap-md">
+<h1 class="font-headline-md text-headline-md text-on-surface">All Assets</h1>
+<div class="h-6 w-px bg-outline-variant/30 mx-sm"></div>
+<div class="flex items-center gap-xs text-outline">
+<button class="p-xs hover:bg-white/5 rounded-DEFAULT transition-colors"><span class="material-symbols-outlined text-body-lg">grid_view</span></button>
+<button class="p-xs hover:bg-white/5 rounded-DEFAULT transition-colors"><span class="material-symbols-outlined text-body-lg">view_list</span></button>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative flex items-center glass-elevated rounded-DEFAULT px-md py-xs w-64 focus-within:active-glow transition-all duration-200">
+<span class="material-symbols-outlined text-outline text-body-md mr-sm">search</span>
+<input class="bg-transparent border-none outline-none text-body-md font-body-md text-on-surface placeholder-outline-variant w-full p-0 focus:ring-0" placeholder="Search assets..." type="text"/>
+</div>
+<button class="h-10 px-md rounded-DEFAULT bg-transparent border border-outline-variant hover:bg-surface-bright hover:border-outline transition-all flex items-center gap-sm text-on-surface font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-body-md">create_new_folder</span>
+                        New Folder
+                    </button>
+<button class="h-10 px-md rounded-DEFAULT bg-primary text-on-primary hover:bg-primary-fixed hover:shadow-[0_0_12px_rgba(173,198,255,0.3)] transition-all flex items-center gap-sm font-label-caps text-label-caps">
+<span class="material-symbols-outlined text-body-md">upload</span>
+                        Upload Asset
+                    </button>
+</div>
+</div>
+<!-- Asset Grid -->
+<div class="flex-1 p-lg overflow-y-auto">
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-lg">
+<!-- Card 1: 3D Model -->
+<div class="glass-panel rounded-lg overflow-hidden group hover:active-glow cursor-pointer transition-all duration-300 flex flex-col h-64">
+<div class="h-40 bg-surface-container relative flex items-center justify-center p-sm border-b border-outline-variant/10">
+<div class="absolute top-sm right-sm z-10 font-code-sm text-[10px] px-2 py-0.5 rounded-sm bg-surface-variant border border-outline-variant/50 text-outline">.glb</div>
+<img alt="Cyber Arm Model" class="w-full h-full object-contain filter group-hover:brightness-110 transition-all duration-300" data-alt="A highly detailed 3D rendering of a futuristic cybernetic arm. The model is displayed against a stark, dark grey studio backdrop with dramatic rim lighting highlighting its intricate metallic joints and glowing blue circuitry. The overall aesthetic is professional, technical, and high-fidelity, typical of a AAA game asset preview." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKO_06aXnKW06_rucdGoMSkcyryB3KfsNsUF4o9B5Co50HRxLtZTRoONJFnUoLvYmWHSS5xJ1q-MT3RQ3i1UgyH5S_BaVrvZ9A4H7LyxLE4MoOogvFj-Kb4jHE2dkw1Js7vjfEh8BiJ5xtuCkyzR00mWe5d8n8GoVfHsHrVFuKklpVYIWzN-pKtM-P4Mk-gMSU06DGIzGS6TUQJPmAOzl4u9KrGD2aZmxITq2d1Kdo7VraXw7ZUMb1"/>
+</div>
+<div class="p-sm flex flex-col justify-between flex-1 bg-surface-container-lowest">
+<div>
+<h3 class="font-body-md text-body-md text-on-surface truncate group-hover:text-primary transition-colors">cyber_arm_v2.glb</h3>
+<p class="font-code-sm text-code-sm text-outline mt-1">12.4 MB</p>
+</div>
+<div class="flex items-center justify-between mt-sm">
+<span class="font-label-caps text-[10px] text-tertiary px-1.5 py-0.5 border border-tertiary/20 rounded-sm bg-tertiary/5">Model</span>
+<button class="text-outline hover:text-on-surface opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-body-md">more_vert</span></button>
+</div>
+</div>
+</div>
+<!-- Card 2: Texture -->
+<div class="glass-panel rounded-lg overflow-hidden group hover:active-glow cursor-pointer transition-all duration-300 flex flex-col h-64">
+<div class="h-40 bg-surface-container relative flex items-center justify-center border-b border-outline-variant/10">
+<div class="absolute top-sm right-sm z-10 font-code-sm text-[10px] px-2 py-0.5 rounded-sm bg-surface-variant border border-outline-variant/50 text-outline">.png</div>
+<img alt="Rust Texture" class="w-full h-full object-cover filter group-hover:brightness-110 transition-all duration-300" data-alt="A seamless, high-resolution texture map of rusted, distressed metal plating. The texture features deep oranges and dark browns of oxidation contrasting with raw steel grey. It is lit evenly to display the surface roughness and normal details clearly. The image is a square tile meant for use in a 3D material setup." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtylz4nq9Cy6XctRxLth-63sIfSzcMMmwUult0JIw3unfq7Dz4P55puAqRq6DQCGsOkROuzkjQjIVHNkUVzOM2KC-HKJTpQP6aMTuuIWzoj_k7UJSodXP9gx13AhB1SksMYWYtNa2NIIZ1ws2Zxc2xSTwzrjqZvGbIKhZjTLoYXzKhOxfyKYVMTXhawbcACVUmbydlRS_eWdc8aEaVniJVXKf4PGPLLW_mKdmAhRr-eDdUvW9xJA44"/>
+</div>
+<div class="p-sm flex flex-col justify-between flex-1 bg-surface-container-lowest">
+<div>
+<h3 class="font-body-md text-body-md text-on-surface truncate group-hover:text-primary transition-colors">metal_rust_albedo.png</h3>
+<p class="font-code-sm text-code-sm text-outline mt-1">4.2 MB • 2048x2048</p>
+</div>
+<div class="flex items-center justify-between mt-sm">
+<span class="font-label-caps text-[10px] text-secondary px-1.5 py-0.5 border border-secondary/20 rounded-sm bg-secondary/5">Texture</span>
+<button class="text-outline hover:text-on-surface opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-body-md">more_vert</span></button>
+</div>
+</div>
+</div>
+<!-- Card 3: HDR Environment -->
+<div class="glass-panel rounded-lg overflow-hidden group hover:active-glow cursor-pointer transition-all duration-300 flex flex-col h-64">
+<div class="h-40 bg-surface-container relative flex items-center justify-center border-b border-outline-variant/10">
+<div class="absolute top-sm right-sm z-10 font-code-sm text-[10px] px-2 py-0.5 rounded-sm bg-surface-variant border border-outline-variant/50 text-outline">.hdr</div>
+<img alt="Neon Alley HDR" class="w-full h-full object-cover filter group-hover:brightness-110 transition-all duration-300" data-alt="An equirectangular panoramic image of a neon-lit cyberpunk city alleyway at night. The image serves as an HDRI environment map, featuring intense contrasting light sources in vibrant pinks, cyan, and deep shadows. The perspective is distorted characteristic of a 360-degree map, designed to provide complex lighting reflections for a 3D scene." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHKy1SSn7DXqFe98qigF9NhseNQofZ1OkSECV2HvjkGfhKUxTGeWn4a9j5PRelOvZzgaVc61qma_slLR380GFOtT1u-0DuaxsLd1mkmkx7gKD4suEi1VP2G1cg_0vnEJlQedJpMpoI7IRbnTAFjmN_LZ9pn5jsPdAClXuTsqjdvkJhx0L5jx8h67So31m_vhb07Vm-ZcqS4XtrbQEUNrbCb1-7wJTQq8Fn6C4Aa_TFaTitRnTWkltY"/>
+</div>
+<div class="p-sm flex flex-col justify-between flex-1 bg-surface-container-lowest">
+<div>
+<h3 class="font-body-md text-body-md text-on-surface truncate group-hover:text-primary transition-colors">neon_alley_4k.hdr</h3>
+<p class="font-code-sm text-code-sm text-outline mt-1">28.1 MB</p>
+</div>
+<div class="flex items-center justify-between mt-sm">
+<span class="font-label-caps text-[10px] text-primary px-1.5 py-0.5 border border-primary/20 rounded-sm bg-primary/5">Environment</span>
+<button class="text-outline hover:text-on-surface opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-body-md">more_vert</span></button>
+</div>
+</div>
+</div>
+<!-- Card 4: Material -->
+<div class="glass-panel rounded-lg overflow-hidden group hover:active-glow cursor-pointer transition-all duration-300 flex flex-col h-64">
+<div class="h-40 bg-surface-container relative flex items-center justify-center p-md border-b border-outline-variant/10">
+<div class="absolute top-sm right-sm z-10 font-code-sm text-[10px] px-2 py-0.5 rounded-sm bg-surface-variant border border-outline-variant/50 text-outline">.mat</div>
+<div class="w-24 h-24 rounded-full bg-gradient-to-tr from-surface-variant to-outline border-2 border-outline-variant/30 shadow-[0_0_20px_rgba(140,144,159,0.2)]"></div>
+</div>
+<div class="p-sm flex flex-col justify-between flex-1 bg-surface-container-lowest">
+<div>
+<h3 class="font-body-md text-body-md text-on-surface truncate group-hover:text-primary transition-colors">brushed_steel.mat</h3>
+<p class="font-code-sm text-code-sm text-outline mt-1">12 KB</p>
+</div>
+<div class="flex items-center justify-between mt-sm">
+<span class="font-label-caps text-[10px] text-error px-1.5 py-0.5 border border-error/20 rounded-sm bg-error/5">Material</span>
+<button class="text-outline hover:text-on-surface opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-body-md">more_vert</span></button>
+</div>
+</div>
+</div>
+<!-- Card 5: 3D Model (Selected State Example) -->
+<div class="glass-elevated rounded-lg overflow-hidden group active-glow cursor-pointer transition-all duration-300 flex flex-col h-64">
+<div class="h-40 bg-surface-container relative flex items-center justify-center p-sm border-b border-primary/30 bg-primary/5">
+<div class="absolute top-sm left-sm z-10"><span class="material-symbols-outlined text-primary text-body-md" style="font-variation-settings: 'FILL' 1;">check_circle</span></div>
+<div class="absolute top-sm right-sm z-10 font-code-sm text-[10px] px-2 py-0.5 rounded-sm bg-surface-variant border border-outline-variant/50 text-outline">.obj</div>
+<img alt="Car Wireframe" class="w-full h-full object-contain filter brightness-110" data-alt="A low-poly 3D model wireframe of a futuristic sports car. The wireframe lines are glowing a subtle electric blue against a very dark, near-black studio environment. The geometry is clean and optimized, showcasing the topology of the vehicle intended for real-time rendering engine use." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMxF2QtIEDzrSKC-Q3E05CtnetFTW2zCHav2q-8PnrssDQAQ-gnqg5vsnbFSR_H4HWLRM0ULO1-DBPo0V6TBMwgi1SkmaMS9Iuwu6kOGWIR4JGw8jnZsE58Wp_CIlZFIhRI8-wQ2FgEzcE-6ovtvyykjWXJyBRjP_96qKD0HPgXPzv5yMhNQqN1nwHvHSPg6GH_ZhMNU4U3anoqsvzke7uWRXeR-vgFDMrLMoTC82eRnEe-WQb16yF"/>
+</div>
+<div class="p-sm flex flex-col justify-between flex-1 bg-surface-container-lowest">
+<div>
+<h3 class="font-body-md text-body-md text-primary truncate">vehicle_chassis_lp.obj</h3>
+<p class="font-code-sm text-code-sm text-outline mt-1">3.8 MB</p>
+</div>
+<div class="flex items-center justify-between mt-sm">
+<span class="font-label-caps text-[10px] text-tertiary px-1.5 py-0.5 border border-tertiary/20 rounded-sm bg-tertiary/5">Model</span>
+<button class="text-primary hover:text-primary-fixed transition-colors"><span class="material-symbols-outlined text-body-md">more_vert</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Contextual Info Panel (Bottom overlay) -->
+<div class="absolute bottom-0 left-0 right-0 h-12 glass-panel border-t border-outline-variant/10 border-x-0 border-b-0 flex items-center justify-between px-lg z-30 translate-y-0 transition-transform">
+<div class="flex items-center gap-md font-code-sm text-code-sm text-outline">
+<span>1 asset selected</span>
+<div class="w-1 h-1 rounded-full bg-outline-variant"></div>
+<span>vehicle_chassis_lp.obj (3.8 MB)</span>
+</div>
+<div class="flex items-center gap-sm">
+<button class="font-label-caps text-label-caps text-outline hover:text-on-surface px-sm py-1 transition-colors">Duplicate</button>
+<button class="font-label-caps text-label-caps text-error hover:text-on-error hover:bg-error/10 rounded-sm px-sm py-1 transition-colors">Delete</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest fixed bottom-0 w-full h-6 border-t border-outline-variant/10 flex justify-between items-center px-md z-50 overflow-hidden font-code-sm text-code-sm">
+<span class="text-secondary cursor-pointer hover:text-primary transition-colors">© 2024 CodeSpace 3D | System: Optimal</span>
+<div class="flex items-center gap-md">
+<a class="text-outline hover:text-primary transition-colors cursor-pointer" href="#">Logs</a>
+<a class="text-outline hover:text-primary transition-colors cursor-pointer flex items-center gap-xs" href="#"><span class="material-symbols-outlined text-[14px]">call_split</span> Main Branch</a>
+<a class="text-outline hover:text-primary transition-colors cursor-pointer" href="#">UTF-8</a>
+<a class="text-outline hover:text-primary transition-colors cursor-pointer" href="#">Spaces: 4</a>
+</div>
+</footer>
+</body></html>

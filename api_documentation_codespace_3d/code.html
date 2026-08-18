@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeSpace 3D - API Documentation</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#502400",
+                        "on-tertiary-fixed": "#311400",
+                        "on-surface": "#dee2f1",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#d6e5ff",
+                        "on-error-container": "#ffdad6",
+                        "surface-container": "#1b202a",
+                        "surface-variant": "#303540",
+                        "surface-tint": "#adc6ff",
+                        "on-secondary": "#00315d",
+                        "surface-container-high": "#252a35",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "on-primary-container": "#00285d",
+                        "on-primary": "#002e6a",
+                        "on-primary-fixed": "#001a42",
+                        "surface-container-highest": "#303540",
+                        "error": "#ffb4ab",
+                        "on-error": "#690005",
+                        "tertiary": "#ffb786",
+                        "inverse-primary": "#005ac2",
+                        "surface-dim": "#0e131d",
+                        "outline-variant": "#424754",
+                        "outline": "#8c909f",
+                        "on-primary-fixed-variant": "#004395",
+                        "inverse-surface": "#dee2f1",
+                        "secondary-fixed": "#d4e3ff",
+                        "background": "#0e131d",
+                        "on-secondary-fixed": "#001c39",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "surface-container-low": "#171c26",
+                        "inverse-on-surface": "#2b303b",
+                        "primary-container": "#4d8eff",
+                        "secondary-container": "#0267b8",
+                        "tertiary-fixed": "#ffdcc6",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface": "#0e131d",
+                        "on-secondary-fixed-variant": "#004883",
+                        "primary-fixed": "#d8e2ff",
+                        "secondary-fixed-dim": "#a4c9ff",
+                        "surface-container-lowest": "#090e18",
+                        "primary": "#adc6ff",
+                        "surface-bright": "#343944",
+                        "secondary": "#a4c9ff",
+                        "tertiary-container": "#df7412",
+                        "on-tertiary-container": "#461f00",
+                        "on-background": "#dee2f1",
+                        "on-surface-variant": "#c2c6d6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "unit": "4px",
+                        "xl": "40px",
+                        "sm": "8px",
+                        "gutter": "20px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "code-sm": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "code-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0e131d;
+            color: #dee2f1;
+        }
+        .glass-panel {
+            background: rgba(9, 13, 22, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(66, 71, 84, 0.1);
+        }
+        .glow-active {
+            box-shadow: 0 0 12px rgba(173, 198, 255, 0.15);
+            border-color: rgba(173, 198, 255, 0.3);
+        }
+        /* Scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0e131d; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #303540; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #424754; 
+        }
+        /* JSON Viewer specific */
+        .json-key { color: #adc6ff; }
+        .json-string { color: #a4c9ff; }
+        .json-number { color: #ffb786; }
+        .json-boolean { color: #df7412; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md h-screen flex flex-col overflow-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface/80 backdrop-blur-xl fixed top-0 w-full h-14 border-b border-outline-variant/10 flex justify-between items-center px-lg z-50 transition-all duration-200 ease-in-out">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold tracking-tighter text-on-surface">CodeSpace 3D</span>
+</div>
+<nav class="hidden md:flex items-center gap-md h-full">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-white/5 px-sm py-xs rounded flex items-center h-full" href="#">Editor</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-white/5 px-sm py-xs rounded flex items-center h-full" href="#">Assets</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-white/5 px-sm py-xs rounded flex items-center h-full" href="#">Debug</a>
+<a class="text-primary border-b-2 border-primary pb-1 flex items-center h-full" href="#">Terminal</a>
+</nav>
+<div class="flex items-center gap-sm">
+<button aria-label="settings" class="p-xs text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded transition-all duration-200 ease-in-out">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+<button aria-label="cloud_done" class="p-xs text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded transition-all duration-200 ease-in-out">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">cloud_done</span>
+</button>
+<button aria-label="notifications" class="p-xs text-on-surface-variant hover:text-on-surface hover:bg-white/5 rounded transition-all duration-200 ease-in-out">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-variant ml-sm overflow-hidden">
+<img alt="User avatar" class="w-full h-full object-cover" data-alt="A futuristic geometric avatar placeholder with deep blue and metallic gray tones in a minimalistic tech aesthetic, soft luminous highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtYbo_UFGEgWqGjT1VjrUq9xyaGYJlW_NKLr03aWf8ebLnqnBHd9lx8AF1lCLtw_WAGA9uWcQO9k0cj5suoc2cnxJDl9Uddxqw2DCZrYDwcdTi6j8YQ4_6-mp9w7DmSTSsa7yFSXN2TolaoUlU_iR6HH_TMNlBaZHFU5o7fmvQDBAG2D5LPqPDpNvYF-Itff_iXC93e-QfZPms2TzmjuaQo7o6z-T3CnNwLc3aRx7OYyoz2vb8tcQ_"/>
+</div>
+</div>
+</header>
+<div class="flex flex-1 pt-14 overflow-hidden">
+<!-- SideNavBar -->
+<aside class="bg-surface-container-low border-r border-outline-variant/10 fixed left-0 top-14 bottom-0 w-16 md:w-20 flex flex-col items-center py-md z-40 transition-all duration-200 ease-in-out">
+<nav class="flex-1 w-full flex flex-col gap-sm items-center">
+<a aria-label="Explorer" class="w-12 h-12 flex flex-col items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-container-high rounded transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">folder_open</span>
+<span class="font-label-caps text-label-caps mt-xs text-[10px] hidden md:block">Explorer</span>
+</a>
+<a aria-label="Search" class="w-12 h-12 flex flex-col items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-container-high rounded transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">search</span>
+<span class="font-label-caps text-label-caps mt-xs text-[10px] hidden md:block">Search</span>
+</a>
+<a aria-label="Source Control" class="w-12 h-12 flex flex-col items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-container-high rounded transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_tree</span>
+<span class="font-label-caps text-label-caps mt-xs text-[10px] hidden md:block">Source Control</span>
+</a>
+<a aria-label="Extensions" class="w-12 h-12 flex flex-col items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-container-high rounded transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">extension</span>
+<span class="font-label-caps text-label-caps mt-xs text-[10px] hidden md:block">Extensions</span>
+</a>
+<a aria-label="Debugger" class="w-12 h-12 flex flex-col items-center justify-center text-primary border-l-2 border-primary bg-primary/5 rounded transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bug_report</span>
+<span class="font-label-caps text-label-caps mt-xs text-[10px] hidden md:block">Debugger</span>
+</a>
+</nav>
+<div class="mt-auto w-full flex flex-col gap-sm items-center pb-6">
+<a aria-label="Accounts" class="w-12 h-12 flex flex-col items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-container-high rounded transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</a>
+<a aria-label="Manage" class="w-12 h-12 flex flex-col items-center justify-center text-outline hover:text-on-surface-variant hover:bg-surface-container-high rounded transition-transform scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+</a>
+</div>
+</aside>
+<!-- Main Workspace Content -->
+<main class="ml-16 md:ml-20 flex-1 flex h-[calc(100vh-56px-24px)] overflow-hidden bg-surface-dim">
+<!-- API Navigation Sidebar (Secondary) -->
+<div class="w-64 border-r border-outline-variant/10 bg-surface-container-lowest flex flex-col overflow-y-auto">
+<div class="p-md border-b border-outline-variant/10">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-2 text-outline text-[16px]">search</span>
+<input class="w-full bg-surface-container rounded border-outline-variant/20 pl-8 pr-2 py-1 text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-all font-code-sm" placeholder="Search API..." type="text"/>
+</div>
+</div>
+<div class="p-sm flex-1">
+<!-- Auth Group -->
+<div class="mb-2">
+<div class="flex items-center gap-2 p-1 text-on-surface-variant hover:text-on-surface cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] transition-transform group-hover:text-primary">folder</span>
+<span class="font-label-caps text-label-caps">Authentication</span>
+</div>
+<div class="ml-6 pl-2 border-l border-outline-variant/20 flex flex-col gap-1 mt-1">
+<a class="text-sm font-code-sm text-outline hover:text-primary py-1 px-2 rounded hover:bg-white/5 flex items-center gap-2" href="#">
+<span class="text-[10px] text-secondary font-bold">POST</span> /token
+                            </a>
+</div>
+</div>
+<!-- Assets Group (Active) -->
+<div class="mb-2">
+<div class="flex items-center gap-2 p-1 text-primary cursor-pointer group">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">folder_open</span>
+<span class="font-label-caps text-label-caps">Assets</span>
+</div>
+<div class="ml-6 pl-2 border-l border-outline-variant/20 flex flex-col gap-1 mt-1">
+<a class="text-sm font-code-sm text-outline hover:text-primary py-1 px-2 rounded hover:bg-white/5 flex items-center gap-2" href="#">
+<span class="text-[10px] text-tertiary font-bold">GET</span> /v1/assets
+                            </a>
+<a class="text-sm font-code-sm text-primary bg-primary/10 py-1 px-2 rounded flex items-center gap-2 border border-primary/20" href="#">
+<span class="text-[10px] text-secondary font-bold">POST</span> /v1/assets/upload
+                            </a>
+<a class="text-sm font-code-sm text-outline hover:text-primary py-1 px-2 rounded hover:bg-white/5 flex items-center gap-2" href="#">
+<span class="text-[10px] text-error font-bold">DEL</span> /v1/assets/{id}
+                            </a>
+</div>
+</div>
+<!-- Terminal Group -->
+<div class="mb-2">
+<div class="flex items-center gap-2 p-1 text-on-surface-variant hover:text-on-surface cursor-pointer group">
+<span class="material-symbols-outlined text-[16px] transition-transform group-hover:text-primary">folder</span>
+<span class="font-label-caps text-label-caps">Terminal</span>
+</div>
+</div>
+</div>
+</div>
+<!-- API Details (Center) -->
+<div class="flex-1 flex flex-col overflow-y-auto px-lg py-xl">
+<div class="max-w-3xl">
+<!-- Header -->
+<div class="mb-8">
+<div class="flex items-center gap-sm mb-2">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded font-code-sm text-[12px] font-bold">POST</span>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">/v1/assets/upload</h1>
+<span class="border border-outline-variant/30 text-outline px-2 py-0.5 rounded font-label-caps text-label-caps ml-2">Beta</span>
+</div>
+<p class="text-on-surface-variant text-body-lg mb-4">Uploads a new 3D asset or texture map to the active project workspace.</p>
+<div class="flex gap-md border-b border-outline-variant/10 pb-4">
+<button class="bg-surface-container-high hover:bg-surface-bright text-on-surface border border-outline-variant/20 px-3 py-1.5 rounded flex items-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+<span class="font-label-caps text-label-caps">Copy URL</span>
+</button>
+<button class="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 px-3 py-1.5 rounded flex items-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">play_arrow</span>
+<span class="font-label-caps text-label-caps">Try it out</span>
+</button>
+</div>
+</div>
+<!-- Request Parameters -->
+<div class="mb-xl">
+<h2 class="font-headline-md text-headline-md mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">data_object</span>
+                            Request Body
+                        </h2>
+<div class="glass-panel rounded-lg overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high border-b border-outline-variant/20">
+<th class="p-3 font-label-caps text-label-caps text-outline w-1/4">Field</th>
+<th class="p-3 font-label-caps text-label-caps text-outline w-1/4">Type</th>
+<th class="p-3 font-label-caps text-label-caps text-outline w-1/2">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-outline-variant/10 hover:bg-surface-container-highest transition-colors">
+<td class="p-3 font-code-sm text-on-surface flex items-center gap-2">
+                                            file
+                                            <span class="text-error text-[10px] font-bold">REQ</span>
+</td>
+<td class="p-3 font-code-sm text-secondary">binary</td>
+<td class="p-3 text-sm text-on-surface-variant">The GLTF, GLB, or image file to upload. Max size 50MB.</td>
+</tr>
+<tr class="border-b border-outline-variant/10 hover:bg-surface-container-highest transition-colors">
+<td class="p-3 font-code-sm text-on-surface">project_id</td>
+<td class="p-3 font-code-sm text-secondary">string (uuid)</td>
+<td class="p-3 text-sm text-on-surface-variant">Target project UUID. Defaults to currently active project if omitted.</td>
+</tr>
+<tr class="border-b border-outline-variant/10 hover:bg-surface-container-highest transition-colors">
+<td class="p-3 font-code-sm text-on-surface">optimize</td>
+<td class="p-3 font-code-sm text-secondary">boolean</td>
+<td class="p-3 text-sm text-on-surface-variant">If true, automatically runs Draco compression on geometry. Default: false.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Code Examples -->
+<div class="mb-xl">
+<div class="flex items-center justify-between mb-2">
+<h2 class="font-headline-md text-[20px] text-on-surface">Example Request</h2>
+<div class="flex gap-1 bg-surface-container-high p-1 rounded border border-outline-variant/20">
+<button class="px-3 py-1 rounded bg-surface-variant text-on-surface font-label-caps text-[10px]">cURL</button>
+<button class="px-3 py-1 rounded text-outline hover:text-on-surface font-label-caps text-[10px]">Node.js</button>
+<button class="px-3 py-1 rounded text-outline hover:text-on-surface font-label-caps text-[10px]">Python</button>
+</div>
+</div>
+<div class="glass-panel rounded-lg p-4 font-code-sm text-code-sm overflow-x-auto relative group">
+<button class="absolute top-2 right-2 p-1 rounded bg-surface/50 text-outline opacity-0 group-hover:opacity-100 transition-opacity hover:text-on-surface">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+<pre class="text-on-surface-variant"><code><span class="text-secondary">curl</span> -X POST \
+  https://api.codespace3d.com/v1/assets/upload \
+  -H <span class="text-tertiary">'Authorization: Bearer YOUR_TOKEN'</span> \
+  -H <span class="text-tertiary">'Content-Type: multipart/form-data'</span> \
+  -F <span class="text-tertiary">'file=@/path/to/model.glb'</span> \
+  -F <span class="text-tertiary">'optimize=true'</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<!-- Response Panel (Right Sidebar) -->
+<div class="w-80 border-l border-outline-variant/10 bg-surface-container-low flex flex-col">
+<div class="p-md border-b border-outline-variant/10">
+<h3 class="font-headline-md text-[16px] text-on-surface">Responses</h3>
+</div>
+<div class="flex p-2 gap-2 border-b border-outline-variant/10">
+<button class="flex-1 py-1.5 rounded bg-primary/10 text-primary border border-primary/20 font-label-caps text-[10px] flex items-center justify-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary"></span> 200 OK
+                    </button>
+<button class="flex-1 py-1.5 rounded text-outline hover:bg-surface-container-high border border-transparent font-label-caps text-[10px] flex items-center justify-center gap-1">
+<span class="w-2 h-2 rounded-full bg-error"></span> 400 Error
+                    </button>
+</div>
+<div class="flex-1 p-sm overflow-y-auto">
+<div class="glass-panel rounded p-3 font-code-sm text-[12px] h-full overflow-x-auto">
+<pre><code>{
+  <span class="json-key">"status"</span>: <span class="json-string">"success"</span>,
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"asset_id"</span>: <span class="json-string">"as_9x8f7d6e5"</span>,
+    <span class="json-key">"url"</span>: <span class="json-string">"https://cdn.cs3d.com/as_9x8f7d6e5.glb"</span>,
+    <span class="json-key">"size_bytes"</span>: <span class="json-number">2450981</span>,
+    <span class="json-key">"optimized"</span>: <span class="json-boolean">true</span>,
+    <span class="json-key">"created_at"</span>: <span class="json-string">"2024-03-15T10:23:41Z"</span>
+  }
+}</code></pre>
+</div>
+</div>
+<div class="p-sm border-t border-outline-variant/10 bg-surface-container-lowest">
+<div class="flex items-center justify-between text-xs text-outline mb-2">
+<span>Rate Limit</span>
+<span class="font-code-sm">100 / min</span>
+</div>
+<div class="w-full bg-surface-variant h-1 rounded overflow-hidden">
+<div class="bg-primary h-full w-1/4"></div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest fixed bottom-0 w-full h-6 border-t border-outline-variant/10 flex justify-between items-center px-md z-50 overflow-hidden font-code-sm text-code-sm text-secondary">
+<span>© 2024 CodeSpace 3D | System: Optimal</span>
+<div class="flex gap-4">
+<a class="text-outline hover:text-primary transition-colors cursor-pointer" href="#">Logs</a>
+<a class="text-outline hover:text-primary transition-colors cursor-pointer" href="#">Main Branch</a>
+<a class="text-outline hover:text-primary transition-colors cursor-pointer" href="#">UTF-8</a>
+<a class="text-outline hover:text-primary transition-colors cursor-pointer" href="#">Spaces: 4</a>
+</div>
+</footer>
+</body></html>
