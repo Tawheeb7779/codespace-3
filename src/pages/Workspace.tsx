@@ -12,6 +12,12 @@ import { LivePreview } from '../components/workspace/LivePreview';
 import { Terminal } from '../components/workspace/Terminal';
 import { BottomPanel } from '../components/workspace/BottomPanel';
 import { AiAssistantDrawer } from '../components/workspace/AiAssistantDrawer';
+import { PackageManagerPanel } from '../components/workspace/PackageManagerPanel';
+import { AssetsManagerPanel } from '../components/workspace/AssetsManagerPanel';
+import { TaskManagerPanel } from '../components/workspace/TaskManagerPanel';
+import { TeamChatPanel } from '../components/workspace/TeamChatPanel';
+import { AnalyticsPanel } from '../components/workspace/AnalyticsPanel';
+import { CommandPaletteModal } from '../components/workspace/CommandPaletteModal';
 
 export default function Workspace() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -23,6 +29,7 @@ export default function Workspace() {
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isRunActive, setIsRunActive] = useState(true);
   const [isAiOpen, setIsAiOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
 
   useEffect(() => {
@@ -52,6 +59,7 @@ export default function Workspace() {
         onRefreshPreview={() => setPreviewKey((k) => k + 1)}
         toggleAiAssistant={() => setIsAiOpen(!isAiOpen)}
         isAiOpen={isAiOpen}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
       {/* Main Workspace Body */}
@@ -64,18 +72,25 @@ export default function Workspace() {
           isAiOpen={isAiOpen}
         />
 
-        {/* Left Secondary Panel (Explorer / Git / Search) */}
+        {/* Left Secondary Panel (Explorer / Packages / Assets / Tasks / Chat / Analytics / Git / Search) */}
         <div className="w-64 h-full shrink-0">
           {activeSidebarTab === 'explorer' && <FileExplorerPanel />}
+          {activeSidebarTab === 'packages' && <PackageManagerPanel />}
+          {activeSidebarTab === 'assets' && <AssetsManagerPanel />}
+          {activeSidebarTab === 'tasks' && <TaskManagerPanel />}
+          {activeSidebarTab === 'chat' && <TeamChatPanel />}
+          {activeSidebarTab === 'analytics' && <AnalyticsPanel />}
           {activeSidebarTab === 'git' && <GitSourceControlPanel />}
           {activeSidebarTab === 'search' && (
             <div className="h-full bg-surface-low border-r border-outline-variant/15 p-4 text-xs">
               <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] block mb-3">GLOBAL SEARCH</span>
-              <input
-                type="text"
-                placeholder="Search across all project files..."
-                className="w-full px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded text-xs text-white focus:outline-none focus:border-primary"
-              />
+              <button
+                onClick={() => setIsCommandPaletteOpen(true)}
+                className="w-full py-2 px-3 bg-surface-container hover:bg-surface-high text-outline hover:text-white rounded border border-outline-variant/20 font-mono text-xs flex items-center justify-between transition-colors"
+              >
+                <span>Type search query...</span>
+                <span className="text-[10px]">⌘K</span>
+              </button>
             </div>
           )}
           {activeSidebarTab === 'graph3d' && (
@@ -86,16 +101,10 @@ export default function Workspace() {
               </p>
             </div>
           )}
-          {activeSidebarTab === 'integrations' && (
-            <div className="h-full bg-surface-low border-r border-outline-variant/15 p-4 text-xs space-y-2">
-              <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] block">INTEGRATIONS</span>
-              <p className="text-outline text-[11px]">Vercel Edge & GitHub Session Active.</p>
-            </div>
-          )}
           {activeSidebarTab === 'settings' && (
             <div className="h-full bg-surface-low border-r border-outline-variant/15 p-4 text-xs space-y-2">
               <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] block">PREFERENCES</span>
-              <p className="text-outline text-[11px]">Monaco Editor & WebGL rendering active.</p>
+              <p className="text-outline text-[11px]">Monaco Editor, WebGL rendering & WebContainer engine active.</p>
             </div>
           )}
         </div>
@@ -147,6 +156,14 @@ export default function Workspace() {
 
         {/* Right AI Assistant Drawer */}
         <AiAssistantDrawer isOpen={isAiOpen} onClose={() => setIsAiOpen(false)} />
+
+        {/* Global Command Palette Search Modal */}
+        <CommandPaletteModal
+          isOpen={isCommandPaletteOpen}
+          onClose={() => setIsCommandPaletteOpen(false)}
+          onSelectView={setActiveView}
+          toggleAi={() => setIsAiOpen(!isAiOpen)}
+        />
       </div>
     </div>
   );

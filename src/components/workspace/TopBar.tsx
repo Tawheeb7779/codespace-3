@@ -13,7 +13,8 @@ import {
   Tablet,
   Smartphone,
   Eye,
-  EyeOff
+  EyeOff,
+  Command
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
@@ -28,6 +29,7 @@ interface TopBarProps {
   onRefreshPreview: () => void;
   toggleAiAssistant: () => void;
   isAiOpen: boolean;
+  onOpenCommandPalette: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -40,6 +42,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onRefreshPreview,
   toggleAiAssistant,
   isAiOpen,
+  onOpenCommandPalette,
 }) => {
   const navigate = useNavigate();
   const { projects, activeProjectId, gitBranch, gitStatus } = useProjectStore();
@@ -160,6 +163,15 @@ export const TopBar: React.FC<TopBarProps> = ({
             title="Refresh Sandboxed Preview"
           >
             <RotateCw className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            onClick={onOpenCommandPalette}
+            className="px-2 py-1 bg-surface-high hover:bg-surface-high/80 text-outline hover:text-white rounded border border-outline-variant/20 flex items-center gap-1 transition-colors"
+            title="Command Palette (⌘K)"
+          >
+            <Command className="w-3 h-3 text-primary" />
+            <span className="font-mono text-[10px]">⌘K</span>
           </button>
         </div>
       </div>

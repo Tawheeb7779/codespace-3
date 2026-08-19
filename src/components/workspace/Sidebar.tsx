@@ -4,12 +4,26 @@ import {
   Search,
   GitPullRequest,
   Boxes,
-  Globe,
+  Package,
+  FolderArchive,
+  CheckSquare,
+  MessageSquare,
+  Activity,
   Settings,
   Bot
 } from 'lucide-react';
 
-export type SidebarTab = 'explorer' | 'search' | 'git' | 'graph3d' | 'integrations' | 'settings';
+export type SidebarTab =
+  | 'explorer'
+  | 'search'
+  | 'packages'
+  | 'assets'
+  | 'tasks'
+  | 'chat'
+  | 'analytics'
+  | 'git'
+  | 'graph3d'
+  | 'settings';
 
 interface SidebarProps {
   activeTab: SidebarTab;
@@ -26,10 +40,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navItems: { id: SidebarTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: 'explorer', label: 'Explorer', icon: FolderTree },
-    { id: 'search', label: 'Search', icon: Search },
+    { id: 'search', label: 'Search (⌘K)', icon: Search },
+    { id: 'packages', label: 'Package Manager', icon: Package },
+    { id: 'assets', label: 'Assets Manager', icon: FolderArchive },
+    { id: 'tasks', label: 'Tasks Board', icon: CheckSquare },
+    { id: 'chat', label: 'Team Channels', icon: MessageSquare },
+    { id: 'analytics', label: 'Analytics & Database', icon: Activity },
     { id: 'git', label: 'Source Control', icon: GitPullRequest },
     { id: 'graph3d', label: '3D Graph', icon: Boxes },
-    { id: 'integrations', label: 'Integrations', icon: Globe },
   ];
 
   return (
@@ -63,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ? 'bg-secondary/20 text-secondary border-l-2 border-secondary'
               : 'text-outline hover:text-secondary hover:bg-surface-high'
           }`}
-          title="AI Assistant"
+          title="AI Assistant Drawer"
         >
           <Bot className="w-4 h-4" />
         </button>
@@ -75,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ? 'bg-primary-container/20 text-primary border-l-2 border-primary'
               : 'text-outline hover:text-white hover:bg-surface-high'
           }`}
-          title="Settings"
+          title="Workspace Settings"
         >
           <Settings className="w-4 h-4" />
         </button>
