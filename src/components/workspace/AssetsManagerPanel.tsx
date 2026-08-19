@@ -13,22 +13,20 @@ import {
 import { ProjectAsset } from '../../types/stitch';
 import { useProjectStore } from '../../store/useProjectStore';
 
-const INITIAL_ASSETS: ProjectAsset[] = [
-  { id: '1', name: 'robot_avatar.gltf', type: '3d-model', size: '2.4 MB', url: '/assets/models/robot.gltf', updatedAt: '2026-02-18' },
-  { id: '2', name: 'spatial_grid_texture.png', type: 'texture', size: '512 KB', url: '/assets/textures/grid.png', updatedAt: '2026-02-17' },
-  { id: '3', name: 'ambient_space.mp3', type: 'audio', size: '1.8 MB', url: '/assets/audio/space.mp3', updatedAt: '2026-02-15' },
-  { id: '4', name: 'logo_codespace.svg', type: 'image', size: '24 KB', url: '/assets/logo.svg', updatedAt: '2026-02-10' },
-];
-
 export const AssetsManagerPanel: React.FC = () => {
-  const { createFile, updateFileContent } = useProjectStore();
+  const { activeProjectId, projectAssets, setAssetsForProject, createFile, updateFileContent } = useProjectStore();
 
-  const [assets, setAssets] = useState<ProjectAsset[]>(INITIAL_ASSETS);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filterType, setFilterText] = useState<'all' | '3d-model' | 'texture' | 'audio' | 'image'>('all');
   const [newAssetName, setNewAssetName] = useState('');
   const [newAssetType, setNewAssetType] = useState<ProjectAsset['type']>('3d-model');
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const currentProjectId = activeProjectId || 'demo-3d-app';
+  const assets = projectAssets[currentProjectId] || [
+    { id: '1', name: 'robot_avatar.gltf', type: '3d-model', size: '2.4 MB', url: '/public/assets/robot_avatar.gltf', updatedAt: '2026-02-18' },
+    { id: '2', name: 'spatial_grid.png', type: 'texture', size: '512 KB', url: '/public/assets/spatial_grid.png', updatedAt: '2026-02-17' },
+  ];
 
   const handleCopySnippet = (asset: ProjectAsset) => {
     let snippet = '';
@@ -46,16 +44,17 @@ export const AssetsManagerPanel: React.FC = () => {
   };
 
   const handleCreateComponentFromAsset = (asset: ProjectAsset) => {
-    const compName = asset.name.split('.')[0].replace(/[^a-zA-Z0-9]/g, '_') + 'Model.tsx';
+    const rawName = asset.name.split('.')[0].replace(/[^a-zA-Z0-9]/g, '_');
+    const compName = `${rawName}Model.tsx`;
     const codeContent = `import React from 'react';
 import { useGLTF } from '@react-three/drei';
 
-export function ${asset.name.split('.')[0]}Model() {
+export function ${rawName}Model() {
   const { scene } = useGLTF('${asset.url}');
   return <primitive object={scene} scale={1} />;
 }
 `;
-    createFile(compName, 'components', false);
+    createFile(compName, 'src', false);
     updateFileContent(compName, codeContent);
   };
 
@@ -71,17 +70,19 @@ export function ${asset.name.split('.')[0]}Model() {
       name: cleanName,
       type: newAssetType,
       size: '1.2 MB',
-      url: `/assets/${newAssetType}s/${cleanName}`,
+      url: `/public/assets/${cleanName}`,
       updatedAt: new Date().toISOString().split('T')[0],
     };
 
-    setAssets([newAsset, ...assets]);
+    const updated = [newAsset, ...assets];
+    setAssetsForProject(currentProjectId, updated);
     setNewAssetName('');
     setShowAddModal(false);
   };
 
   const handleDeleteAsset = (id: string) => {
-    setAssets(assets.filter((a) => a.id !== id));
+    const updated = assets.filter((a) => a.id !== id);
+    setAssetsForProject(currentProjectId, updated);
   };
 
   const filteredAssets = assets.filter((a) => filterType === 'all' || a.type === filterType);

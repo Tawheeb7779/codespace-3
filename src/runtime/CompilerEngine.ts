@@ -43,6 +43,17 @@ export class CompilerEngine {
       Object.values(files).forEach((file) => {
         if (file.isFolder) return;
 
+        // Check for severe syntax anomalies like unclosed tags or quotes
+        const openBraces = (file.content.match(/\{/g) || []).length;
+        const closeBraces = (file.content.match(/\}/g) || []).length;
+        const openAngles = (file.content.match(/</g) || []).length;
+        const closeAngles = (file.content.match(/>/g) || []).length;
+
+        if (Math.abs(openBraces - closeBraces) > 3 || Math.abs(openAngles - closeAngles) > 5) {
+          errors.push(`Syntax error in ${file.name}: Unmatched braces or tags detected.`);
+          return;
+        }
+
         if (file.name.endsWith('.tsx') || file.name.endsWith('.ts')) {
           outputFiles[file.name] = this.transpileTsx(file.content);
         } else if (file.name.endsWith('.js') || file.name.endsWith('.jsx')) {

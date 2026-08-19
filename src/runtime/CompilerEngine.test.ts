@@ -37,4 +37,25 @@ describe('CompilerEngine', () => {
     expect(res.success).toBe(true);
     expect(res.outputFiles['App.tsx']).toBeDefined();
   });
+
+  it('handles syntax errors gracefully and reports failure', () => {
+    const malformedFiles: Record<string, ProjectFile> = {
+      'App.tsx': {
+        id: 'App.tsx',
+        name: 'App.tsx',
+        path: '/src/App.tsx',
+        language: 'typescript',
+        content: 'export default function App() { {{{ return <h1>Test', // Severe syntax error
+      },
+    };
+
+    const res = CompilerEngine.compileProject(malformedFiles);
+    expect(res.success).toBe(false);
+    expect(res.errors.length).toBeGreaterThan(0);
+  });
+
+  it('parses manifest cleanly and handles malformed JSON', () => {
+    const manifest = CompilerEngine.parseManifest('{"invalid": json');
+    expect(manifest).toEqual({});
+  });
 });

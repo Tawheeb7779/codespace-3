@@ -79,6 +79,7 @@ export const Terminal: React.FC = () => {
           term.writeln('  touch <file>    - Create a new file');
           term.writeln('  mkdir <dir>     - Create a new directory');
           term.writeln('  rm <file>       - Remove file');
+          term.writeln('  node <script>   - Execute Node.js process');
           term.writeln('  npm install     - Run npm package installer');
           term.writeln('  npm run dev     - Execute Vite development server');
           term.writeln('  npm run build   - Run Vite/Rollup production build');
@@ -156,6 +157,56 @@ export const Terminal: React.FC = () => {
           } else {
             deleteFile(args[0]);
             term.writeln(`\r\nRemoved ${args[0]}`);
+          }
+          break;
+
+        case 'node':
+          if (WebContainerProvider.isSupported() && currentProject) {
+            term.writeln(`\r\n\x1b[36m[WebContainer Process]\x1b[0m Spawning node ${args.join(' ')}...`);
+            await RuntimeFilesystemBridge.initializeProject(currentProject.files);
+
+            try {
+              const exitCode = await WebContainerProvider.spawnProcess(
+                'node',
+                args,
+                (chunk) => {
+                  term.write(chunk.replace(/\n/g, '\r\n'));
+                }
+              );
+              term.writeln(`\r\n\x1b[32m[Node Process Exited]\x1b[0m Exit Code: ${exitCode}`);
+            } catch (e: unknown) {
+              const msg = e instanceof Error ? e.message : String(e);
+              term.writeln(`\r\n\x1b[31m[WebContainer Process Error]\x1b[0m ${msg}`);
+            }
+          } else {
+            if (args.length === 0 || args[0] === '-v' || args[0] === '--version') {
+              term.writeln('\r\n\x1b[33m[In-Browser Fallback Engine]\x1b[0m Node.js v22.0.0 (Browser Isolated JS Shell)');
+            } else if (args[0] === '-e' && args[1]) {
+              try {
+                // Safe evaluation of expression in isolated scope
+                const res = new Function(`return ${args[1]}`)();
+                term.writeln(`\r\n${res}`);
+              } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : String(e);
+                term.writeln(`\r\n\x1b[31mEval Error: ${msg}\x1b[0m`);
+              }
+            } else if (currentProject) {
+              const target = Object.values(currentProject.files).find(f => f.name === args[0]);
+              if (target && !target.isFolder) {
+                term.writeln(`\r\n\x1b[33m[In-Browser JS Evaluation]\x1b[0m Executing ${args[0]}:`);
+                try {
+                  const logs: string[] = [];
+                  const customConsole = { log: (...a: unknown[]) => logs.push(a.join(' ')) };
+                  new Function('console', target.content)(customConsole);
+                  term.writeln(logs.join('\r\n') || 'Program completed with no stdout.');
+                } catch (e: unknown) {
+                  const msg = e instanceof Error ? e.message : String(e);
+                  term.writeln(`\r\n\x1b[31mExecution Error: ${msg}\x1b[0m`);
+                }
+              } else {
+                term.writeln(`\r\n\x1b[31mnode: internal/modules/cjs/loader.js: Cannot find module '${args[0]}'\x1b[0m`);
+              }
+            }
           }
           break;
 

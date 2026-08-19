@@ -10,18 +10,16 @@ import {
 import { ChatMessage } from '../../types/stitch';
 import { useProjectStore } from '../../store/useProjectStore';
 
-const INITIAL_MESSAGES: ChatMessage[] = [
-  { id: '1', sender: 'Nexus AI', text: '3D Spatial Graph nodes compiled. 12 file nodes mounted to workspace.', timestamp: '10:14 AM', isAi: true },
-  { id: '2', sender: 'Tawheeb', text: 'Hey team, I updated App.tsx and Scene3D.tsx for the new R3F lighting presets.', timestamp: '10:16 AM', isAi: false },
-  { id: '3', sender: 'Jules', text: 'Great! Testing WebContainer dev server and HMR stream now.', timestamp: '10:18 AM', isAi: false },
-];
-
 export const TeamChatPanel: React.FC = () => {
-  const { createFile } = useProjectStore();
+  const { activeProjectId, projectChats, setChatForProject, createFile, updateFileContent } = useProjectStore();
 
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState('');
   const [activeChannel, setActiveChannel] = useState<'general' | 'dev-3d' | 'ai-nexus'>('general');
+
+  const currentProjectId = activeProjectId || 'demo-3d-app';
+  const messages = projectChats[currentProjectId] || [
+    { id: '1', sender: 'Nexus AI [Offline Agent]', text: '3D Spatial Graph nodes compiled. 12 file nodes mounted to workspace.', timestamp: '10:14 AM', isAi: true }
+  ];
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +32,8 @@ export const TeamChatPanel: React.FC = () => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const updated = [...messages, userMsg];
+    setChatForProject(currentProjectId, updated);
     setInputText('');
 
     // Trigger AI response if in AI channel or tagged
@@ -42,18 +41,31 @@ export const TeamChatPanel: React.FC = () => {
       setTimeout(() => {
         const aiMsg: ChatMessage = {
           id: (Date.now() + 1).toString(),
-          sender: 'Nexus AI',
-          text: 'Analyzed message context. Would you like me to generate a new Three.js mesh component for this channel?',
+          sender: 'Nexus AI [Offline Fallback Agent]',
+          text: 'Context analyzed. Click below to generate a new R3F Spatial Shader mesh component directly on the workspace filesystem.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           isAi: true,
         };
-        setMessages((prev) => [...prev, aiMsg]);
-      }, 1000);
+        const withAi = [...updated, aiMsg];
+        setChatForProject(currentProjectId, withAi);
+      }, 800);
     }
   };
 
   const handleAiAction = () => {
-    createFile('ChannelShaderMesh.tsx', 'components', false);
+    const fileName = 'ChannelShaderMesh.tsx';
+    const content = `import React from 'react';
+
+export function ChannelShaderMesh() {
+  return (
+    <mesh>
+      <sphereGeometry args={[1, 32, 32]} />
+      <meshStandardMaterial color="#38bdf8" wireframe />
+    </mesh>
+  );
+}`;
+    createFile(fileName, 'src', false);
+    updateFileContent(fileName, content);
   };
 
   return (
@@ -113,9 +125,9 @@ export const TeamChatPanel: React.FC = () => {
             {m.isAi && (
               <button
                 onClick={handleAiAction}
-                className="mt-1 py-1 px-2.5 bg-secondary/20 hover:bg-secondary/30 text-secondary rounded text-[10px] font-medium flex items-center gap-1 border border-secondary/30 transition-colors"
+                className="mt-1 py-1 px-2.5 bg-secondary/20 hover:bg-secondary/30 text-secondary rounded text-[10px] font-medium flex items-center justify-center gap-1 border border-secondary/30 transition-colors"
               >
-                <Sparkles className="w-3 h-3" /> Generate R3F Channel Mesh
+                <Sparkles className="w-3 h-3" /> Generate R3F Channel Mesh to Workspace File
               </button>
             )}
           </div>

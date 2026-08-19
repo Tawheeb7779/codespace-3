@@ -7,7 +7,8 @@ import {
   Code2,
   FilePlus,
   Wrench,
-  Lock
+  Lock,
+  AlertTriangle
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
@@ -16,6 +17,7 @@ interface Message {
   id: string;
   sender: 'user' | 'assistant';
   text: string;
+  isFallback?: boolean;
   action?: {
     type: 'create_file' | 'edit_file';
     fileName: string;
@@ -30,14 +32,14 @@ interface AiAssistantDrawerProps {
 
 export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, onClose }) => {
   const { projects, activeProjectId, activeFileId, createFile, updateFileContent } = useProjectStore();
-  const { aiProvider } = usePreferenceStore();
+  const { aiProvider, aiApiKey } = usePreferenceStore();
 
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       sender: 'assistant',
-      text: 'Hello! I am your CodeSpace 3D Project Assistant. I can analyze your workspace structure, explain code, generate 3D components, and modify project files directly.',
+      text: 'Hello! I am your CodeSpace 3D Project Assistant. I analyze your workspace files and can generate or edit 3D components on disk.',
     },
   ]);
   const [isThinking, setIsThinking] = useState(false);
@@ -45,24 +47,87 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
   const currentProject = projects.find((p) => p.id === activeProjectId);
   const activeFile = activeFileId && currentProject ? currentProject.files[activeFileId] : null;
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isThinking) return;
 
-    const userMsg: Message = { id: Date.now().toString(), sender: 'user', text: input.trim() };
+    const userText = input.trim();
+    const userMsg: Message = { id: Date.now().toString(), sender: 'user', text: userText };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsThinking(true);
 
-    setTimeout(() => {
-      let replyText = `I analyzed **${currentProject?.name || 'Workspace'}** (Provider: ${aiProvider.toUpperCase()}).`;
-      let action: Message['action'] = undefined;
+    let replyText = '';
+    let action: Message['action'] = undefined;
+    let isFallback = false;
 
-      const lower = userMsg.text.toLowerCase();
+    const key = (aiApiKey || '').trim();
 
-      if (lower.includes('component') || lower.includes('create file')) {
+    // Check if real provider API call is possible
+    if ((aiProvider === 'openai' || aiProvider === 'anthropic') && key) {
+      try {
+        if (aiProvider === 'openai') {
+          const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${key}`,
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [
+                {
+                  role: 'system',
+                  content: `You are an AI coding assistant for CodeSpace 3D IDE. Current project: ${currentProject?.name}. Active file: ${activeFile?.name || 'none'}.`,
+                },
+                { role: 'user', content: userText },
+              ],
+            }),
+          });
+          if (!res.ok) {
+            const errJson = await res.json().catch(() => ({}));
+            throw new Error(errJson.error?.message || `OpenAI API Error ${res.status}`);
+          }
+          const data = await res.json();
+          replyText = data.choices?.[0]?.message?.content || 'No response returned from OpenAI.';
+        } else if (aiProvider === 'anthropic') {
+          const res = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': key,
+              'anthropic-version': '2023-06-01',
+            },
+            body: JSON.stringify({
+              model: 'claude-3-haiku-20240307',
+              max_tokens: 1000,
+              messages: [{ role: 'user', content: userText }],
+            }),
+          });
+          if (!res.ok) {
+            const errJson = await res.json().catch(() => ({}));
+            throw new Error(errJson.error?.message || `Anthropic API Error ${res.status}`);
+          }
+          const data = await res.json();
+          replyText = data.content?.[0]?.text || 'No response returned from Anthropic.';
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        replyText = `API Call Failed: ${msg}. Falling back to built-in offline agent.`;
+        isFallback = true;
+      }
+    }
+
+    // Fallback offline agent logic if no API key provided or API failed
+    if (!replyText) {
+      isFallback = true;
+      replyText = `[Offline Agent] Analyzed **${currentProject?.name || 'Workspace'}**.`;
+
+      const lower = userText.toLowerCase();
+
+      if (lower.includes('component') || lower.includes('create file') || lower.includes('spatial')) {
         const newFileName = 'SpatialBox.tsx';
-        replyText += ` Created new React Three Fiber component \`${newFileName}\` in your workspace.`;
+        replyText += ` Created new React Three Fiber component \`${newFileName}\` on disk.`;
         action = {
           type: 'create_file',
           fileName: newFileName,
@@ -70,29 +135,30 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
         };
       } else if (lower.includes('fix') || lower.includes('refactor') || lower.includes('edit')) {
         if (activeFile) {
-          replyText += ` Applied optimization to active file \`${activeFile.name}\`. Added smooth performance hooks and type annotations.`;
+          replyText += ` Prepared optimization for active file \`${activeFile.name}\`.`;
           action = {
             type: 'edit_file',
             fileName: activeFile.name,
             content: activeFile.content + `\n\n// AI Refactored: Added spatial optimization hook\nexport const useSpatialOptim = () => true;`,
           };
         } else {
-          replyText += ` Please open a file in the editor first so I can refactor it for you.`;
+          replyText += ` Please select a file in the editor first to refactor.`;
         }
       } else {
-        replyText += ` Your current project contains ${Object.keys(currentProject?.files || {}).length} nodes. Everything looks structurally optimal!`;
+        replyText += ` Workspace contains ${Object.keys(currentProject?.files || {}).length} file nodes. System status is optimal.`;
       }
+    }
 
-      const assistantMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        sender: 'assistant',
-        text: replyText,
-        action,
-      };
+    const assistantMsg: Message = {
+      id: (Date.now() + 1).toString(),
+      sender: 'assistant',
+      text: replyText,
+      isFallback,
+      action,
+    };
 
-      setMessages((prev) => [...prev, assistantMsg]);
-      setIsThinking(false);
-    }, 1000);
+    setMessages((prev) => [...prev, assistantMsg]);
+    setIsThinking(false);
   };
 
   const executeAction = (action: Message['action']) => {
@@ -126,7 +192,11 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
       {/* Security Disclaimer */}
       <div className="p-2 bg-surface-high/50 border-b border-outline-variant/10 text-[10px] text-outline flex items-center gap-1.5 px-3">
         <Lock className="w-3 h-3 text-amber-400 shrink-0" />
-        <span>Project context provided via provider abstraction boundary.</span>
+        <span>
+          {aiProvider === 'mock' || !aiApiKey
+            ? 'Offline Fallback Agent Active (No API Key required)'
+            : `Using ${aiProvider.toUpperCase()} with stored API Key`}
+        </span>
       </div>
 
       {/* Messages */}
@@ -143,20 +213,25 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
                   : 'bg-surface-container text-slate-200 border border-outline-variant/15 rounded-bl-none'
               }`}
             >
-              <p>{m.text}</p>
+              {m.isFallback && (
+                <div className="flex items-center gap-1 text-[10px] text-amber-400 font-mono">
+                  <AlertTriangle className="w-3 h-3" /> Offline Local Agent
+                </div>
+              )}
+              <p className="whitespace-pre-wrap">{m.text}</p>
 
               {m.action && (
                 <div className="pt-2 border-t border-white/10 space-y-1">
                   <div className="flex items-center gap-1 text-[11px] font-mono text-tertiary">
                     <Sparkles className="w-3 h-3" />
-                    <span>Suggested Action: {m.action.type}</span>
+                    <span>Action: {m.action.type}</span>
                   </div>
                   <button
                     onClick={() => executeAction(m.action)}
                     className="w-full py-1 px-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded text-[10px] font-medium flex items-center justify-center gap-1 border border-emerald-500/30 transition-colors"
                   >
                     {m.action.type === 'create_file' ? <FilePlus className="w-3 h-3" /> : <Wrench className="w-3 h-3" />}
-                    Apply Action to Workspace
+                    Apply Action to Workspace Disk
                   </button>
                 </div>
               )}
@@ -175,13 +250,13 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
       {/* Quick Prompts */}
       <div className="px-3 py-2 border-t border-outline-variant/10 flex gap-1 overflow-x-auto text-[10px] text-outline">
         <button
-          onClick={() => setInput('Create component SpatialBox')}
+          onClick={() => setInput('Create 3D component SpatialBox')}
           className="px-2 py-1 bg-surface-container hover:text-white rounded border border-outline-variant/15 whitespace-nowrap flex items-center gap-1"
         >
           <Code2 className="w-3 h-3 text-primary" /> Create 3D Component
         </button>
         <button
-          onClick={() => setInput('Fix bugs in active file')}
+          onClick={() => setInput('Refactor active file')}
           className="px-2 py-1 bg-surface-container hover:text-white rounded border border-outline-variant/15 whitespace-nowrap flex items-center gap-1"
         >
           <Wrench className="w-3 h-3 text-amber-400" /> Refactor Code
