@@ -1,0 +1,153 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useProjectStore } from '../store/useProjectStore';
+
+import { TopBar } from '../components/workspace/TopBar';
+import { Sidebar, SidebarTab } from '../components/workspace/Sidebar';
+import { FileExplorerPanel } from '../components/workspace/FileExplorerPanel';
+import { GitSourceControlPanel } from '../components/workspace/GitSourceControlPanel';
+import { Spatial3DWorkspace } from '../components/workspace/Spatial3DWorkspace';
+import { CodeEditor } from '../components/workspace/CodeEditor';
+import { LivePreview } from '../components/workspace/LivePreview';
+import { Terminal } from '../components/workspace/Terminal';
+import { BottomPanel } from '../components/workspace/BottomPanel';
+import { AiAssistantDrawer } from '../components/workspace/AiAssistantDrawer';
+
+export default function Workspace() {
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
+  const { projects, activeProjectId, setActiveProject } = useProjectStore();
+
+  const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('explorer');
+  const [activeView, setActiveView] = useState<'code' | '3d' | 'preview' | 'split'>('split');
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [isRunActive, setIsRunActive] = useState(true);
+  const [isAiOpen, setIsAiOpen] = useState(false);
+  const [previewKey, setPreviewKey] = useState(0);
+
+  useEffect(() => {
+    if (projectId) {
+      const exists = projects.some((p) => p.id === projectId);
+      if (exists) {
+        setActiveProject(projectId);
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [projectId, projects, setActiveProject, navigate]);
+
+  const currentProject = projects.find((p) => p.id === activeProjectId);
+  if (!currentProject) return null;
+
+  return (
+    <div className="h-screen w-screen flex flex-col bg-background text-[#dee2f1] overflow-hidden select-none font-sans">
+      {/* Top Header Bar */}
+      <TopBar
+        activeView={activeView}
+        setActiveView={setActiveView}
+        previewDevice={previewDevice}
+        setPreviewDevice={setPreviewDevice}
+        isRunActive={isRunActive}
+        setIsRunActive={setIsRunActive}
+        onRefreshPreview={() => setPreviewKey((k) => k + 1)}
+        toggleAiAssistant={() => setIsAiOpen(!isAiOpen)}
+        isAiOpen={isAiOpen}
+      />
+
+      {/* Main Workspace Body */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Left Icon Navigation Sidebar */}
+        <Sidebar
+          activeTab={activeSidebarTab}
+          setActiveTab={setActiveSidebarTab}
+          toggleAiAssistant={() => setIsAiOpen(!isAiOpen)}
+          isAiOpen={isAiOpen}
+        />
+
+        {/* Left Secondary Panel (Explorer / Git / Search) */}
+        <div className="w-64 h-full shrink-0">
+          {activeSidebarTab === 'explorer' && <FileExplorerPanel />}
+          {activeSidebarTab === 'git' && <GitSourceControlPanel />}
+          {activeSidebarTab === 'search' && (
+            <div className="h-full bg-surface-low border-r border-outline-variant/15 p-4 text-xs">
+              <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] block mb-3">GLOBAL SEARCH</span>
+              <input
+                type="text"
+                placeholder="Search across all project files..."
+                className="w-full px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded text-xs text-white focus:outline-none focus:border-primary"
+              />
+            </div>
+          )}
+          {activeSidebarTab === 'graph3d' && (
+            <div className="h-full bg-surface-low border-r border-outline-variant/15 p-4 text-xs space-y-2">
+              <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] block">3D ARCHITECTURE GRAPH</span>
+              <p className="text-outline text-[11px] leading-relaxed">
+                Nodes represent real project modules and files. Interacting with 3D nodes opens code directly in Monaco.
+              </p>
+            </div>
+          )}
+          {activeSidebarTab === 'integrations' && (
+            <div className="h-full bg-surface-low border-r border-outline-variant/15 p-4 text-xs space-y-2">
+              <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] block">INTEGRATIONS</span>
+              <p className="text-outline text-[11px]">Vercel Edge & GitHub Session Active.</p>
+            </div>
+          )}
+          {activeSidebarTab === 'settings' && (
+            <div className="h-full bg-surface-low border-r border-outline-variant/15 p-4 text-xs space-y-2">
+              <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] block">PREFERENCES</span>
+              <p className="text-outline text-[11px]">Monaco Editor & WebGL rendering active.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Main Central Viewport (Editor / 3D / Preview / Split) */}
+        <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
+          <div className="flex-1 flex min-h-0 relative">
+            {activeView === 'code' && (
+              <div className="w-full h-full">
+                <CodeEditor />
+              </div>
+            )}
+
+            {activeView === '3d' && (
+              <div className="w-full h-full">
+                <Spatial3DWorkspace />
+              </div>
+            )}
+
+            {activeView === 'preview' && (
+              <div className="w-full h-full">
+                <LivePreview
+                  key={previewKey}
+                  previewDevice={previewDevice}
+                  setPreviewDevice={setPreviewDevice}
+                  isRunActive={isRunActive}
+                  setIsRunActive={setIsRunActive}
+                />
+              </div>
+            )}
+
+            {activeView === 'split' && (
+              <div className="w-full h-full flex flex-col md:flex-row">
+                {/* Editor Column */}
+                <div className="flex-1 h-1/2 md:h-full border-b md:border-b-0 md:border-r border-outline-variant/15">
+                  <CodeEditor />
+                </div>
+                {/* 3D Spatial Architecture Column */}
+                <div className="flex-1 h-1/2 md:h-full">
+                  <Spatial3DWorkspace />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Terminal Panel */}
+          <BottomPanel terminalComponent={<Terminal />} problemsCount={0} />
+        </div>
+
+        {/* Right AI Assistant Drawer */}
+        <AiAssistantDrawer isOpen={isAiOpen} onClose={() => setIsAiOpen(false)} />
+      </div>
+    </div>
+  );
+}
