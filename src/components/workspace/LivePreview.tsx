@@ -29,7 +29,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   setIsRunActive,
 }) => {
   const { projects, activeProjectId } = useProjectStore();
-  const { isRunning, addLog } = useRuntimeStore();
+  const { isRunning, webContainerUrl, addLog } = useRuntimeStore();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [key, setKey] = useState(0);
@@ -37,7 +37,7 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
 
   const currentProject = projects.find((p) => p.id === activeProjectId);
 
-  // Synthesize compiled executable HTML/React bundle for iframe sandbox
+  // Synthesize compiled executable HTML/React bundle for fallback iframe sandbox
   const iframeSrcDoc = useMemo(() => {
     if (!currentProject) return '';
 
@@ -137,14 +137,14 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
       <div className="h-10 bg-surface-low border-b border-outline-variant/15 px-3 flex items-center justify-between text-xs select-none">
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1.5 text-slate-300 font-semibold text-[11px]">
-            <Globe className="w-3.5 h-3.5 text-primary" /> LIVE PREVIEW (PORT 5173)
+            <Globe className="w-3.5 h-3.5 text-primary" /> LIVE PREVIEW
           </span>
           <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
             isRunActive && isRunning
               ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
               : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
           }`}>
-            {isRunActive && isRunning ? 'Vite Dev Server Active' : 'Stopped'}
+            {webContainerUrl ? 'WebContainer Server' : (isRunActive && isRunning ? 'Vite Dev Server Active' : 'Stopped')}
           </span>
         </div>
 
@@ -216,13 +216,22 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
 
         {isRunActive && isRunning ? (
           <div className={`transition-all duration-300 overflow-hidden bg-slate-950 ${getViewportDimensions()}`}>
-            <iframe
-              key={key}
-              title="CodeSpace 3D React Runtime Preview"
-              srcDoc={iframeSrcDoc}
-              sandbox="allow-scripts allow-modals"
-              className="w-full h-full border-0"
-            />
+            {webContainerUrl ? (
+              <iframe
+                key={key}
+                title="WebContainer Real Process Preview"
+                src={webContainerUrl}
+                className="w-full h-full border-0"
+              />
+            ) : (
+              <iframe
+                key={key}
+                title="CodeSpace 3D React Runtime Preview"
+                srcDoc={iframeSrcDoc}
+                sandbox="allow-scripts allow-modals"
+                className="w-full h-full border-0"
+              />
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center text-outline gap-3">

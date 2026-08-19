@@ -4,6 +4,8 @@ import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import { useProjectStore } from '../../store/useProjectStore';
 import { useRuntimeStore } from '../../runtime/RuntimeManager';
+import { WebContainerProvider } from '../../runtime/WebContainerProvider';
+import { RuntimeFilesystemBridge } from '../../runtime/RuntimeFilesystemBridge';
 
 export const Terminal: React.FC = () => {
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -11,7 +13,7 @@ export const Terminal: React.FC = () => {
   const currentPathRef = useRef<string>('/src');
 
   const { activeProjectId, createFile, deleteFile, gitStatus } = useProjectStore();
-  const { installPackages, buildProject, startDevServer, stopDevServer } = useRuntimeStore();
+  const { installPackages, buildProject, startDevServer, setWebContainerUrl } = useRuntimeStore();
 
   useEffect(() => {
     if (!terminalRef.current) return;
@@ -44,8 +46,8 @@ export const Terminal: React.FC = () => {
 
     xtermRef.current = term;
 
-    term.writeln('\x1b[36mCodeSpace 3D Virtual Terminal Engine v1.0.0\x1b[0m');
-    term.writeln('Type \x1b[33mhelp\x1b[0m for available filesystem & runtime commands.\r\n');
+    term.writeln('\x1b[36mCodeSpace 3D Terminal & WebContainer Process Bridge v1.0.0\x1b[0m');
+    term.writeln('Type \x1b[33mhelp\x1b[0m for available filesystem & process commands.\r\n');
 
     let currentLine = '';
 
@@ -77,9 +79,9 @@ export const Terminal: React.FC = () => {
           term.writeln('  touch <file>    - Create a new file');
           term.writeln('  mkdir <dir>     - Create a new directory');
           term.writeln('  rm <file>       - Remove file');
-          term.writeln('  npm install     - Resolve and install package.json dependencies');
-          term.writeln('  npm run dev     - Start Vite development server');
-          term.writeln('  npm run build   - Compile TSX/TS project to dist bundle');
+          term.writeln('  npm install     - Run npm package installer');
+          term.writeln('  npm run dev     - Execute Vite development server');
+          term.writeln('  npm run build   - Run Vite/Rollup production build');
           term.writeln('  git status      - Show git staging status');
           term.writeln('  clear           - Clear terminal output');
           break;
@@ -158,30 +160,50 @@ export const Terminal: React.FC = () => {
           break;
 
         case 'npm':
-          if (args[0] === 'install') {
-            term.writeln('\r\n\x1b[33m[npm]\x1b[0m Resolving package dependencies...');
-            const pkg = currentProject?.files['package.json'];
-            await installPackages(pkg?.content);
-            term.writeln('\x1b[32m[npm]\x1b[0m Packages installed successfully.');
-          } else if (args.join(' ') === 'run dev') {
-            term.writeln('\r\n\x1b[36m[vite]\x1b[0m Starting Vite development server...');
-            if (currentProject) {
-              startDevServer(currentProject.files);
-              term.writeln('\x1b[32m[vite]\x1b[0m VITE v5.2.11 ready in 218 ms');
-              term.writeln('  ➜  Local:   http://localhost:5173/');
-            }
-          } else if (args.join(' ') === 'run build') {
-            term.writeln('\r\n\x1b[36m[vite]\x1b[0m Building for production...');
-            if (currentProject) {
-              const res = buildProject(currentProject.files);
-              if (res.success) {
-                term.writeln(`\x1b[32m[vite]\x1b[0m Built ${Object.keys(res.outputFiles).length} modules in ${res.durationMs}ms.`);
-              } else {
-                term.writeln(`\x1b[31m[vite]\x1b[0m Build failed with ${res.errors.length} errors.`);
+          if (WebContainerProvider.isSupported() && currentProject) {
+            term.writeln(`\r\n\x1b[36m[WebContainer Process]\x1b[0m Spawning npm ${args.join(' ')}...`);
+            await RuntimeFilesystemBridge.initializeProject(currentProject.files);
+
+            WebContainerProvider.setOnServerReady((url) => {
+              setWebContainerUrl(url);
+              term.writeln(`\x1b[32m[WebContainer Server Ready]\x1b[0m ${url}`);
+            });
+
+            try {
+              const exitCode = await WebContainerProvider.spawnProcess(
+                'npm',
+                args,
+                (chunk) => {
+                  term.write(chunk.replace(/\n/g, '\r\n'));
+                }
+              );
+              term.writeln(`\r\n\x1b[32m[Process Exited]\x1b[0m Code: ${exitCode}`);
+            } catch (e: unknown) {
+              const msg = e instanceof Error ? e.message : String(e);
+              term.writeln(`\r\n\x1b[31m[WebContainer Fallback]\x1b[0m ${msg}`);
+              // Fallback to in-browser compiler engine
+              if (args[0] === 'install') {
+                const pkg = currentProject.files['package.json'];
+                await installPackages(pkg?.content);
+              } else if (args.join(' ') === 'run dev') {
+                startDevServer(currentProject.files);
+              } else if (args.join(' ') === 'run build') {
+                buildProject(currentProject.files);
               }
             }
           } else {
-            term.writeln(`\r\n\x1b[33mnpm ${args.join(' ')}\x1b[0m executed.`);
+            // Standard browser fallback
+            if (args[0] === 'install') {
+              term.writeln('\r\n\x1b[33m[In-Browser Package Resolver]\x1b[0m Resolving manifest dependencies...');
+              const pkg = currentProject?.files['package.json'];
+              await installPackages(pkg?.content);
+            } else if (args.join(' ') === 'run dev') {
+              term.writeln('\r\n\x1b[36m[In-Browser Vite Compiler]\x1b[0m Dev server started on port 5173.');
+              if (currentProject) startDevServer(currentProject.files);
+            } else if (args.join(' ') === 'run build') {
+              term.writeln('\r\n\x1b[36m[In-Browser TSX Compiler]\x1b[0m Building bundle...');
+              if (currentProject) buildProject(currentProject.files);
+            }
           }
           break;
 
@@ -234,7 +256,7 @@ export const Terminal: React.FC = () => {
       disposeData.dispose();
       term.dispose();
     };
-  }, [activeProjectId, createFile, deleteFile, gitStatus, installPackages, buildProject, startDevServer, stopDevServer]);
+  }, [activeProjectId, createFile, deleteFile, gitStatus, installPackages, buildProject, startDevServer, setWebContainerUrl]);
 
   return <div ref={terminalRef} className="w-full h-full min-h-[140px] overflow-hidden" />;
 };

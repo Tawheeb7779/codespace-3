@@ -4,7 +4,9 @@ import { RuntimeLog, RuntimeStatus, PackageManifest, BuildResult } from '../type
 import { CompilerEngine } from './CompilerEngine';
 
 interface RuntimeStoreState extends RuntimeStatus {
+  webContainerUrl: string | null;
   // Actions
+  setWebContainerUrl: (url: string | null) => void;
   startDevServer: (files: Record<string, ProjectFile>) => void;
   stopDevServer: () => void;
   buildProject: (files: Record<string, ProjectFile>) => BuildResult;
@@ -18,6 +20,7 @@ export const useRuntimeStore = create<RuntimeStoreState>((set, get) => ({
   isBuilding: false,
   port: 5173,
   url: 'http://localhost:5173/',
+  webContainerUrl: null,
   logs: [
     {
       id: '1',
@@ -28,6 +31,8 @@ export const useRuntimeStore = create<RuntimeStoreState>((set, get) => ({
   ],
   errors: [],
   manifest: null,
+
+  setWebContainerUrl: (url) => set({ webContainerUrl: url }),
 
   startDevServer: (files) => {
     const pkgFile = Object.values(files).find((f) => f.name === 'package.json');
@@ -44,7 +49,7 @@ export const useRuntimeStore = create<RuntimeStoreState>((set, get) => ({
   },
 
   stopDevServer: () => {
-    set({ isRunning: false });
+    set({ isRunning: false, webContainerUrl: null });
     get().addLog('info', '[Vite Runtime] Dev server stopped.');
   },
 
