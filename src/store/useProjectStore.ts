@@ -1,10 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Project, ProjectFile } from '../types';
+import { WorkspaceTask, ChatMessage, ProjectAsset } from '../types/stitch';
+import { RuntimeFilesystemBridge } from '../runtime/RuntimeFilesystemBridge';
 
 export const DEFAULT_REACT_THREE_FILES: Record<string, ProjectFile> = {
-  'root': { id: 'root', name: 'root', path: '/', content: '', language: '', isFolder: true, parentId: null, children: ['src', 'package.json', 'README.md'] },
+  'root': { id: 'root', name: 'root', path: '/', content: '', language: '', isFolder: true, parentId: null, children: ['src', 'public', 'package.json', 'README.md'] },
   'src': { id: 'src', name: 'src', path: '/src', content: '', language: '', isFolder: true, parentId: 'root', children: ['App.tsx', 'main.tsx', 'index.css', 'components'] },
+  'public': { id: 'public', name: 'public', path: '/public', content: '', language: '', isFolder: true, parentId: 'root', children: ['assets'] },
+  'assets': { id: 'assets', name: 'assets', path: '/public/assets', content: '', language: '', isFolder: true, parentId: 'public', children: [] },
   'components': { id: 'components', name: 'components', path: '/src/components', content: '', language: '', isFolder: true, parentId: 'src', children: ['Scene3D.tsx', 'Header.tsx'] },
   'App.tsx': {
     id: 'App.tsx',
@@ -151,15 +155,6 @@ export function Header({ title }: { title: string }) {
     content: `# CodeSpace 3D Workspace
 
 Welcome to **CodeSpace 3D**, a real browser-based 3D Web IDE.
-
-## Features
-- Real in-memory file explorer
-- Full Monaco code editor
-- Interactive 3D Spatial Architecture Graph
-- Live Sandboxed Preview
-- Terminal with virtual execution API
-- GitHub repository integration boundary
-- AI coding assistant
 `
   }
 };
@@ -173,17 +168,7 @@ const DEFAULT_PROJECTS: Project[] = [
     template: 'react-three',
     branch: 'main',
     files: DEFAULT_REACT_THREE_FILES,
-    rootFileIds: ['src', 'package.json', 'README.md'],
-  },
-  {
-    id: 'web-components-lib',
-    name: 'Aether Glass UI Kit',
-    description: 'Glassmorphic Web Components and design system layout',
-    updatedAt: new Date(Date.now() - 86400000).toISOString(),
-    template: 'vanilla',
-    branch: 'main',
-    files: DEFAULT_REACT_THREE_FILES,
-    rootFileIds: ['src', 'package.json', 'README.md'],
+    rootFileIds: ['src', 'public', 'package.json', 'README.md'],
   }
 ];
 
@@ -196,6 +181,11 @@ interface ProjectState {
   gitStatus: { staged: string[]; unstaged: string[]; committed: boolean };
   githubRepo: string | null;
   githubConnected: boolean;
+
+  // Stitch feature persistent state per project
+  projectTasks: Record<string, WorkspaceTask[]>;
+  projectChats: Record<string, ChatMessage[]>;
+  projectAssets: Record<string, ProjectAsset[]>;
 
   // Actions
   setActiveProject: (id: string) => void;
@@ -212,6 +202,11 @@ interface ProjectState {
   stageFile: (filePath: string) => void;
   unstageFile: (filePath: string) => void;
   commitChanges: (message: string) => void;
+
+  // Task & Chat & Asset persistence actions
+  setTasksForProject: (projectId: string, tasks: WorkspaceTask[]) => void;
+  setChatForProject: (projectId: string, messages: ChatMessage[]) => void;
+  setAssetsForProject: (projectId: string, assets: ProjectAsset[]) => void;
 }
 
 export const useProjectStore = create<ProjectState>()(
@@ -226,6 +221,23 @@ export const useProjectStore = create<ProjectState>()(
       githubRepo: null,
       githubConnected: false,
 
+      projectTasks: {
+        'demo-3d-app': [
+          { id: '1', title: 'Implement 3D Node Mesh Orbiting', description: 'Refactor R3F rotation frame loops', status: 'in_progress', priority: 'high', assignedTo: 'Jules' },
+          { id: '2', title: 'WebContainer COOP/COEP Headers', description: 'Enable SharedArrayBuffer cross-origin isolation', status: 'completed', priority: 'high', assignedTo: 'DevOps' }
+        ]
+      },
+      projectChats: {
+        'demo-3d-app': [
+          { id: '1', sender: 'Nexus AI', text: '3D Spatial Graph nodes compiled. 12 file nodes mounted.', timestamp: '10:14 AM', isAi: true }
+        ]
+      },
+      projectAssets: {
+        'demo-3d-app': [
+          { id: '1', name: 'robot_avatar.gltf', type: '3d-model', size: '2.4 MB', url: '/public/assets/robot_avatar.gltf', updatedAt: '2026-02-18' }
+        ]
+      },
+
       setActiveProject: (id) => {
         const project = get().projects.find(p => p.id === id);
         if (project) {
@@ -236,6 +248,8 @@ export const useProjectStore = create<ProjectState>()(
             openTabIds: firstFile ? [firstFile.id] : [],
             gitBranch: project.branch || 'main',
           });
+          // Sync filesystem to WebContainer for the new project
+          RuntimeFilesystemBridge.initializeProject(project.files);
         }
       },
 
@@ -249,7 +263,7 @@ export const useProjectStore = create<ProjectState>()(
           template,
           branch: 'main',
           files: JSON.parse(JSON.stringify(DEFAULT_REACT_THREE_FILES)),
-          rootFileIds: ['src', 'package.json', 'README.md'],
+          rootFileIds: ['src', 'public', 'package.json', 'README.md'],
         };
         set(state => ({
           projects: [newProject, ...state.projects],
@@ -257,6 +271,7 @@ export const useProjectStore = create<ProjectState>()(
           activeFileId: 'App.tsx',
           openTabIds: ['App.tsx'],
         }));
+        RuntimeFilesystemBridge.initializeProject(newProject.files);
         return newProject;
       },
 
@@ -288,19 +303,25 @@ export const useProjectStore = create<ProjectState>()(
           const { activeProjectId, projects, gitStatus } = state;
           if (!activeProjectId) return state;
 
+          let updatedFile: ProjectFile | null = null;
           const updatedProjects = projects.map(p => {
             if (p.id !== activeProjectId) return p;
             const file = p.files[fileId];
             if (!file) return p;
 
+            updatedFile = { ...file, content, isUnsaved: true };
             return {
               ...p,
               files: {
                 ...p.files,
-                [fileId]: { ...file, content, isUnsaved: true }
+                [fileId]: updatedFile
               }
             };
           });
+
+          if (updatedFile) {
+            RuntimeFilesystemBridge.onFileUpdated(updatedFile);
+          }
 
           const currentFile = projects.find(p => p.id === activeProjectId)?.files[fileId];
           const path = currentFile?.path || fileId;
@@ -356,6 +377,8 @@ export const useProjectStore = create<ProjectState>()(
             return { ...p, files: updatedFiles };
           });
 
+          RuntimeFilesystemBridge.onFileUpdated(newFile);
+
           return {
             projects: updatedProjects,
             activeFileId: isFolder ? state.activeFileId : id,
@@ -385,6 +408,8 @@ export const useProjectStore = create<ProjectState>()(
             delete newFiles[fileId];
             return { ...p, files: newFiles };
           });
+
+          RuntimeFilesystemBridge.onFileDeleted(fileId);
 
           const newTabs = openTabIds.filter(id => id !== fileId);
           const nextActive = activeFileId === fileId ? (newTabs[0] || null) : activeFileId;
@@ -445,6 +470,18 @@ export const useProjectStore = create<ProjectState>()(
           unstaged: [],
           committed: true
         }
+      })),
+
+      setTasksForProject: (projectId, tasks) => set(state => ({
+        projectTasks: { ...state.projectTasks, [projectId]: tasks }
+      })),
+
+      setChatForProject: (projectId, messages) => set(state => ({
+        projectChats: { ...state.projectChats, [projectId]: messages }
+      })),
+
+      setAssetsForProject: (projectId, assets) => set(state => ({
+        projectAssets: { ...state.projectAssets, [projectId]: assets }
       })),
     }),
     {

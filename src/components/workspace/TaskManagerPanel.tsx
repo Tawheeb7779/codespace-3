@@ -8,16 +8,16 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { WorkspaceTask } from '../../types/stitch';
-
-const INITIAL_TASKS: WorkspaceTask[] = [
-  { id: '1', title: 'Implement 3D Node Mesh Orbiting', description: 'Refactor R3F rotation frame loops for high FPS', status: 'in_progress', priority: 'high', assignedTo: 'Jules' },
-  { id: '2', title: 'WebContainer COOP/COEP Headers', description: 'Enable SharedArrayBuffer cross-origin isolation', status: 'completed', priority: 'high', assignedTo: 'DevOps' },
-  { id: '3', title: 'Monaco Editor Theme Customization', description: 'Add JetBrains Mono and dark glassmorphic palette', status: 'completed', priority: 'medium', assignedTo: 'UX' },
-  { id: '4', title: 'Optimize R3F Canvas Shadows', description: 'Provide quality degradation toggle for mobile GPUs', status: 'todo', priority: 'low', assignedTo: '3D Team' },
-];
+import { useProjectStore } from '../../store/useProjectStore';
 
 export const TaskManagerPanel: React.FC = () => {
-  const [tasks, setTasks] = useState<WorkspaceTask[]>(INITIAL_TASKS);
+  const { activeProjectId, projectTasks, setTasksForProject } = useProjectStore();
+
+  const currentTasks = (activeProjectId && projectTasks[activeProjectId]) || [
+    { id: '1', title: 'Implement 3D Node Mesh Orbiting', description: 'Refactor R3F rotation frame loops', status: 'in_progress', priority: 'high', assignedTo: 'Jules' },
+    { id: '2', title: 'WebContainer COOP/COEP Headers', description: 'Enable SharedArrayBuffer cross-origin isolation', status: 'completed', priority: 'high', assignedTo: 'DevOps' }
+  ];
+
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDesc, setNewTaskDesc] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<WorkspaceTask['priority']>('medium');
@@ -25,7 +25,7 @@ export const TaskManagerPanel: React.FC = () => {
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTaskTitle.trim()) return;
+    if (!newTaskTitle.trim() || !activeProjectId) return;
 
     const task: WorkspaceTask = {
       id: Date.now().toString(),
@@ -36,25 +36,29 @@ export const TaskManagerPanel: React.FC = () => {
       assignedTo: 'Me',
     };
 
-    setTasks([task, ...tasks]);
+    const updated = [task, ...currentTasks];
+    setTasksForProject(activeProjectId, updated);
+
     setNewTaskTitle('');
     setNewTaskDesc('');
     setShowAddModal(false);
   };
 
   const handleToggleStatus = (id: string) => {
-    setTasks(
-      tasks.map((t) => {
-        if (t.id !== id) return t;
-        const nextStatus: WorkspaceTask['status'] =
-          t.status === 'todo' ? 'in_progress' : t.status === 'in_progress' ? 'completed' : 'todo';
-        return { ...t, status: nextStatus };
-      })
-    );
+    if (!activeProjectId) return;
+    const updated = currentTasks.map((t) => {
+      if (t.id !== id) return t;
+      const nextStatus: WorkspaceTask['status'] =
+        t.status === 'todo' ? 'in_progress' : t.status === 'in_progress' ? 'completed' : 'todo';
+      return { ...t, status: nextStatus };
+    });
+    setTasksForProject(activeProjectId, updated);
   };
 
   const handleDeleteTask = (id: string) => {
-    setTasks(tasks.filter((t) => t.id !== id));
+    if (!activeProjectId) return;
+    const updated = currentTasks.filter((t) => t.id !== id);
+    setTasksForProject(activeProjectId, updated);
   };
 
   const getPriorityBadge = (priority: WorkspaceTask['priority']) => {
@@ -84,7 +88,7 @@ export const TaskManagerPanel: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
         <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] flex items-center gap-2">
-          <CheckSquare className="w-4 h-4 text-emerald-400" /> TASK BOARD
+          <CheckSquare className="w-4 h-4 text-emerald-400" /> TASK BOARD (PERSISTENT)
         </span>
         <button
           onClick={() => setShowAddModal(true)}
@@ -97,7 +101,7 @@ export const TaskManagerPanel: React.FC = () => {
 
       {/* Task Cards List */}
       <div className="space-y-2">
-        {tasks.map((task) => (
+        {currentTasks.map((task) => (
           <div
             key={task.id}
             className="p-3 bg-surface-container rounded-lg border border-outline-variant/15 space-y-2 group cursor-pointer hover:border-primary/40 transition-colors"
