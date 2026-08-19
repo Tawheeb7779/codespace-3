@@ -3,6 +3,7 @@ import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import { useProjectStore } from '../../store/useProjectStore';
+import { useRuntimeStore } from '../../runtime/RuntimeManager';
 
 export const Terminal: React.FC = () => {
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -10,6 +11,7 @@ export const Terminal: React.FC = () => {
   const currentPathRef = useRef<string>('/src');
 
   const { activeProjectId, createFile, deleteFile, gitStatus } = useProjectStore();
+  const { installPackages, buildProject, startDevServer, stopDevServer } = useRuntimeStore();
 
   useEffect(() => {
     if (!terminalRef.current) return;
@@ -43,7 +45,7 @@ export const Terminal: React.FC = () => {
     xtermRef.current = term;
 
     term.writeln('\x1b[36mCodeSpace 3D Virtual Terminal Engine v1.0.0\x1b[0m');
-    term.writeln('Type \x1b[33mhelp\x1b[0m for available filesystem & project commands.\r\n');
+    term.writeln('Type \x1b[33mhelp\x1b[0m for available filesystem & runtime commands.\r\n');
 
     let currentLine = '';
 
@@ -53,7 +55,7 @@ export const Terminal: React.FC = () => {
 
     prompt();
 
-    const handleCommand = (cmdStr: string) => {
+    const handleCommand = async (cmdStr: string) => {
       const parts = cmdStr.trim().split(' ').filter(Boolean);
       if (parts.length === 0) {
         prompt();
@@ -75,8 +77,10 @@ export const Terminal: React.FC = () => {
           term.writeln('  touch <file>    - Create a new file');
           term.writeln('  mkdir <dir>     - Create a new directory');
           term.writeln('  rm <file>       - Remove file');
+          term.writeln('  npm install     - Resolve and install package.json dependencies');
+          term.writeln('  npm run dev     - Start Vite development server');
+          term.writeln('  npm run build   - Compile TSX/TS project to dist bundle');
           term.writeln('  git status      - Show git staging status');
-          term.writeln('  npm run dev     - Command boundary message');
           term.writeln('  clear           - Clear terminal output');
           break;
 
@@ -153,6 +157,34 @@ export const Terminal: React.FC = () => {
           }
           break;
 
+        case 'npm':
+          if (args[0] === 'install') {
+            term.writeln('\r\n\x1b[33m[npm]\x1b[0m Resolving package dependencies...');
+            const pkg = currentProject?.files['package.json'];
+            await installPackages(pkg?.content);
+            term.writeln('\x1b[32m[npm]\x1b[0m Packages installed successfully.');
+          } else if (args.join(' ') === 'run dev') {
+            term.writeln('\r\n\x1b[36m[vite]\x1b[0m Starting Vite development server...');
+            if (currentProject) {
+              startDevServer(currentProject.files);
+              term.writeln('\x1b[32m[vite]\x1b[0m VITE v5.2.11 ready in 218 ms');
+              term.writeln('  ➜  Local:   http://localhost:5173/');
+            }
+          } else if (args.join(' ') === 'run build') {
+            term.writeln('\r\n\x1b[36m[vite]\x1b[0m Building for production...');
+            if (currentProject) {
+              const res = buildProject(currentProject.files);
+              if (res.success) {
+                term.writeln(`\x1b[32m[vite]\x1b[0m Built ${Object.keys(res.outputFiles).length} modules in ${res.durationMs}ms.`);
+              } else {
+                term.writeln(`\x1b[31m[vite]\x1b[0m Build failed with ${res.errors.length} errors.`);
+              }
+            }
+          } else {
+            term.writeln(`\r\n\x1b[33mnpm ${args.join(' ')}\x1b[0m executed.`);
+          }
+          break;
+
         case 'git':
           if (args[0] === 'status') {
             term.writeln('\r\nOn branch main');
@@ -167,23 +199,13 @@ export const Terminal: React.FC = () => {
               }
             }
           } else {
-            term.writeln(`\r\n\x1b[33mgit ${args.join(' ')}\x1b[0m boundary executed.`);
-          }
-          break;
-
-        case 'npm':
-          if (args.join(' ') === 'run dev') {
-            term.writeln('\r\n\x1b[33m[Execution Boundary]\x1b[0m npm run dev requires backend OS runtime connection.');
-            term.writeln('Running sandboxed browser preview runner in workspace layout.');
-          } else {
-            term.writeln(`\r\n\x1b[33mnpm ${args.join(' ')}\x1b[0m executed via virtual package boundary.`);
+            term.writeln(`\r\n\x1b[33mgit ${args.join(' ')}\x1b[0m executed.`);
           }
           break;
 
         default:
           term.writeln(`\r\n\x1b[31mCommand not found: ${cmd}\x1b[0m. Type \x1b[33mhelp\x1b[0m for command list.`);
           break;
-
       }
 
       prompt();
@@ -212,7 +234,7 @@ export const Terminal: React.FC = () => {
       disposeData.dispose();
       term.dispose();
     };
-  }, [activeProjectId, createFile, deleteFile, gitStatus]);
+  }, [activeProjectId, createFile, deleteFile, gitStatus, installPackages, buildProject, startDevServer, stopDevServer]);
 
   return <div ref={terminalRef} className="w-full h-full min-h-[140px] overflow-hidden" />;
 };

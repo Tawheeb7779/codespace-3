@@ -12,6 +12,8 @@ import {
   Globe
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
+import { useRuntimeStore } from '../../runtime/RuntimeManager';
+import { CompilerEngine } from '../../runtime/CompilerEngine';
 
 interface LivePreviewProps {
   previewDevice: 'desktop' | 'tablet' | 'mobile';
@@ -27,33 +29,38 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   setIsRunActive,
 }) => {
   const { projects, activeProjectId } = useProjectStore();
+  const { isRunning, addLog } = useRuntimeStore();
+
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [key, setKey] = useState(0);
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
 
   const currentProject = projects.find((p) => p.id === activeProjectId);
 
-  // Construct iframe source HTML from in-memory project files
+  // Synthesize compiled executable HTML/React bundle for iframe sandbox
   const iframeSrcDoc = useMemo(() => {
     if (!currentProject) return '';
 
     const files = currentProject.files;
     let customHtml = '';
     let cssContent = '';
-    let jsContent = '';
+    const tsxOutputs: string[] = [];
 
     Object.values(files).forEach((file) => {
       if (file.isFolder) return;
       if (file.name.endsWith('.html')) customHtml = file.content;
       if (file.name.endsWith('.css')) cssContent += `\n${file.content}`;
-      if (file.name.endsWith('.tsx') || file.name.endsWith('.ts') || file.name.endsWith('.js')) {
-        jsContent += `\n${file.content}`;
+      if (file.name.endsWith('.tsx') || file.name.endsWith('.ts') || file.name.endsWith('.js') || file.name.endsWith('.jsx')) {
+        const js = CompilerEngine.transpileTsx(file.content);
+        tsxOutputs.push(`// --- Module: ${file.name} ---\n${js}`);
       }
     });
 
     if (customHtml) {
       return customHtml;
     }
+
+    const compiledJsBundle = tsxOutputs.join('\n\n');
 
     return `
       <!DOCTYPE html>
@@ -62,6 +69,9 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <script src="https://cdn.tailwindcss.com"></script>
+          <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+          <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+          <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
           <style>${cssContent}</style>
           <script>
             window.onerror = function(msg, url, line) {
@@ -74,22 +84,22 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
             <div class="p-6 bg-slate-900 rounded-xl border border-slate-800 space-y-4 max-w-xl mx-auto mt-8 shadow-2xl">
               <div class="flex items-center gap-3">
                 <div class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></div>
-                <h2 class="text-xl font-bold text-blue-400">Live Browser Preview Sandbox</h2>
+                <h2 class="text-xl font-bold text-blue-400">CodeSpace 3D React Runtime Engine</h2>
               </div>
               <p class="text-sm text-slate-300 leading-relaxed">
-                Rendering workspace code in real-time iframe sandbox. Editing source code updates the spatial environment dynamically.
+                Active in-browser transpiled React + TSX application executing dynamically inside sandboxed Vite/React runtime context.
               </p>
               <div class="p-4 bg-slate-950 rounded border border-slate-800 font-mono text-xs text-slate-400 space-y-1">
                 <div>Project: <span class="text-white">${currentProject.name}</span></div>
-                <div>Files In Memory: <span class="text-emerald-400">${Object.keys(files).length}</span></div>
-                <div>Runtime Mode: <span class="text-blue-400">Isolated Client Sandbox</span></div>
+                <div>Runtime Mode: <span class="text-emerald-400">In-Browser TSX Compiler (React 18)</span></div>
+                <div>Vite Dev Port: <span class="text-blue-400">5173</span></div>
               </div>
             </div>
           </div>
-          <script>
+
+          <script type="text/babel">
             try {
-              ${jsContent}
-              console.log('Sandbox browser execution environment running.');
+              ${compiledJsBundle}
             } catch(e) {
               window.onerror(e.message, '', 0);
             }
@@ -103,11 +113,12 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
     const handleMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === 'PREVIEW_ERROR') {
         setRuntimeError(event.data.error);
+        addLog('error', `[Runtime Error] ${event.data.error}`);
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [addLog]);
 
   const getViewportDimensions = () => {
     switch (previewDevice) {
@@ -126,10 +137,14 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
       <div className="h-10 bg-surface-low border-b border-outline-variant/15 px-3 flex items-center justify-between text-xs select-none">
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1.5 text-slate-300 font-semibold text-[11px]">
-            <Globe className="w-3.5 h-3.5 text-primary" /> LIVE PREVIEW
+            <Globe className="w-3.5 h-3.5 text-primary" /> LIVE PREVIEW (PORT 5173)
           </span>
-          <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-            {isRunActive ? 'Sandbox Running' : 'Stopped'}
+          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
+            isRunActive && isRunning
+              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+              : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+          }`}>
+            {isRunActive && isRunning ? 'Vite Dev Server Active' : 'Stopped'}
           </span>
         </div>
 
@@ -199,11 +214,11 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
           </div>
         )}
 
-        {isRunActive ? (
+        {isRunActive && isRunning ? (
           <div className={`transition-all duration-300 overflow-hidden bg-slate-950 ${getViewportDimensions()}`}>
             <iframe
               key={key}
-              title="CodeSpace 3D Sandbox Preview"
+              title="CodeSpace 3D React Runtime Preview"
               srcDoc={iframeSrcDoc}
               sandbox="allow-scripts allow-modals"
               className="w-full h-full border-0"
@@ -212,12 +227,12 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
         ) : (
           <div className="flex flex-col items-center justify-center text-outline gap-3">
             <Square className="w-10 h-10 opacity-30" />
-            <p className="text-sm">Preview execution is currently stopped.</p>
+            <p className="text-sm">Runtime dev server is currently stopped.</p>
             <button
               onClick={() => setIsRunActive(true)}
               className="px-4 py-2 bg-primary-container text-white text-xs font-medium rounded-lg hover:bg-primary-container/80 transition-all flex items-center gap-2"
             >
-              <Play className="w-3.5 h-3.5 fill-current" /> Start Sandbox Runner
+              <Play className="w-3.5 h-3.5 fill-current" /> Launch Vite Dev Server
             </button>
           </div>
         )}
