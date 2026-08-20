@@ -3,6 +3,14 @@ import { persist } from 'zustand/middleware';
 import { Project, ProjectFile } from '../types';
 import { WorkspaceTask, ChatMessage, ProjectAsset } from '../types/stitch';
 import { RuntimeFilesystemBridge } from '../runtime/RuntimeFilesystemBridge';
+import { useAuthStore } from './useAuthStore';
+
+export type UserRole = 'owner' | 'admin' | 'developer' | 'viewer';
+
+export interface ExtendedProject extends Project {
+  userId?: string;
+  visibility?: 'public' | 'private';
+}
 
 export const DEFAULT_REACT_THREE_FILES: Record<string, ProjectFile> = {
   'root': { id: 'root', name: 'root', path: '/', content: '', language: '', isFolder: true, parentId: null, children: ['src', 'public', 'package.json', 'README.md'] },
@@ -159,7 +167,7 @@ Welcome to **CodeSpace 3D**, a real browser-based 3D Web IDE.
   }
 };
 
-const DEFAULT_PROJECTS: Project[] = [
+const DEFAULT_PROJECTS: ExtendedProject[] = [
   {
     id: 'demo-3d-app',
     name: '3D Spatial App',
@@ -169,11 +177,13 @@ const DEFAULT_PROJECTS: Project[] = [
     branch: 'main',
     files: DEFAULT_REACT_THREE_FILES,
     rootFileIds: ['src', 'public', 'package.json', 'README.md'],
+    userId: 'guest-local',
+    visibility: 'public',
   }
 ];
 
 interface ProjectState {
-  projects: Project[];
+  projects: ExtendedProject[];
   activeProjectId: string | null;
   activeFileId: string | null;
   openTabIds: string[];
@@ -182,6 +192,9 @@ interface ProjectState {
   githubRepo: string | null;
   githubConnected: boolean;
 
+  // RBAC User Role per project
+  currentUserRole: UserRole;
+
   // Stitch feature persistent state per project
   projectTasks: Record<string, WorkspaceTask[]>;
   projectChats: Record<string, ChatMessage[]>;
@@ -189,7 +202,7 @@ interface ProjectState {
 
   // Actions
   setActiveProject: (id: string) => void;
-  createProject: (name: string, description: string, template?: Project['template']) => Project;
+  createProject: (name: string, description: string, template?: Project['template']) => ExtendedProject;
   deleteProject: (id: string) => void;
   openFile: (fileId: string) => void;
   closeTab: (fileId: string) => void;
@@ -199,6 +212,7 @@ interface ProjectState {
   renameFile: (fileId: string, newName: string) => void;
   setGithubRepo: (repo: string | null) => void;
   setGithubConnected: (connected: boolean) => void;
+  setUserRole: (role: UserRole) => void;
   stageFile: (filePath: string) => void;
   unstageFile: (filePath: string) => void;
   commitChanges: (message: string) => void;
@@ -220,6 +234,7 @@ export const useProjectStore = create<ProjectState>()(
       gitStatus: { staged: [], unstaged: ['App.tsx'], committed: false },
       githubRepo: null,
       githubConnected: false,
+      currentUserRole: 'owner',
 
       projectTasks: {
         'demo-3d-app': [
@@ -248,14 +263,14 @@ export const useProjectStore = create<ProjectState>()(
             openTabIds: firstFile ? [firstFile.id] : [],
             gitBranch: project.branch || 'main',
           });
-          // Sync filesystem to WebContainer for the new project
           RuntimeFilesystemBridge.initializeProject(project.files);
         }
       },
 
       createProject: (name, description, template = 'react-three') => {
+        const currentUser = useAuthStore.getState().user;
         const id = name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now().toString().slice(-4);
-        const newProject: Project = {
+        const newProject: ExtendedProject = {
           id,
           name,
           description,
@@ -264,6 +279,8 @@ export const useProjectStore = create<ProjectState>()(
           branch: 'main',
           files: JSON.parse(JSON.stringify(DEFAULT_REACT_THREE_FILES)),
           rootFileIds: ['src', 'public', 'package.json', 'README.md'],
+          userId: currentUser?.id || 'guest-local',
+          visibility: 'private',
         };
         set(state => ({
           projects: [newProject, ...state.projects],
@@ -276,6 +293,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       deleteProject: (id) => {
+        if (get().currentUserRole === 'viewer') return; // RBAC Guard
         set(state => ({
           projects: state.projects.filter(p => p.id !== id),
           activeProjectId: state.activeProjectId === id ? (state.projects[0]?.id || null) : state.activeProjectId,
@@ -299,6 +317,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       updateFileContent: (fileId, content) => {
+        if (get().currentUserRole === 'viewer') return; // RBAC Guard
         set(state => {
           const { activeProjectId, projects, gitStatus } = state;
           if (!activeProjectId) return state;
@@ -335,6 +354,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       createFile: (name, parentId = 'src', isFolder = false) => {
+        if (get().currentUserRole === 'viewer') return; // RBAC Guard
         set(state => {
           const { activeProjectId, projects } = state;
           if (!activeProjectId) return state;
@@ -388,6 +408,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       deleteFile: (fileId) => {
+        if (get().currentUserRole === 'viewer') return; // RBAC Guard
         set(state => {
           const { activeProjectId, projects, openTabIds, activeFileId } = state;
           if (!activeProjectId) return state;
@@ -423,6 +444,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       renameFile: (fileId, newName) => {
+        if (get().currentUserRole === 'viewer') return; // RBAC Guard
         set(state => {
           const { activeProjectId, projects } = state;
           if (!activeProjectId) return state;
@@ -447,6 +469,7 @@ export const useProjectStore = create<ProjectState>()(
 
       setGithubRepo: (repo) => set({ githubRepo: repo }),
       setGithubConnected: (connected) => set({ githubConnected: connected }),
+      setUserRole: (currentUserRole) => set({ currentUserRole }),
 
       stageFile: (filePath) => set(state => ({
         gitStatus: {

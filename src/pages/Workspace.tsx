@@ -17,6 +17,7 @@ import { AssetsManagerPanel } from '../components/workspace/AssetsManagerPanel';
 import { TaskManagerPanel } from '../components/workspace/TaskManagerPanel';
 import { TeamChatPanel } from '../components/workspace/TeamChatPanel';
 import { AnalyticsPanel } from '../components/workspace/AnalyticsPanel';
+import { SqlStudioPanel } from '../components/workspace/SqlStudioPanel';
 import { CommandPaletteModal } from '../components/workspace/CommandPaletteModal';
 
 export default function Workspace() {
@@ -72,7 +73,7 @@ export default function Workspace() {
           isAiOpen={isAiOpen}
         />
 
-        {/* Left Secondary Panel (Explorer / Packages / Assets / Tasks / Chat / Analytics / Git / Search) */}
+        {/* Left Secondary Panel */}
         <div className="w-64 h-full shrink-0">
           {activeSidebarTab === 'explorer' && <FileExplorerPanel />}
           {activeSidebarTab === 'packages' && <PackageManagerPanel />}
@@ -80,6 +81,7 @@ export default function Workspace() {
           {activeSidebarTab === 'tasks' && <TaskManagerPanel />}
           {activeSidebarTab === 'chat' && <TeamChatPanel />}
           {activeSidebarTab === 'analytics' && <AnalyticsPanel />}
+          {activeSidebarTab === 'sql' && <SqlStudioPanel />}
           {activeSidebarTab === 'git' && <GitSourceControlPanel />}
           {activeSidebarTab === 'search' && (
             <div className="h-full bg-surface-low border-r border-outline-variant/15 p-4 text-xs">
@@ -138,11 +140,9 @@ export default function Workspace() {
 
             {activeView === 'split' && (
               <div className="w-full h-full flex flex-col md:flex-row">
-                {/* Editor Column */}
                 <div className="flex-1 h-1/2 md:h-full border-b md:border-b-0 md:border-r border-outline-variant/15">
                   <CodeEditor />
                 </div>
-                {/* 3D Spatial Architecture Column */}
                 <div className="flex-1 h-1/2 md:h-full">
                   <Spatial3DWorkspace />
                 </div>
@@ -150,14 +150,11 @@ export default function Workspace() {
             )}
           </div>
 
-          {/* Bottom Terminal Panel */}
           <BottomPanel terminalComponent={<Terminal />} problemsCount={0} />
         </div>
 
-        {/* Right AI Assistant Drawer */}
         <AiAssistantDrawer isOpen={isAiOpen} onClose={() => setIsAiOpen(false)} />
 
-        {/* Global Command Palette Search Modal */}
         <CommandPaletteModal
           isOpen={isCommandPaletteOpen}
           onClose={() => setIsCommandPaletteOpen(false)}

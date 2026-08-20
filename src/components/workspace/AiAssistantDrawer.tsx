@@ -8,10 +8,13 @@ import {
   FilePlus,
   Wrench,
   Lock,
-  AlertTriangle
+  AlertTriangle,
+  Mic,
+  MicOff
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
+import { VoiceRecognitionService } from '../../services/VoiceRecognitionService';
 
 interface Message {
   id: string;
@@ -35,6 +38,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
   const { aiProvider, aiApiKey } = usePreferenceStore();
 
   const [input, setInput] = useState('');
+  const [isListening, setIsListening] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -46,6 +50,20 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
 
   const currentProject = projects.find((p) => p.id === activeProjectId);
   const activeFile = activeFileId && currentProject ? currentProject.files[activeFileId] : null;
+
+  const handleToggleVoice = () => {
+    if (isListening) {
+      VoiceRecognitionService.stopListening();
+      setIsListening(false);
+    } else {
+      const started = VoiceRecognitionService.startListening({
+        onResult: (transcript) => setInput(transcript),
+        onError: () => setIsListening(false),
+        onEnd: () => setIsListening(false),
+      });
+      if (started) setIsListening(true);
+    }
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,11 +281,21 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
         </button>
       </div>
 
-      {/* Input */}
-      <form onSubmit={handleSendMessage} className="p-3 border-t border-outline-variant/15 bg-surface-container-low flex gap-2">
+      {/* Input Form with Voice Dictation */}
+      <form onSubmit={handleSendMessage} className="p-3 border-t border-outline-variant/15 bg-surface-container-low flex gap-2 items-center">
+        <button
+          type="button"
+          onClick={handleToggleVoice}
+          className={`p-2 rounded-lg transition-colors ${
+            isListening ? 'bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse' : 'bg-surface-container text-outline hover:text-white'
+          }`}
+          title="Voice Speech Recognition"
+        >
+          {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+        </button>
         <input
           type="text"
-          placeholder="Ask AI to modify files or explain code..."
+          placeholder="Ask AI to modify files or dictate prompt..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 px-3 py-1.5 bg-surface-container border border-outline-variant/20 rounded-lg text-xs text-white placeholder-outline focus:outline-none focus:border-primary"
