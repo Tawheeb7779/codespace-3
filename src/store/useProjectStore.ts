@@ -3,8 +3,14 @@ import { persist } from 'zustand/middleware';
 import { Project, ProjectFile } from '../types';
 import { WorkspaceTask, ChatMessage, ProjectAsset } from '../types/stitch';
 import { RuntimeFilesystemBridge } from '../runtime/RuntimeFilesystemBridge';
+import { useAuthStore } from './useAuthStore';
 
 export type UserRole = 'owner' | 'admin' | 'developer' | 'viewer';
+
+export interface ExtendedProject extends Project {
+  userId?: string;
+  visibility?: 'public' | 'private';
+}
 
 export const DEFAULT_REACT_THREE_FILES: Record<string, ProjectFile> = {
   'root': { id: 'root', name: 'root', path: '/', content: '', language: '', isFolder: true, parentId: null, children: ['src', 'public', 'package.json', 'README.md'] },
@@ -161,7 +167,7 @@ Welcome to **CodeSpace 3D**, a real browser-based 3D Web IDE.
   }
 };
 
-const DEFAULT_PROJECTS: Project[] = [
+const DEFAULT_PROJECTS: ExtendedProject[] = [
   {
     id: 'demo-3d-app',
     name: '3D Spatial App',
@@ -171,11 +177,13 @@ const DEFAULT_PROJECTS: Project[] = [
     branch: 'main',
     files: DEFAULT_REACT_THREE_FILES,
     rootFileIds: ['src', 'public', 'package.json', 'README.md'],
+    userId: 'guest-local',
+    visibility: 'public',
   }
 ];
 
 interface ProjectState {
-  projects: Project[];
+  projects: ExtendedProject[];
   activeProjectId: string | null;
   activeFileId: string | null;
   openTabIds: string[];
@@ -194,7 +202,7 @@ interface ProjectState {
 
   // Actions
   setActiveProject: (id: string) => void;
-  createProject: (name: string, description: string, template?: Project['template']) => Project;
+  createProject: (name: string, description: string, template?: Project['template']) => ExtendedProject;
   deleteProject: (id: string) => void;
   openFile: (fileId: string) => void;
   closeTab: (fileId: string) => void;
@@ -260,8 +268,9 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       createProject: (name, description, template = 'react-three') => {
+        const currentUser = useAuthStore.getState().user;
         const id = name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Date.now().toString().slice(-4);
-        const newProject: Project = {
+        const newProject: ExtendedProject = {
           id,
           name,
           description,
@@ -270,6 +279,8 @@ export const useProjectStore = create<ProjectState>()(
           branch: 'main',
           files: JSON.parse(JSON.stringify(DEFAULT_REACT_THREE_FILES)),
           rootFileIds: ['src', 'public', 'package.json', 'README.md'],
+          userId: currentUser?.id || 'guest-local',
+          visibility: 'private',
         };
         set(state => ({
           projects: [newProject, ...state.projects],
