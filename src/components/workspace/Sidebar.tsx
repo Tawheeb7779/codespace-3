@@ -10,7 +10,8 @@ import {
   MessageSquare,
   Activity,
   Settings,
-  Bot
+  Bot,
+  Database
 } from 'lucide-react';
 
 export type SidebarTab =
@@ -21,6 +22,7 @@ export type SidebarTab =
   | 'tasks'
   | 'chat'
   | 'analytics'
+  | 'sql'
   | 'git'
   | 'graph3d'
   | 'settings';
@@ -45,7 +47,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'assets', label: 'Assets Manager', icon: FolderArchive },
     { id: 'tasks', label: 'Tasks Board', icon: CheckSquare },
     { id: 'chat', label: 'Team Channels', icon: MessageSquare },
-    { id: 'analytics', label: 'Analytics & Database', icon: Activity },
+    { id: 'analytics', label: 'Analytics Telemetry', icon: Activity },
+    { id: 'sql', label: 'Database & SQL Studio', icon: Database },
     { id: 'git', label: 'Source Control', icon: GitPullRequest },
     { id: 'graph3d', label: '3D Graph', icon: Boxes },
   ];

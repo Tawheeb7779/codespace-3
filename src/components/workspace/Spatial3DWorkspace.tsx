@@ -5,7 +5,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
-import { Box, Layers, RefreshCw } from 'lucide-react';
+import { Box, Layers, RefreshCw, Eye, Sliders } from 'lucide-react';
 
 interface Node3DData {
   id: string;
@@ -22,9 +22,10 @@ interface NodeMeshProps {
   onSelect: (id: string) => void;
   onFocus: (position: [number, number, number]) => void;
   isLowQuality: boolean;
+  shaderPreset: 'standard' | 'hologram' | 'neon';
 }
 
-const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, isLowQuality }) => {
+const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, isLowQuality, shaderPreset }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const lastTapRef = useRef<number>(0);
@@ -41,13 +42,19 @@ const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, 
     const timeSinceLastTap = now - lastTapRef.current;
 
     if (timeSinceLastTap < 300) {
-      // Double tap / Double click: Focus camera smoothly
       onFocus(node.position);
     } else {
-      // Single tap / Single click: Select file and open in Monaco
       onSelect(node.id);
     }
     lastTapRef.current = now;
+  };
+
+  const getMaterialColor = () => {
+    if (hovered) return '#6366f1';
+    if (isActive) return '#4d8eff';
+    if (shaderPreset === 'hologram') return '#38bdf8';
+    if (shaderPreset === 'neon') return '#f43f5e';
+    return node.color;
   };
 
   return (
@@ -68,15 +75,14 @@ const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, 
           <boxGeometry args={[0.6, 0.6, 0.6]} />
         )}
         <meshStandardMaterial
-          color={hovered ? '#6366f1' : isActive ? '#4d8eff' : node.color}
-          wireframe={node.isFolder}
-          emissive={isActive ? '#004395' : '#000000'}
+          color={getMaterialColor()}
+          wireframe={node.isFolder || shaderPreset === 'hologram'}
+          emissive={isActive ? '#004395' : shaderPreset === 'neon' ? '#881337' : '#000000'}
           roughness={0.3}
           metalness={0.7}
         />
       </mesh>
 
-      {/* Floating 3D Label */}
       <Text
         position={[0, 0.7, 0]}
         fontSize={0.25}
@@ -87,7 +93,6 @@ const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, 
         {node.name}
       </Text>
 
-      {/* Hover Info Tag */}
       {hovered && (
         <Html position={[0, 1.1, 0]} center pointerEvents="none">
           <div className="bg-slate-900/90 backdrop-blur border border-primary/40 px-2.5 py-1 rounded shadow-xl text-[10px] text-white font-mono whitespace-nowrap">
@@ -138,8 +143,6 @@ const CameraController: React.FC<CameraControllerProps> = ({ targetFocus, contro
     if (targetFocus) {
       const [tx, ty, tz] = targetFocus;
       desiredTarget.current.set(tx, ty, tz);
-
-      // Calculate smooth offset for camera focus
       desiredCamPos.current.set(tx, ty + 1.2, tz + 3.5);
       isAnimating.current = true;
 
@@ -157,7 +160,6 @@ const CameraController: React.FC<CameraControllerProps> = ({ targetFocus, contro
   useFrame((_state, delta) => {
     if (!isAnimating.current || prefersReducedMotion) return;
 
-    // Smooth lerp camera position and target
     const speed = Math.min(delta * 4, 0.2);
     camera.position.lerp(desiredCamPos.current, speed);
 
@@ -216,6 +218,8 @@ export const Spatial3DWorkspace: React.FC = () => {
   const [searchFilter, setSearchFilter] = useState('');
   const [targetFocus, setTargetFocus] = useState<[number, number, number] | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [shaderPreset, setShaderPreset] = useState<'standard' | 'hologram' | 'neon'>('standard');
+  const [arStatusMsg, setArStatusMsg] = useState<string | null>(null);
 
   const controlsRef = useRef<OrbitControlsImpl>(null);
   const currentProject = projects.find((p) => p.id === activeProjectId);
@@ -228,6 +232,24 @@ export const Spatial3DWorkspace: React.FC = () => {
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
 
+  const handleRequestArMode = async () => {
+    if (typeof navigator !== 'undefined' && 'xr' in navigator) {
+      try {
+        const supported = await (navigator as any).xr.isSessionSupported('immersive-ar');
+        if (supported) {
+          setArStatusMsg('WebXR AR mode supported. Ready for pass-through device session.');
+        } else {
+          setArStatusMsg('WebXR AR mode is not supported on this device/display.');
+        }
+      } catch {
+        setArStatusMsg('WebXR AR capability query error.');
+      }
+    } else {
+      setArStatusMsg('WebXR API unavailable in current browser environment.');
+    }
+    setTimeout(() => setArStatusMsg(null), 4000);
+  };
+
   const { nodes, connections } = useMemo(() => {
     if (!currentProject) return { nodes: [], connections: [] };
 
@@ -237,7 +259,6 @@ export const Spatial3DWorkspace: React.FC = () => {
 
     const total = fileList.length;
     fileList.forEach((file, index) => {
-      // Calculate 3D spatial layout using spherical/spiral node arrangement
       const phi = Math.acos(-1 + (2 * index) / Math.max(1, total));
       const theta = Math.sqrt(total * Math.PI) * phi;
       const radius = file.isFolder ? 2.2 : 3.8;
@@ -262,7 +283,6 @@ export const Spatial3DWorkspace: React.FC = () => {
       });
     });
 
-    // Create edge connections between files and parent folders
     generatedNodes.forEach((node) => {
       if (node.parentId) {
         const parentNode = generatedNodes.find((n) => n.id === node.parentId);
@@ -285,29 +305,67 @@ export const Spatial3DWorkspace: React.FC = () => {
   return (
     <WebGLBoundary>
       <div className="w-full h-full relative bg-[#0e131d] overflow-hidden select-none">
-        {/* Search & Navigation Overlay Overlay */}
-        <div className="absolute top-3 left-3 z-20 bg-surface-low/80 backdrop-blur-md p-2 rounded-lg border border-outline-variant/20 flex items-center gap-2">
-          <input
-            type="text"
-            placeholder="Search 3D nodes..."
-            value={searchFilter}
-            onChange={(e) => setSearchFilter(e.target.value)}
-            className="bg-surface-container text-xs text-white px-2.5 py-1 rounded border border-outline-variant/20 focus:outline-none focus:border-primary w-40"
-          />
-          <span className="text-[10px] text-outline font-mono flex items-center gap-1">
-            <Layers className="w-3 h-3 text-primary" /> {filteredNodes.length} Nodes
-          </span>
+        {/* Controls Overlay */}
+        <div className="absolute top-3 left-3 z-20 flex flex-wrap gap-2 items-center">
+          <div className="bg-surface-low/80 backdrop-blur-md p-1.5 rounded-lg border border-outline-variant/20 flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Search 3D nodes..."
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              className="bg-surface-container text-xs text-white px-2.5 py-1 rounded border border-outline-variant/20 focus:outline-none focus:border-primary w-36"
+            />
+            <span className="text-[10px] text-outline font-mono flex items-center gap-1">
+              <Layers className="w-3 h-3 text-primary" /> {filteredNodes.length}
+            </span>
+          </div>
+
+          {/* Shader Customizer Toggles */}
+          <div className="bg-surface-low/80 backdrop-blur-md p-1.5 rounded-lg border border-outline-variant/20 flex items-center gap-1 text-[10px] font-mono text-outline">
+            <Sliders className="w-3 h-3 text-secondary" />
+            <button
+              onClick={() => setShaderPreset('standard')}
+              className={`px-2 py-0.5 rounded ${shaderPreset === 'standard' ? 'bg-primary-container text-white' : 'hover:text-white'}`}
+            >
+              Standard
+            </button>
+            <button
+              onClick={() => setShaderPreset('hologram')}
+              className={`px-2 py-0.5 rounded ${shaderPreset === 'hologram' ? 'bg-primary-container text-white' : 'hover:text-white'}`}
+            >
+              Hologram
+            </button>
+            <button
+              onClick={() => setShaderPreset('neon')}
+              className={`px-2 py-0.5 rounded ${shaderPreset === 'neon' ? 'bg-primary-container text-white' : 'hover:text-white'}`}
+            >
+              Neon
+            </button>
+          </div>
+
+          {/* AR Mode Trigger */}
+          <button
+            onClick={handleRequestArMode}
+            className="bg-surface-low/80 backdrop-blur-md p-2 rounded-lg border border-outline-variant/20 hover:border-primary/50 text-xs text-slate-200 hover:text-white transition-colors flex items-center gap-1.5 font-mono"
+            title="Request WebXR AR Pass-through Mode"
+          >
+            <Eye className="w-3.5 h-3.5 text-tertiary" /> WebXR AR
+          </button>
         </div>
+
+        {arStatusMsg && (
+          <div className="absolute top-14 left-3 z-30 bg-surface-container/90 backdrop-blur border border-tertiary/40 text-tertiary px-3 py-1.5 rounded text-[10px] font-mono shadow-xl">
+            {arStatusMsg}
+          </div>
+        )}
 
         {/* 3D Canvas */}
         <Canvas camera={{ position: [0, 2, 7], fov: 55 }}>
           <ambientLight intensity={render3DQuality === 'low' ? 0.8 : 0.4} />
           {render3DQuality !== 'low' && <pointLight position={[10, 10, 10]} intensity={1} />}
 
-          {/* Connection Lines */}
           <ConnectionLines connections={connections} />
 
-          {/* Interactive Nodes */}
           {filteredNodes.map((node) => (
             <NodeMesh
               key={node.id}
@@ -316,10 +374,10 @@ export const Spatial3DWorkspace: React.FC = () => {
               onSelect={(id) => openFile(id)}
               onFocus={(pos) => setTargetFocus(pos)}
               isLowQuality={render3DQuality === 'low'}
+              shaderPreset={shaderPreset}
             />
           ))}
 
-          {/* Camera Controller & Smooth OrbitControls */}
           <CameraController
             targetFocus={targetFocus}
             controlsRef={controlsRef}

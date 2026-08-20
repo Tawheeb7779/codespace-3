@@ -4,6 +4,8 @@ import { Project, ProjectFile } from '../types';
 import { WorkspaceTask, ChatMessage, ProjectAsset } from '../types/stitch';
 import { RuntimeFilesystemBridge } from '../runtime/RuntimeFilesystemBridge';
 
+export type UserRole = 'owner' | 'admin' | 'developer' | 'viewer';
+
 export const DEFAULT_REACT_THREE_FILES: Record<string, ProjectFile> = {
   'root': { id: 'root', name: 'root', path: '/', content: '', language: '', isFolder: true, parentId: null, children: ['src', 'public', 'package.json', 'README.md'] },
   'src': { id: 'src', name: 'src', path: '/src', content: '', language: '', isFolder: true, parentId: 'root', children: ['App.tsx', 'main.tsx', 'index.css', 'components'] },
@@ -182,6 +184,9 @@ interface ProjectState {
   githubRepo: string | null;
   githubConnected: boolean;
 
+  // RBAC User Role per project
+  currentUserRole: UserRole;
+
   // Stitch feature persistent state per project
   projectTasks: Record<string, WorkspaceTask[]>;
   projectChats: Record<string, ChatMessage[]>;
@@ -199,6 +204,7 @@ interface ProjectState {
   renameFile: (fileId: string, newName: string) => void;
   setGithubRepo: (repo: string | null) => void;
   setGithubConnected: (connected: boolean) => void;
+  setUserRole: (role: UserRole) => void;
   stageFile: (filePath: string) => void;
   unstageFile: (filePath: string) => void;
   commitChanges: (message: string) => void;
@@ -220,6 +226,7 @@ export const useProjectStore = create<ProjectState>()(
       gitStatus: { staged: [], unstaged: ['App.tsx'], committed: false },
       githubRepo: null,
       githubConnected: false,
+      currentUserRole: 'owner',
 
       projectTasks: {
         'demo-3d-app': [
@@ -248,7 +255,6 @@ export const useProjectStore = create<ProjectState>()(
             openTabIds: firstFile ? [firstFile.id] : [],
             gitBranch: project.branch || 'main',
           });
-          // Sync filesystem to WebContainer for the new project
           RuntimeFilesystemBridge.initializeProject(project.files);
         }
       },
@@ -276,6 +282,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       deleteProject: (id) => {
+        if (get().currentUserRole === 'viewer') return; // RBAC Guard
         set(state => ({
           projects: state.projects.filter(p => p.id !== id),
           activeProjectId: state.activeProjectId === id ? (state.projects[0]?.id || null) : state.activeProjectId,
@@ -299,6 +306,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       updateFileContent: (fileId, content) => {
+        if (get().currentUserRole === 'viewer') return; // RBAC Guard
         set(state => {
           const { activeProjectId, projects, gitStatus } = state;
           if (!activeProjectId) return state;
@@ -335,6 +343,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       createFile: (name, parentId = 'src', isFolder = false) => {
+        if (get().currentUserRole === 'viewer') return; // RBAC Guard
         set(state => {
           const { activeProjectId, projects } = state;
           if (!activeProjectId) return state;
@@ -388,6 +397,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       deleteFile: (fileId) => {
+        if (get().currentUserRole === 'viewer') return; // RBAC Guard
         set(state => {
           const { activeProjectId, projects, openTabIds, activeFileId } = state;
           if (!activeProjectId) return state;
@@ -423,6 +433,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       renameFile: (fileId, newName) => {
+        if (get().currentUserRole === 'viewer') return; // RBAC Guard
         set(state => {
           const { activeProjectId, projects } = state;
           if (!activeProjectId) return state;
@@ -447,6 +458,7 @@ export const useProjectStore = create<ProjectState>()(
 
       setGithubRepo: (repo) => set({ githubRepo: repo }),
       setGithubConnected: (connected) => set({ githubConnected: connected }),
+      setUserRole: (currentUserRole) => set({ currentUserRole }),
 
       stageFile: (filePath) => set(state => ({
         gitStatus: {
