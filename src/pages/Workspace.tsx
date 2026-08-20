@@ -12,6 +12,8 @@ import { LivePreview } from '../components/workspace/LivePreview';
 import { Terminal } from '../components/workspace/Terminal';
 import { BottomPanel } from '../components/workspace/BottomPanel';
 import { AiAssistantDrawer } from '../components/workspace/AiAssistantDrawer';
+import { NotificationsDrawer } from '../components/workspace/NotificationsDrawer';
+import { VercelDeploymentModal } from '../components/workspace/VercelDeploymentModal';
 import { PackageManagerPanel } from '../components/workspace/PackageManagerPanel';
 import { AssetsManagerPanel } from '../components/workspace/AssetsManagerPanel';
 import { TaskManagerPanel } from '../components/workspace/TaskManagerPanel';
@@ -30,6 +32,8 @@ export default function Workspace() {
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isRunActive, setIsRunActive] = useState(true);
   const [isAiOpen, setIsAiOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isVercelModalOpen, setIsVercelModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
 
@@ -60,6 +64,9 @@ export default function Workspace() {
         onRefreshPreview={() => setPreviewKey((k) => k + 1)}
         toggleAiAssistant={() => setIsAiOpen(!isAiOpen)}
         isAiOpen={isAiOpen}
+        toggleNotifications={() => setIsNotificationsOpen(!isNotificationsOpen)}
+        isNotificationsOpen={isNotificationsOpen}
+        onOpenVercelModal={() => setIsVercelModalOpen(true)}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
@@ -153,8 +160,12 @@ export default function Workspace() {
           <BottomPanel terminalComponent={<Terminal />} problemsCount={0} />
         </div>
 
+        {/* Right AI Assistant & Notification Drawers */}
         <AiAssistantDrawer isOpen={isAiOpen} onClose={() => setIsAiOpen(false)} />
+        <NotificationsDrawer isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
 
+        {/* Modals */}
+        <VercelDeploymentModal isOpen={isVercelModalOpen} onClose={() => setIsVercelModalOpen(false)} />
         <CommandPaletteModal
           isOpen={isCommandPaletteOpen}
           onClose={() => setIsCommandPaletteOpen(false)}

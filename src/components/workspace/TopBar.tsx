@@ -15,7 +15,9 @@ import {
   Eye,
   EyeOff,
   Command,
-  User
+  User,
+  Bell,
+  CloudUpload
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
@@ -33,6 +35,9 @@ interface TopBarProps {
   onRefreshPreview: () => void;
   toggleAiAssistant: () => void;
   isAiOpen: boolean;
+  toggleNotifications: () => void;
+  isNotificationsOpen: boolean;
+  onOpenVercelModal: () => void;
   onOpenCommandPalette: () => void;
 }
 
@@ -46,6 +51,9 @@ export const TopBar: React.FC<TopBarProps> = ({
   onRefreshPreview,
   toggleAiAssistant,
   isAiOpen,
+  toggleNotifications,
+  isNotificationsOpen,
+  onOpenVercelModal,
   onOpenCommandPalette,
 }) => {
   const navigate = useNavigate();
@@ -90,7 +98,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
         </div>
 
-        {/* Middle: View Mode & Preview Controls */}
+        {/* Middle: View Mode, Preview & Deploy Controls */}
         <div className="flex items-center gap-2">
           <div className="flex items-center bg-surface-container p-0.5 rounded-lg border border-outline-variant/15">
             <button
@@ -174,6 +182,16 @@ export const TopBar: React.FC<TopBarProps> = ({
               <RotateCw className="w-3.5 h-3.5" />
             </button>
 
+            {/* Vercel Deploy Trigger Button */}
+            <button
+              onClick={onOpenVercelModal}
+              className="px-2.5 py-1 bg-surface-high hover:bg-surface-high/80 text-slate-200 rounded border border-outline-variant/20 flex items-center gap-1.5 transition-colors font-medium text-[11px]"
+              title="Deploy to Vercel Cloud"
+            >
+              <CloudUpload className="w-3.5 h-3.5 text-primary" />
+              <span className="hidden xl:inline">Deploy Vercel</span>
+            </button>
+
             <button
               onClick={onOpenCommandPalette}
               className="px-2 py-1 bg-surface-high hover:bg-surface-high/80 text-outline hover:text-white rounded border border-outline-variant/20 flex items-center gap-1 transition-colors"
@@ -185,8 +203,20 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
         </div>
 
-        {/* Right: User Profile & AI & Toggles */}
+        {/* Right: Notifications, User Profile & AI & Toggles */}
         <div className="flex items-center gap-2">
+          {/* Notification Bell Icon Trigger */}
+          <button
+            onClick={toggleNotifications}
+            className={`p-1.5 rounded relative transition-colors ${
+              isNotificationsOpen ? 'bg-primary/20 text-primary' : 'text-outline hover:text-white hover:bg-surface-high'
+            }`}
+            title="Notification Center"
+          >
+            <Bell className="w-4 h-4" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full animate-pulse" />
+          </button>
+
           {isAuthenticated && profile ? (
             <button
               onClick={() => setIsProfileOpen(true)}
