@@ -15,6 +15,8 @@ import {
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
 import { VoiceRecognitionService } from '../../services/VoiceRecognitionService';
+import { WebContainerProvider } from '../../runtime/WebContainerProvider';
+import { CompilerEngine } from '../../runtime/CompilerEngine';
 
 interface Message {
   id: string;
@@ -22,9 +24,9 @@ interface Message {
   text: string;
   isFallback?: boolean;
   action?: {
-    type: 'create_file' | 'edit_file';
-    fileName: string;
-    content: string;
+    type: 'create_file' | 'edit_file' | 'run_build';
+    fileName?: string;
+    content?: string;
   };
 }
 
@@ -179,13 +181,53 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
     setIsThinking(false);
   };
 
-  const executeAction = (action: Message['action']) => {
+  const executeAction = async (action: Message['action']) => {
     if (!action) return;
-    if (action.type === 'create_file') {
+
+    if (action.type === 'create_file' && action.fileName && action.content) {
       createFile(action.fileName, 'src', false);
       updateFileContent(action.fileName, action.content);
-    } else if (action.type === 'edit_file' && activeFileId) {
-      updateFileContent(activeFileId, action.content);
+    } else if (action.type === 'edit_file' && action.content) {
+      const targetId = action.fileName || activeFileId;
+      if (targetId) {
+        updateFileContent(targetId, action.content);
+      }
+    } else if (action.type === 'run_build') {
+      const systemMsgId = Date.now().toString();
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: systemMsgId,
+          sender: 'assistant',
+          text: '🚀 Invoking project build check across WebContainer & Babel isolations...',
+        },
+      ]);
+
+      let buildOutput = '';
+      if (WebContainerProvider.isSupported()) {
+        await WebContainerProvider.spawnProcess('npm', ['run', 'build'], (data) => {
+          buildOutput += data;
+        });
+      }
+
+      if (!buildOutput && currentProject) {
+        // Fallback local transpile verification across files
+        const res = CompilerEngine.compileProject(currentProject.files);
+        if (res.success) {
+          buildOutput = `✓ In-browser compilation succeeded across ${Object.keys(res.outputFiles).length} files in ${res.durationMs}ms.`;
+        } else {
+          buildOutput = `❌ Build Errors:\n` + res.errors.join('\n');
+        }
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          sender: 'assistant',
+          text: `**Build Verification Log:**\n\`\`\`\n${buildOutput}\n\`\`\``,
+        },
+      ]);
     }
   };
 
@@ -278,6 +320,12 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
           className="px-2 py-1 bg-surface-container hover:text-white rounded border border-outline-variant/15 whitespace-nowrap flex items-center gap-1"
         >
           <Wrench className="w-3 h-3 text-amber-400" /> Refactor Code
+        </button>
+        <button
+          onClick={() => executeAction({ type: 'run_build' })}
+          className="px-2 py-1 bg-surface-container hover:text-white rounded border border-outline-variant/15 whitespace-nowrap flex items-center gap-1 text-emerald-400"
+        >
+          <Sparkles className="w-3 h-3" /> Run Build Check
         </button>
       </div>
 

@@ -20,18 +20,18 @@ export const Terminal: React.FC = () => {
 
     const term = new XTerm({
       theme: {
-        background: '#0e131d',
-        foreground: '#dee2f1',
-        cursor: '#adc6ff',
-        selectionBackground: 'rgba(77, 142, 255, 0.3)',
-        black: '#0e131d',
-        red: '#ffb4ab',
+        background: '#050507',
+        foreground: '#e4e4e7',
+        cursor: '#ef233c',
+        selectionBackground: 'rgba(239, 35, 60, 0.35)',
+        black: '#050507',
+        red: '#ef233c',
         green: '#50fa7b',
         yellow: '#ffb786',
-        blue: '#adc6ff',
+        blue: '#ef233c',
         magenta: '#ff79c6',
         cyan: '#8be9fd',
-        white: '#dee2f1',
+        white: '#e4e4e7',
       },
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 13,
@@ -46,13 +46,13 @@ export const Terminal: React.FC = () => {
 
     xtermRef.current = term;
 
-    term.writeln('\x1b[36mCodeSpace 3D Terminal & WebContainer Process Bridge v1.0.0\x1b[0m');
+    term.writeln('\x1b[31mCodeSpace 3D Red Noir Terminal & WASM Process Engine v1.0.0\x1b[0m');
     term.writeln('Type \x1b[33mhelp\x1b[0m for available filesystem & process commands.\r\n');
 
     let currentLine = '';
 
     const prompt = () => {
-      term.write(`\r\n\x1b[32mcodespace@3d-ide\x1b[0m:\x1b[34m${currentPathRef.current}\x1b[0m$ `);
+      term.write(`\r\n\x1b[31mcodespace@3d-ide\x1b[0m:\x1b[37m${currentPathRef.current}\x1b[0m$ `);
     };
 
     prompt();
@@ -101,7 +101,7 @@ export const Terminal: React.FC = () => {
             Object.values(currentProject.files).forEach(f => {
               if (f.id === 'root') return;
               if (f.isFolder) {
-                term.writeln(`\x1b[34m${f.name}/\x1b[0m`);
+                term.writeln(`\x1b[31m${f.name}/\x1b[0m`);
               } else {
                 term.writeln(`  ${f.name}`);
               }
@@ -162,7 +162,7 @@ export const Terminal: React.FC = () => {
 
         case 'node':
           if (WebContainerProvider.isSupported() && currentProject) {
-            term.writeln(`\r\n\x1b[36m[WebContainer Process]\x1b[0m Spawning node ${args.join(' ')}...`);
+            term.writeln(`\r\n\x1b[31m[WebContainer Process]\x1b[0m Spawning node ${args.join(' ')}...`);
             await RuntimeFilesystemBridge.initializeProject(currentProject.files);
 
             try {
@@ -212,7 +212,7 @@ export const Terminal: React.FC = () => {
 
         case 'npm':
           if (WebContainerProvider.isSupported() && currentProject) {
-            term.writeln(`\r\n\x1b[36m[WebContainer Process]\x1b[0m Spawning npm ${args.join(' ')}...`);
+            term.writeln(`\r\n\x1b[31m[WebContainer Process]\x1b[0m Spawning npm ${args.join(' ')}...`);
             await RuntimeFilesystemBridge.initializeProject(currentProject.files);
 
             WebContainerProvider.setOnServerReady((url) => {
@@ -232,7 +232,6 @@ export const Terminal: React.FC = () => {
             } catch (e: unknown) {
               const msg = e instanceof Error ? e.message : String(e);
               term.writeln(`\r\n\x1b[31m[WebContainer Fallback]\x1b[0m ${msg}`);
-              // Fallback to in-browser compiler engine
               if (args[0] === 'install') {
                 const pkg = currentProject.files['package.json'];
                 await installPackages(pkg?.content);
@@ -243,16 +242,15 @@ export const Terminal: React.FC = () => {
               }
             }
           } else {
-            // Standard browser fallback
             if (args[0] === 'install') {
               term.writeln('\r\n\x1b[33m[In-Browser Package Resolver]\x1b[0m Resolving manifest dependencies...');
               const pkg = currentProject?.files['package.json'];
               await installPackages(pkg?.content);
             } else if (args.join(' ') === 'run dev') {
-              term.writeln('\r\n\x1b[36m[In-Browser Vite Compiler]\x1b[0m Dev server started on port 5173.');
+              term.writeln('\r\n\x1b[31m[In-Browser Vite Compiler]\x1b[0m Dev server started on port 5173.');
               if (currentProject) startDevServer(currentProject.files);
             } else if (args.join(' ') === 'run build') {
-              term.writeln('\r\n\x1b[36m[In-Browser TSX Compiler]\x1b[0m Building bundle...');
+              term.writeln('\r\n\x1b[31m[In-Browser TSX Compiler]\x1b[0m Building bundle...');
               if (currentProject) buildProject(currentProject.files);
             }
           }
@@ -264,7 +262,7 @@ export const Terminal: React.FC = () => {
             if (gitStatus.unstaged.length === 0 && gitStatus.staged.length === 0) {
               term.writeln('nothing to commit, working tree clean');
             } else {
-              term.writeln('\x1b[33mUnstaged changes:\x1b[0m');
+              term.writeln('\x1b[31mUnstaged changes:\x1b[0m');
               gitStatus.unstaged.forEach(u => term.writeln(`  modified:   ${u}`));
               if (gitStatus.staged.length > 0) {
                 term.writeln('\x1b[32mStaged changes:\x1b[0m');
@@ -272,7 +270,7 @@ export const Terminal: React.FC = () => {
               }
             }
           } else {
-            term.writeln(`\r\n\x1b[33mgit ${args.join(' ')}\x1b[0m executed.`);
+            term.writeln(`\r\n\x1b[31mgit ${args.join(' ')}\x1b[0m executed.`);
           }
           break;
 
@@ -309,5 +307,5 @@ export const Terminal: React.FC = () => {
     };
   }, [activeProjectId, createFile, deleteFile, gitStatus, installPackages, buildProject, startDevServer, setWebContainerUrl]);
 
-  return <div ref={terminalRef} className="w-full h-full min-h-[140px] overflow-hidden" />;
+  return <div ref={terminalRef} className="w-full h-full min-h-[140px] overflow-hidden bg-[#050507]" />;
 };

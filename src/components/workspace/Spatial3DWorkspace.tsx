@@ -22,17 +22,41 @@ interface NodeMeshProps {
   onSelect: (id: string) => void;
   onFocus: (position: [number, number, number]) => void;
   isLowQuality: boolean;
-  shaderPreset: 'standard' | 'hologram' | 'neon';
+  shaderPreset: 'standard' | 'hologram' | 'neon' | 'custom';
 }
 
 const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, isLowQuality, shaderPreset }) => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
   const [hovered, setHovered] = useState(false);
   const lastTapRef = useRef<number>(0);
+
+  const { customVertexShader, customFragmentShader } = usePreferenceStore();
+
+  // Create custom GLSL shader material with uTime uniform
+  const shaderMaterial = useMemo(() => {
+    if (shaderPreset !== 'custom') return null;
+    try {
+      return new THREE.ShaderMaterial({
+        vertexShader: customVertexShader,
+        fragmentShader: customFragmentShader,
+        uniforms: {
+          uTime: { value: 0 },
+        },
+        transparent: true,
+        wireframe: node.isFolder,
+      });
+    } catch {
+      return null;
+    }
+  }, [customVertexShader, customFragmentShader, shaderPreset, node.isFolder]);
 
   useFrame((_state, delta) => {
     if (meshRef.current && !isLowQuality) {
       meshRef.current.rotation.y += delta * (isActive ? 0.8 : 0.2);
+    }
+    if (materialRef.current && materialRef.current.uniforms?.uTime) {
+      materialRef.current.uniforms.uTime.value += delta;
     }
   });
 
@@ -50,10 +74,10 @@ const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, 
   };
 
   const getMaterialColor = () => {
-    if (hovered) return '#6366f1';
-    if (isActive) return '#4d8eff';
+    if (hovered) return '#ef233c';
+    if (isActive) return '#ff2a2a';
     if (shaderPreset === 'hologram') return '#38bdf8';
-    if (shaderPreset === 'neon') return '#f43f5e';
+    if (shaderPreset === 'neon') return '#ef233c';
     return node.color;
   };
 
@@ -74,19 +98,24 @@ const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, 
         ) : (
           <boxGeometry args={[0.6, 0.6, 0.6]} />
         )}
-        <meshStandardMaterial
-          color={getMaterialColor()}
-          wireframe={node.isFolder || shaderPreset === 'hologram'}
-          emissive={isActive ? '#004395' : shaderPreset === 'neon' ? '#881337' : '#000000'}
-          roughness={0.3}
-          metalness={0.7}
-        />
+
+        {shaderPreset === 'custom' && shaderMaterial ? (
+          <primitive object={shaderMaterial} ref={materialRef} attach="material" />
+        ) : (
+          <meshStandardMaterial
+            color={getMaterialColor()}
+            wireframe={node.isFolder || shaderPreset === 'hologram'}
+            emissive={isActive ? '#8d0801' : shaderPreset === 'neon' ? '#ef233c' : '#000000'}
+            roughness={0.2}
+            metalness={0.8}
+          />
+        )}
       </mesh>
 
       <Text
         position={[0, 0.7, 0]}
         fontSize={0.25}
-        color={isActive ? '#adc6ff' : '#ffffff'}
+        color={isActive ? '#ef233c' : '#ffffff'}
         anchorX="center"
         anchorY="middle"
       >
@@ -95,7 +124,7 @@ const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, 
 
       {hovered && (
         <Html position={[0, 1.1, 0]} center pointerEvents="none">
-          <div className="bg-slate-900/90 backdrop-blur border border-primary/40 px-2.5 py-1 rounded shadow-xl text-[10px] text-white font-mono whitespace-nowrap">
+          <div className="bg-[#09090b]/90 backdrop-blur border border-[#ef233c]/40 px-2.5 py-1 rounded-lg shadow-red-glow-sm text-[10px] text-white font-mono whitespace-nowrap">
             {node.isFolder ? 'Folder Node' : 'Source File'} • Double Tap to Focus
           </div>
         </Html>
@@ -121,7 +150,7 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({ connections }) => {
 
   return (
     <lineSegments geometry={lineGeometry}>
-      <lineBasicMaterial color="#424754" opacity={0.5} transparent />
+      <lineBasicMaterial color="#ef233c" opacity={0.3} transparent />
     </lineSegments>
   );
 };
@@ -192,17 +221,17 @@ class WebGLBoundary extends Component<{ children: ReactNode }, { hasError: boole
   render() {
     if (this.state.hasError) {
       return (
-        <div className="w-full h-full flex flex-col items-center justify-center bg-surface-low text-xs p-6 space-y-3">
-          <Box className="w-10 h-10 text-primary opacity-60" />
-          <h3 className="font-semibold text-slate-200">WebGL Acceleration Unavailable</h3>
-          <p className="text-outline text-center max-w-sm">
-            Your browser or device GPU context is restricted. The 2D Code Editor and Live Preview remain fully operational.
+        <div className="w-full h-full flex flex-col items-center justify-center bg-[#050507] text-xs p-6 space-y-3 font-sans">
+          <Box className="w-10 h-10 text-[#ef233c] opacity-80 shadow-red-glow-sm" />
+          <h3 className="font-display font-bold text-white text-base">WebGL Acceleration Restricted</h3>
+          <p className="text-zinc-400 text-center max-w-sm leading-relaxed">
+            Your browser or GPU context is restricted. The 2D Monaco Code Editor and Live Preview remain fully operational.
           </p>
           <button
             onClick={() => this.setState({ hasError: false })}
-            className="px-3 py-1.5 bg-primary-container text-white rounded font-medium flex items-center gap-1.5"
+            className="px-4 py-2 bg-[#ef233c] text-white rounded-xl font-semibold text-xs flex items-center gap-2 shadow-red-glow-sm hover:bg-[#d90429] transition-all"
           >
-            <RefreshCw className="w-3.5 h-3.5" /> Retry 3D Workspace
+            <RefreshCw className="w-3.5 h-3.5" /> Retry 3D Spatial Scene
           </button>
         </div>
       );
@@ -218,7 +247,7 @@ export const Spatial3DWorkspace: React.FC = () => {
   const [searchFilter, setSearchFilter] = useState('');
   const [targetFocus, setTargetFocus] = useState<[number, number, number] | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [shaderPreset, setShaderPreset] = useState<'standard' | 'hologram' | 'neon'>('standard');
+  const [shaderPreset, setShaderPreset] = useState<'standard' | 'hologram' | 'neon' | 'custom'>('standard');
   const [arStatusMsg, setArStatusMsg] = useState<string | null>(null);
 
   const controlsRef = useRef<OrbitControlsImpl>(null);
@@ -269,8 +298,8 @@ export const Spatial3DWorkspace: React.FC = () => {
 
       const ext = file.name.split('.').pop();
       let color = '#a4c9ff';
-      if (file.isFolder) color = '#ffb786';
-      else if (ext === 'tsx' || ext === 'ts') color = '#4d8eff';
+      if (file.isFolder) color = '#ef233c';
+      else if (ext === 'tsx' || ext === 'ts') color = '#ef233c';
       else if (ext === 'json') color = '#ffb786';
 
       generatedNodes.push({
@@ -304,57 +333,63 @@ export const Spatial3DWorkspace: React.FC = () => {
 
   return (
     <WebGLBoundary>
-      <div className="w-full h-full relative bg-[#0e131d] overflow-hidden select-none">
+      <div className="w-full h-full relative bg-[#050507] overflow-hidden select-none font-sans">
         {/* Controls Overlay */}
         <div className="absolute top-3 left-3 z-20 flex flex-wrap gap-2 items-center">
-          <div className="bg-surface-low/80 backdrop-blur-md p-1.5 rounded-lg border border-outline-variant/20 flex items-center gap-2">
+          <div className="bg-[#09090b]/80 backdrop-blur-md p-1.5 rounded-xl border border-white/10 flex items-center gap-2">
             <input
               type="text"
               placeholder="Search 3D nodes..."
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              className="bg-surface-container text-xs text-white px-2.5 py-1 rounded border border-outline-variant/20 focus:outline-none focus:border-primary w-36"
+              className="bg-[#121215] text-xs text-white px-2.5 py-1 rounded-lg border border-white/10 focus:outline-none focus:border-[#ef233c]/50 w-36 font-sans"
             />
-            <span className="text-[10px] text-outline font-mono flex items-center gap-1">
-              <Layers className="w-3 h-3 text-primary" /> {filteredNodes.length}
+            <span className="text-[10px] text-zinc-400 font-mono flex items-center gap-1">
+              <Layers className="w-3 h-3 text-[#ef233c]" /> {filteredNodes.length}
             </span>
           </div>
 
           {/* Shader Customizer Toggles */}
-          <div className="bg-surface-low/80 backdrop-blur-md p-1.5 rounded-lg border border-outline-variant/20 flex items-center gap-1 text-[10px] font-mono text-outline">
-            <Sliders className="w-3 h-3 text-secondary" />
+          <div className="bg-[#09090b]/80 backdrop-blur-md p-1.5 rounded-xl border border-white/10 flex items-center gap-1 text-[10px] font-mono text-zinc-400">
+            <Sliders className="w-3 h-3 text-[#ef233c]" />
             <button
               onClick={() => setShaderPreset('standard')}
-              className={`px-2 py-0.5 rounded ${shaderPreset === 'standard' ? 'bg-primary-container text-white' : 'hover:text-white'}`}
+              className={`px-2 py-0.5 rounded-md transition-all ${shaderPreset === 'standard' ? 'bg-[#ef233c] text-white shadow-red-glow-sm' : 'hover:text-white'}`}
             >
               Standard
             </button>
             <button
               onClick={() => setShaderPreset('hologram')}
-              className={`px-2 py-0.5 rounded ${shaderPreset === 'hologram' ? 'bg-primary-container text-white' : 'hover:text-white'}`}
+              className={`px-2 py-0.5 rounded-md transition-all ${shaderPreset === 'hologram' ? 'bg-[#ef233c] text-white shadow-red-glow-sm' : 'hover:text-white'}`}
             >
               Hologram
             </button>
             <button
               onClick={() => setShaderPreset('neon')}
-              className={`px-2 py-0.5 rounded ${shaderPreset === 'neon' ? 'bg-primary-container text-white' : 'hover:text-white'}`}
+              className={`px-2 py-0.5 rounded-md transition-all ${shaderPreset === 'neon' ? 'bg-[#ef233c] text-white shadow-red-glow-sm' : 'hover:text-white'}`}
             >
               Neon
+            </button>
+            <button
+              onClick={() => setShaderPreset('custom')}
+              className={`px-2 py-0.5 rounded-md transition-all ${shaderPreset === 'custom' ? 'bg-[#ef233c] text-white font-bold shadow-red-glow-sm' : 'hover:text-white'}`}
+            >
+              Custom GLSL
             </button>
           </div>
 
           {/* AR Mode Trigger */}
           <button
             onClick={handleRequestArMode}
-            className="bg-surface-low/80 backdrop-blur-md p-2 rounded-lg border border-outline-variant/20 hover:border-primary/50 text-xs text-slate-200 hover:text-white transition-colors flex items-center gap-1.5 font-mono"
+            className="bg-[#09090b]/80 backdrop-blur-md p-2 rounded-xl border border-white/10 hover:border-[#ef233c]/50 text-xs text-zinc-200 hover:text-white transition-colors flex items-center gap-1.5 font-mono"
             title="Request WebXR AR Pass-through Mode"
           >
-            <Eye className="w-3.5 h-3.5 text-tertiary" /> WebXR AR
+            <Eye className="w-3.5 h-3.5 text-[#ef233c]" /> WebXR AR
           </button>
         </div>
 
         {arStatusMsg && (
-          <div className="absolute top-14 left-3 z-30 bg-surface-container/90 backdrop-blur border border-tertiary/40 text-tertiary px-3 py-1.5 rounded text-[10px] font-mono shadow-xl">
+          <div className="absolute top-14 left-3 z-30 bg-[#121215]/90 backdrop-blur border border-[#ef233c]/40 text-[#ef233c] px-3 py-1.5 rounded-xl text-[10px] font-mono shadow-red-glow-sm">
             {arStatusMsg}
           </div>
         )}
@@ -362,7 +397,7 @@ export const Spatial3DWorkspace: React.FC = () => {
         {/* 3D Canvas */}
         <Canvas camera={{ position: [0, 2, 7], fov: 55 }}>
           <ambientLight intensity={render3DQuality === 'low' ? 0.8 : 0.4} />
-          {render3DQuality !== 'low' && <pointLight position={[10, 10, 10]} intensity={1} />}
+          {render3DQuality !== 'low' && <pointLight position={[10, 10, 10]} intensity={1} color="#ef233c" />}
 
           <ConnectionLines connections={connections} />
 

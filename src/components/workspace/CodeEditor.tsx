@@ -12,6 +12,7 @@ export const CodeEditor: React.FC = () => {
     openTabIds,
     openFile,
     closeTab,
+    saveFile,
     updateFileContent
   } = useProjectStore();
 
@@ -22,7 +23,7 @@ export const CodeEditor: React.FC = () => {
 
   const activeFile = activeFileId ? currentProject.files[activeFileId] : null;
 
-  const handleEditorMount: OnMount = (_editor, monaco) => {
+  const handleEditorMount: OnMount = (editor, monaco) => {
     monaco.editor.defineTheme('codespace-dark', {
       base: 'vs-dark',
       inherit: true,
@@ -45,6 +46,14 @@ export const CodeEditor: React.FC = () => {
       },
     });
     monaco.editor.setTheme('codespace-dark');
+
+    // Register Save Command (Ctrl+S / Cmd+S)
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      const activeId = useProjectStore.getState().activeFileId;
+      if (activeId) {
+        saveFile(activeId);
+      }
+    });
   };
 
   const getTabIcon = (fileName: string) => {

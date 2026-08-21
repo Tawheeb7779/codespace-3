@@ -12,13 +12,19 @@ import { LivePreview } from '../components/workspace/LivePreview';
 import { Terminal } from '../components/workspace/Terminal';
 import { BottomPanel } from '../components/workspace/BottomPanel';
 import { AiAssistantDrawer } from '../components/workspace/AiAssistantDrawer';
+import { NotificationsDrawer } from '../components/workspace/NotificationsDrawer';
+import { VercelDeploymentModal } from '../components/workspace/VercelDeploymentModal';
+import { HelpSupportModal } from '../components/help/HelpSupportModal';
 import { PackageManagerPanel } from '../components/workspace/PackageManagerPanel';
 import { AssetsManagerPanel } from '../components/workspace/AssetsManagerPanel';
 import { TaskManagerPanel } from '../components/workspace/TaskManagerPanel';
 import { TeamChatPanel } from '../components/workspace/TeamChatPanel';
 import { AnalyticsPanel } from '../components/workspace/AnalyticsPanel';
 import { SqlStudioPanel } from '../components/workspace/SqlStudioPanel';
+import { ShaderEditorPanel } from '../components/workspace/ShaderEditorPanel';
 import { CommandPaletteModal } from '../components/workspace/CommandPaletteModal';
+import { AdminPanelModal } from '../components/admin/AdminPanelModal';
+import { SecurityBackupModal } from '../components/security/SecurityBackupModal';
 
 export default function Workspace() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -30,6 +36,11 @@ export default function Workspace() {
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isRunActive, setIsRunActive] = useState(true);
   const [isAiOpen, setIsAiOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isVercelModalOpen, setIsVercelModalOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [isSecurityBackupModalOpen, setIsSecurityBackupModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
 
@@ -60,6 +71,12 @@ export default function Workspace() {
         onRefreshPreview={() => setPreviewKey((k) => k + 1)}
         toggleAiAssistant={() => setIsAiOpen(!isAiOpen)}
         isAiOpen={isAiOpen}
+        toggleNotifications={() => setIsNotificationsOpen(!isNotificationsOpen)}
+        isNotificationsOpen={isNotificationsOpen}
+        onOpenVercelModal={() => setIsVercelModalOpen(true)}
+        onOpenHelpModal={() => setIsHelpModalOpen(true)}
+        onOpenAdminModal={() => setIsAdminModalOpen(true)}
+        onOpenSecurityBackupModal={() => setIsSecurityBackupModalOpen(true)}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
@@ -82,6 +99,7 @@ export default function Workspace() {
           {activeSidebarTab === 'chat' && <TeamChatPanel />}
           {activeSidebarTab === 'analytics' && <AnalyticsPanel />}
           {activeSidebarTab === 'sql' && <SqlStudioPanel />}
+          {activeSidebarTab === 'shader' && <ShaderEditorPanel />}
           {activeSidebarTab === 'git' && <GitSourceControlPanel />}
           {activeSidebarTab === 'search' && (
             <div className="h-full bg-surface-low border-r border-outline-variant/15 p-4 text-xs">
@@ -153,8 +171,15 @@ export default function Workspace() {
           <BottomPanel terminalComponent={<Terminal />} problemsCount={0} />
         </div>
 
+        {/* Right AI Assistant & Notification Drawers */}
         <AiAssistantDrawer isOpen={isAiOpen} onClose={() => setIsAiOpen(false)} />
+        <NotificationsDrawer isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
 
+        {/* Modals */}
+        <VercelDeploymentModal isOpen={isVercelModalOpen} onClose={() => setIsVercelModalOpen(false)} />
+        <HelpSupportModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
+        <AdminPanelModal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} />
+        <SecurityBackupModal isOpen={isSecurityBackupModalOpen} onClose={() => setIsSecurityBackupModalOpen(false)} />
         <CommandPaletteModal
           isOpen={isCommandPaletteOpen}
           onClose={() => setIsCommandPaletteOpen(false)}

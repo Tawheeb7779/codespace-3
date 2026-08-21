@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   GitPullRequest,
   GitBranch,
@@ -9,10 +9,13 @@ import {
   GitCommit,
   Send,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  Download,
+  FolderPlus
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { GitHubPushService, PushResult } from '../../services/GitHubPushService';
+import { GitHubImportService, GitHubRepoItem } from '../../services/GitHubImportService';
 
 export const GitSourceControlPanel: React.FC = () => {
   const {
@@ -25,7 +28,9 @@ export const GitSourceControlPanel: React.FC = () => {
     commitChanges,
     githubConnected,
     githubRepo,
-    setGithubConnected
+    setGithubConnected,
+    setGithubRepo,
+    createProject
   } = useProjectStore();
 
   const [commitMessage, setCommitMessage] = useState('');
@@ -35,7 +40,24 @@ export const GitSourceControlPanel: React.FC = () => {
   const [pushResult, setPushResult] = useState<PushResult | null>(null);
   const [sessionToken, setSessionToken] = useState('');
 
+  // Repository listing & import state
+  const [repos, setRepos] = useState<GitHubRepoItem[]>([]);
+  const [isFetchingRepos, setIsFetchingRepos] = useState(false);
+  const [selectedRepoFullName, setSelectedRepoFullName] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const [importStatusMsg, setImportStatusMsg] = useState<string | null>(null);
+
   const currentProject = projects.find((p) => p.id === activeProjectId);
+
+  useEffect(() => {
+    if (sessionToken && githubConnected) {
+      setIsFetchingRepos(true);
+      GitHubImportService.fetchRepositories(sessionToken).then((list) => {
+        setRepos(list);
+        setIsFetchingRepos(false);
+      });
+    }
+  }, [sessionToken, githubConnected]);
 
   const handleCommit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,11 +67,43 @@ export const GitSourceControlPanel: React.FC = () => {
     setCommitMessage('');
   };
 
+  const handleImportSelectedRepo = async () => {
+    if (!selectedRepoFullName || !sessionToken) return;
+
+    setIsImporting(true);
+    setImportStatusMsg('Fetching repository files from GitHub REST API...');
+
+    const res = await GitHubImportService.importRepository(
+      sessionToken,
+      selectedRepoFullName,
+      gitBranch || 'main'
+    );
+
+    setIsImporting(false);
+
+    if (res.success && res.files) {
+      const repoName = selectedRepoFullName.split('/')[1] || selectedRepoFullName;
+      const newProj = createProject(repoName, `Imported from ${selectedRepoFullName}`, 'react-three');
+
+      useProjectStore.setState((state) => ({
+        projects: state.projects.map((p) =>
+          p.id === newProj.id ? { ...p, files: res.files!, rootFileIds: res.rootFileIds || [] } : p
+        ),
+      }));
+
+      setGithubRepo(selectedRepoFullName);
+      setImportStatusMsg(`Imported ${Object.keys(res.files).length} files successfully.`);
+      setTimeout(() => setImportStatusMsg(null), 4000);
+    } else {
+      setImportStatusMsg(`Import Error: ${res.error}`);
+    }
+  };
+
   const handlePush = async () => {
     if (!githubRepo || !sessionToken) {
       setPushResult({
         success: false,
-        error: 'Missing required parameters. Please enter a valid GitHub Token and repository.',
+        error: 'Missing parameters. Enter a valid GitHub Token and repository name.',
       });
       return;
     }
@@ -79,7 +133,6 @@ export const GitSourceControlPanel: React.FC = () => {
     setPushResult(res);
 
     if (res.success && res.sha) {
-      // Verify remote commit via GET /git/commits/{sha}
       const isVerified = await GitHubPushService.verifyRemoteCommit(sessionToken, githubRepo, res.sha);
       if (!isVerified) {
         setPushResult({
@@ -95,15 +148,15 @@ export const GitSourceControlPanel: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
         <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] flex items-center gap-2">
-          <GitPullRequest className="w-4 h-4 text-primary" /> SOURCE CONTROL
+          <GitPullRequest className="w-4 h-4 text-[#ef233c]" /> SOURCE CONTROL
         </span>
-        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-surface-high border border-outline-variant/20 font-mono text-[11px]">
-          <GitBranch className="w-3 h-3 text-primary" /> {gitBranch}
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-[#121215] border border-white/10 font-mono text-[11px]">
+          <GitBranch className="w-3 h-3 text-[#ef233c]" /> {gitBranch}
         </div>
       </div>
 
       {/* GitHub Session State */}
-      <div className="p-3 bg-surface-container rounded-lg border border-outline-variant/15 space-y-2">
+      <div className="p-3 bg-surface-container rounded-xl border border-white/10 space-y-2">
         <div className="flex items-center justify-between">
           <span className="font-medium text-slate-200">GitHub Session</span>
           {githubConnected ? (
@@ -117,10 +170,10 @@ export const GitSourceControlPanel: React.FC = () => {
           )}
         </div>
 
-        {githubRepo && <p className="text-[11px] font-mono text-outline">Repo: {githubRepo}</p>}
+        {githubRepo && <p className="text-[11px] font-mono text-zinc-400">Repo: {githubRepo}</p>}
 
         <div className="space-y-1 pt-1">
-          <label className="block text-[10px] text-outline">GitHub Token (Session Memory Only)</label>
+          <label className="block text-[10px] text-zinc-400">GitHub Personal Token (Session Memory Only)</label>
           <input
             type="password"
             placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
@@ -129,13 +182,57 @@ export const GitSourceControlPanel: React.FC = () => {
               setSessionToken(e.target.value);
               if (e.target.value) setGithubConnected(true);
             }}
-            className="w-full px-2 py-1 bg-surface-high border border-outline-variant/20 rounded text-[11px] text-white focus:outline-none focus:border-primary"
+            className="w-full px-2.5 py-1.5 bg-[#121215] border border-white/10 rounded-lg text-[11px] text-white focus:outline-none focus:border-[#ef233c]/50 font-mono"
           />
         </div>
       </div>
 
-      {/* Security Directive */}
-      <div className="p-2.5 bg-surface-high/60 rounded border border-outline-variant/10 text-[11px] text-outline flex items-start gap-2">
+      {/* Repository Explorer & Import Section */}
+      {githubConnected && (
+        <div className="p-3 bg-[#121215] rounded-xl border border-white/10 space-y-2">
+          <span className="font-semibold text-white flex items-center gap-1.5 text-[11px]">
+            <FolderPlus className="w-3.5 h-3.5 text-[#ef233c]" /> Import GitHub Repository
+          </span>
+
+          {isFetchingRepos ? (
+            <div className="text-[10px] text-zinc-500 font-mono flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 border-2 border-zinc-500 border-t-[#ef233c] rounded-full animate-spin" />
+              Fetching repository list...
+            </div>
+          ) : (
+            <select
+              value={selectedRepoFullName}
+              onChange={(e) => setSelectedRepoFullName(e.target.value)}
+              className="w-full px-2 py-1.5 bg-[#050507] border border-white/10 rounded-lg text-[11px] text-white focus:outline-none focus:border-[#ef233c]/50"
+            >
+              <option value="">-- Select GitHub Repository --</option>
+              {repos.map((r) => (
+                <option key={r.id} value={r.fullName}>
+                  {r.fullName} ({r.isPrivate ? 'Private' : 'Public'})
+                </option>
+              ))}
+            </select>
+          )}
+
+          <button
+            onClick={handleImportSelectedRepo}
+            disabled={!selectedRepoFullName || isImporting}
+            className="w-full py-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-40 text-white rounded-lg font-semibold text-[11px] transition-all flex items-center justify-center gap-1.5"
+          >
+            <Download className="w-3.5 h-3.5 text-[#ef233c]" />
+            {isImporting ? 'Importing Tree...' : 'Import to Workspace'}
+          </button>
+
+          {importStatusMsg && (
+            <div className="p-2 rounded bg-surface-container border border-white/10 text-[10px] font-mono text-zinc-300">
+              {importStatusMsg}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Security Disclaimer */}
+      <div className="p-2.5 bg-surface-high/60 rounded-lg border border-white/10 text-[11px] text-zinc-400 flex items-start gap-2">
         <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
         <p>Tokens are held strictly in ephemeral session memory and passed directly to GitHub REST API endpoints.</p>
       </div>
@@ -147,13 +244,13 @@ export const GitSourceControlPanel: React.FC = () => {
           placeholder="Commit Message..."
           value={commitMessage}
           onChange={(e) => setCommitMessage(e.target.value)}
-          className="w-full px-2.5 py-1.5 bg-surface-container border border-outline-variant/20 rounded text-xs text-white placeholder-outline focus:outline-none focus:border-primary"
+          className="w-full px-2.5 py-1.5 bg-[#121215] border border-white/10 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#ef233c]/50"
         />
         <div className="flex gap-2">
           <button
             type="submit"
             disabled={gitStatus.staged.length === 0}
-            className="flex-1 py-1.5 bg-primary-container disabled:opacity-40 hover:bg-primary-container/80 text-white rounded font-medium text-xs transition-all flex items-center justify-center gap-1.5"
+            className="flex-1 py-1.5 bg-[#ef233c] disabled:opacity-40 hover:bg-[#d90429] text-white rounded-lg font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-red-glow-sm"
           >
             <GitCommit className="w-3.5 h-3.5" /> Commit ({gitStatus.staged.length})
           </button>
@@ -161,21 +258,21 @@ export const GitSourceControlPanel: React.FC = () => {
             type="button"
             onClick={handlePush}
             disabled={isPushing}
-            className="px-3 py-1.5 bg-secondary text-slate-950 font-semibold rounded text-xs hover:bg-secondary/90 transition-all flex items-center gap-1.5 disabled:opacity-50"
+            className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg text-xs transition-all flex items-center gap-1.5 disabled:opacity-50"
           >
-            <Send className="w-3.5 h-3.5" /> {isPushing ? 'Pushing...' : 'Push'}
+            <Send className="w-3.5 h-3.5 text-[#ef233c]" /> {isPushing ? 'Pushing...' : 'Push'}
           </button>
         </div>
 
         {isPushing && (
-          <div className="p-2 text-primary font-mono text-[10px] flex items-center gap-2 bg-primary/10 rounded border border-primary/20">
-            <div className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <div className="p-2 text-[#ef233c] font-mono text-[10px] flex items-center gap-2 bg-[#ef233c]/10 rounded-lg border border-[#ef233c]/30">
+            <div className="w-3 h-3 border-2 border-[#ef233c]/30 border-t-[#ef233c] rounded-full animate-spin" />
             <span>{pushStatusText}</span>
           </div>
         )}
 
         {pushResult && (
-          <div className={`p-2.5 rounded text-[11px] space-y-1 border ${
+          <div className={`p-2.5 rounded-lg text-[11px] space-y-1 border ${
             pushResult.success
               ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
               : 'bg-red-500/10 text-red-300 border-red-500/30'
@@ -194,7 +291,7 @@ export const GitSourceControlPanel: React.FC = () => {
                   href={`https://github.com/${pushResult.repo}/commit/${pushResult.sha}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-primary hover:underline flex items-center gap-1 pt-1"
+                  className="text-[#ef233c] hover:underline flex items-center gap-1 pt-1 font-semibold"
                 >
                   View Commit on GitHub <ExternalLink className="w-2.5 h-2.5" />
                 </a>
@@ -207,18 +304,18 @@ export const GitSourceControlPanel: React.FC = () => {
 
       {/* Staged Changes List */}
       <div className="space-y-1.5">
-        <div className="flex justify-between items-center text-outline text-[11px] font-semibold">
+        <div className="flex justify-between items-center text-zinc-400 text-[11px] font-semibold">
           <span>STAGED CHANGES ({gitStatus.staged.length})</span>
         </div>
         {gitStatus.staged.length === 0 ? (
-          <div className="text-outline text-[11px] py-1">No staged changes</div>
+          <div className="text-zinc-500 text-[11px] py-1">No staged changes</div>
         ) : (
           gitStatus.staged.map((path) => (
-            <div key={path} className="flex justify-between items-center py-1 px-2 bg-surface-container rounded group">
+            <div key={path} className="flex justify-between items-center py-1 px-2 bg-[#121215] rounded-lg group">
               <span className="truncate font-mono text-emerald-300">{path}</span>
               <button
                 onClick={() => unstageFile(path)}
-                className="p-1 hover:text-white text-outline"
+                className="p-1 hover:text-white text-zinc-500"
                 title="Unstage File"
               >
                 <Minus className="w-3 h-3" />
@@ -230,18 +327,18 @@ export const GitSourceControlPanel: React.FC = () => {
 
       {/* Unstaged Changes List */}
       <div className="space-y-1.5">
-        <div className="flex justify-between items-center text-outline text-[11px] font-semibold">
+        <div className="flex justify-between items-center text-zinc-400 text-[11px] font-semibold">
           <span>CHANGES ({gitStatus.unstaged.length})</span>
         </div>
         {gitStatus.unstaged.length === 0 ? (
-          <div className="text-outline text-[11px] py-1">Working tree clean</div>
+          <div className="text-zinc-500 text-[11px] py-1">Working tree clean</div>
         ) : (
           gitStatus.unstaged.map((path) => (
-            <div key={path} className="flex justify-between items-center py-1 px-2 bg-surface-container rounded group">
+            <div key={path} className="flex justify-between items-center py-1 px-2 bg-[#121215] rounded-lg group">
               <span className="truncate font-mono text-amber-300">{path}</span>
               <button
                 onClick={() => stageFile(path)}
-                className="p-1 hover:text-white text-outline"
+                className="p-1 hover:text-white text-zinc-500"
                 title="Stage File"
               >
                 <Plus className="w-3 h-3" />
