@@ -22,17 +22,41 @@ interface NodeMeshProps {
   onSelect: (id: string) => void;
   onFocus: (position: [number, number, number]) => void;
   isLowQuality: boolean;
-  shaderPreset: 'standard' | 'hologram' | 'neon';
+  shaderPreset: 'standard' | 'hologram' | 'neon' | 'custom';
 }
 
 const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, isLowQuality, shaderPreset }) => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
   const [hovered, setHovered] = useState(false);
   const lastTapRef = useRef<number>(0);
+
+  const { customVertexShader, customFragmentShader } = usePreferenceStore();
+
+  // Create custom GLSL shader material with uTime uniform
+  const shaderMaterial = useMemo(() => {
+    if (shaderPreset !== 'custom') return null;
+    try {
+      return new THREE.ShaderMaterial({
+        vertexShader: customVertexShader,
+        fragmentShader: customFragmentShader,
+        uniforms: {
+          uTime: { value: 0 },
+        },
+        transparent: true,
+        wireframe: node.isFolder,
+      });
+    } catch {
+      return null;
+    }
+  }, [customVertexShader, customFragmentShader, shaderPreset, node.isFolder]);
 
   useFrame((_state, delta) => {
     if (meshRef.current && !isLowQuality) {
       meshRef.current.rotation.y += delta * (isActive ? 0.8 : 0.2);
+    }
+    if (materialRef.current && materialRef.current.uniforms?.uTime) {
+      materialRef.current.uniforms.uTime.value += delta;
     }
   });
 
@@ -74,13 +98,18 @@ const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, 
         ) : (
           <boxGeometry args={[0.6, 0.6, 0.6]} />
         )}
-        <meshStandardMaterial
-          color={getMaterialColor()}
-          wireframe={node.isFolder || shaderPreset === 'hologram'}
-          emissive={isActive ? '#004395' : shaderPreset === 'neon' ? '#881337' : '#000000'}
-          roughness={0.3}
-          metalness={0.7}
-        />
+
+        {shaderPreset === 'custom' && shaderMaterial ? (
+          <primitive object={shaderMaterial} ref={materialRef} attach="material" />
+        ) : (
+          <meshStandardMaterial
+            color={getMaterialColor()}
+            wireframe={node.isFolder || shaderPreset === 'hologram'}
+            emissive={isActive ? '#004395' : shaderPreset === 'neon' ? '#881337' : '#000000'}
+            roughness={0.3}
+            metalness={0.7}
+          />
+        )}
       </mesh>
 
       <Text
@@ -218,7 +247,7 @@ export const Spatial3DWorkspace: React.FC = () => {
   const [searchFilter, setSearchFilter] = useState('');
   const [targetFocus, setTargetFocus] = useState<[number, number, number] | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  const [shaderPreset, setShaderPreset] = useState<'standard' | 'hologram' | 'neon'>('standard');
+  const [shaderPreset, setShaderPreset] = useState<'standard' | 'hologram' | 'neon' | 'custom'>('standard');
   const [arStatusMsg, setArStatusMsg] = useState<string | null>(null);
 
   const controlsRef = useRef<OrbitControlsImpl>(null);
@@ -340,6 +369,12 @@ export const Spatial3DWorkspace: React.FC = () => {
               className={`px-2 py-0.5 rounded ${shaderPreset === 'neon' ? 'bg-primary-container text-white' : 'hover:text-white'}`}
             >
               Neon
+            </button>
+            <button
+              onClick={() => setShaderPreset('custom')}
+              className={`px-2 py-0.5 rounded ${shaderPreset === 'custom' ? 'bg-secondary text-slate-950 font-bold' : 'hover:text-white'}`}
+            >
+              Custom GLSL
             </button>
           </div>
 

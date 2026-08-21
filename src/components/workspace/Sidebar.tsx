@@ -11,7 +11,8 @@ import {
   Activity,
   Settings,
   Bot,
-  Database
+  Database,
+  Code2
 } from 'lucide-react';
 
 export type SidebarTab =
@@ -23,6 +24,7 @@ export type SidebarTab =
   | 'chat'
   | 'analytics'
   | 'sql'
+  | 'shader'
   | 'git'
   | 'graph3d'
   | 'settings';
@@ -49,6 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'chat', label: 'Team Channels', icon: MessageSquare },
     { id: 'analytics', label: 'Analytics Telemetry', icon: Activity },
     { id: 'sql', label: 'Database & SQL Studio', icon: Database },
+    { id: 'shader', label: 'GLSL Shader Studio', icon: Code2 },
     { id: 'git', label: 'Source Control', icon: GitPullRequest },
     { id: 'graph3d', label: '3D Graph', icon: Boxes },
   ];

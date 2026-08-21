@@ -20,6 +20,7 @@ import { TaskManagerPanel } from '../components/workspace/TaskManagerPanel';
 import { TeamChatPanel } from '../components/workspace/TeamChatPanel';
 import { AnalyticsPanel } from '../components/workspace/AnalyticsPanel';
 import { SqlStudioPanel } from '../components/workspace/SqlStudioPanel';
+import { ShaderEditorPanel } from '../components/workspace/ShaderEditorPanel';
 import { CommandPaletteModal } from '../components/workspace/CommandPaletteModal';
 
 export default function Workspace() {
@@ -89,6 +90,7 @@ export default function Workspace() {
           {activeSidebarTab === 'chat' && <TeamChatPanel />}
           {activeSidebarTab === 'analytics' && <AnalyticsPanel />}
           {activeSidebarTab === 'sql' && <SqlStudioPanel />}
+          {activeSidebarTab === 'shader' && <ShaderEditorPanel />}
           {activeSidebarTab === 'git' && <GitSourceControlPanel />}
           {activeSidebarTab === 'search' && (
             <div className="h-full bg-surface-low border-r border-outline-variant/15 p-4 text-xs">
