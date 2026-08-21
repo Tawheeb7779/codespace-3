@@ -48,21 +48,41 @@ CREATE TABLE IF NOT EXISTS public.project_members (
   UNIQUE(project_id, user_id)
 );
 
--- Enable Row Level Security (RLS)
+-- 5. Workspace Snapshots Table (Vault Backups)
+CREATE TABLE IF NOT EXISTS public.workspace_snapshots (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  file_count INTEGER NOT NULL DEFAULT 0,
+  hash TEXT NOT NULL,
+  manifest_json JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable Row Level Security (RLS) across all tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_files ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.workspace_snapshots ENABLE ROW LEVEL SECURITY;
 
--- 5. RLS Policies: Profiles
+-- 6. Performance Indexes
+CREATE INDEX IF NOT EXISTS idx_projects_user_id ON public.projects(user_id);
+CREATE INDEX IF NOT EXISTS idx_project_members_project_user ON public.project_members(project_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_project_files_project_id ON public.project_files(project_id);
+CREATE INDEX IF NOT EXISTS idx_snapshots_project_id ON public.workspace_snapshots(project_id);
+
+-- 7. RLS Policies: Profiles
 CREATE POLICY "Public profiles are viewable by everyone"
   ON public.profiles FOR SELECT USING (true);
 
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
--- 6. RLS Policies: Projects
-CREATE POLICY "Users can view their own projects or public projects"
+-- 8. RLS Policies: Projects
+CREATE POLICY "Users can view their own projects or public projects or member projects"
   ON public.projects FOR SELECT USING (
     auth.uid() = user_id OR
     visibility = 'public' OR
@@ -93,7 +113,37 @@ CREATE POLICY "Owners can delete projects"
     )
   );
 
--- 7. RLS Policies: Project Files
+-- 9. RLS Policies: Project Members & RBAC
+CREATE POLICY "Members can view project member lists"
+  ON public.project_members FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.projects
+      WHERE id = project_members.project_id AND (
+        user_id = auth.uid() OR
+        visibility = 'public' OR
+        EXISTS (
+          SELECT 1 FROM public.project_members pm
+          WHERE pm.project_id = projects.id AND pm.user_id = auth.uid()
+        )
+      )
+    )
+  );
+
+CREATE POLICY "Owners and admins can manage project members"
+  ON public.project_members FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM public.projects
+      WHERE id = project_members.project_id AND (
+        user_id = auth.uid() OR
+        EXISTS (
+          SELECT 1 FROM public.project_members pm
+          WHERE pm.project_id = projects.id AND pm.user_id = auth.uid() AND pm.role IN ('owner', 'admin')
+        )
+      )
+    )
+  );
+
+-- 10. RLS Policies: Project Files
 CREATE POLICY "Members and project viewers can read project files"
   ON public.project_files FOR SELECT USING (
     EXISTS (
@@ -123,7 +173,37 @@ CREATE POLICY "Developers, admins, and owners can modify project files"
     )
   );
 
--- 8. Automatic Profile Creation Trigger on Auth Signup
+-- 11. RLS Policies: Workspace Snapshots (Vault)
+CREATE POLICY "Members can view workspace snapshots"
+  ON public.workspace_snapshots FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.projects
+      WHERE id = workspace_snapshots.project_id AND (
+        user_id = auth.uid() OR
+        visibility = 'public' OR
+        EXISTS (
+          SELECT 1 FROM public.project_members
+          WHERE project_id = projects.id AND user_id = auth.uid()
+        )
+      )
+    )
+  );
+
+CREATE POLICY "Developers, admins, and owners can create/delete workspace snapshots"
+  ON public.workspace_snapshots FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM public.projects
+      WHERE id = workspace_snapshots.project_id AND (
+        user_id = auth.uid() OR
+        EXISTS (
+          SELECT 1 FROM public.project_members
+          WHERE project_id = projects.id AND user_id = auth.uid() AND role IN ('owner', 'admin', 'developer')
+        )
+      )
+    )
+  );
+
+-- 12. Automatic Profile & Owner Member Trigger on Auth Signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
