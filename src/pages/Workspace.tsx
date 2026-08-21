@@ -23,6 +23,7 @@ import { AnalyticsPanel } from '../components/workspace/AnalyticsPanel';
 import { SqlStudioPanel } from '../components/workspace/SqlStudioPanel';
 import { ShaderEditorPanel } from '../components/workspace/ShaderEditorPanel';
 import { CommandPaletteModal } from '../components/workspace/CommandPaletteModal';
+import { AdminPanelModal } from '../components/admin/AdminPanelModal';
 
 export default function Workspace() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -37,6 +38,7 @@ export default function Workspace() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isVercelModalOpen, setIsVercelModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
 
@@ -71,6 +73,7 @@ export default function Workspace() {
         isNotificationsOpen={isNotificationsOpen}
         onOpenVercelModal={() => setIsVercelModalOpen(true)}
         onOpenHelpModal={() => setIsHelpModalOpen(true)}
+        onOpenAdminModal={() => setIsAdminModalOpen(true)}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
@@ -172,6 +175,7 @@ export default function Workspace() {
         {/* Modals */}
         <VercelDeploymentModal isOpen={isVercelModalOpen} onClose={() => setIsVercelModalOpen(false)} />
         <HelpSupportModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
+        <AdminPanelModal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} />
         <CommandPaletteModal
           isOpen={isCommandPaletteOpen}
           onClose={() => setIsCommandPaletteOpen(false)}

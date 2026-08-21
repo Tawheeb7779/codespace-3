@@ -18,7 +18,8 @@ import {
   User,
   Bell,
   CloudUpload,
-  HelpCircle
+  HelpCircle,
+  ShieldCheck
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
@@ -40,6 +41,7 @@ interface TopBarProps {
   isNotificationsOpen: boolean;
   onOpenVercelModal: () => void;
   onOpenHelpModal: () => void;
+  onOpenAdminModal: () => void;
   onOpenCommandPalette: () => void;
 }
 
@@ -57,6 +59,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   isNotificationsOpen,
   onOpenVercelModal,
   onOpenHelpModal,
+  onOpenAdminModal,
   onOpenCommandPalette,
 }) => {
   const navigate = useNavigate();
@@ -200,14 +203,22 @@ export const TopBar: React.FC<TopBarProps> = ({
               className="px-2 py-1 bg-surface-high hover:bg-surface-high/80 text-outline hover:text-white rounded border border-outline-variant/20 flex items-center gap-1 transition-colors"
               title="Command Palette (⌘K)"
             >
-              <Command className="w-3 h-3 text-primary" />
-              <span className="font-mono text-[10px]">⌘K</span>
+              <Command className="w-3 h-3 text-primary text-[10px]">⌘K</Command>
             </button>
           </div>
         </div>
 
-        {/* Right: Help, Notifications, User Profile & AI & Toggles */}
+        {/* Right: Help, Admin, Notifications, User Profile & AI & Toggles */}
         <div className="flex items-center gap-2">
+          {/* Admin Control Center Trigger Button */}
+          <button
+            onClick={onOpenAdminModal}
+            className="p-1.5 rounded text-outline hover:text-white hover:bg-surface-high transition-colors"
+            title="Admin Control Center"
+          >
+            <ShieldCheck className="w-4 h-4 text-primary" />
+          </button>
+
           {/* Help & Support Portal Trigger */}
           <button
             onClick={onOpenHelpModal}
