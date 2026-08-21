@@ -57,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="w-12 bg-surface-low border-r border-outline-variant/15 flex flex-col items-center py-2 justify-between z-30 select-none">
+    <aside className="w-12 bg-[#050507] border-r border-white/10 flex flex-col items-center py-2 justify-between z-30 select-none">
       <div className="flex flex-col gap-1 w-full px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -66,10 +66,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all group relative ${
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all group relative ${
                 isActive
-                  ? 'bg-primary-container/20 text-primary border-l-2 border-primary'
-                  : 'text-outline hover:text-white hover:bg-surface-high'
+                  ? 'bg-[#ef233c]/20 text-[#ef233c] border-l-2 border-[#ef233c] shadow-red-glow-sm'
+                  : 'text-zinc-500 hover:text-white hover:bg-white/10'
               }`}
               title={item.label}
             >
@@ -82,10 +82,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex flex-col gap-1 w-full px-1">
         <button
           onClick={toggleAiAssistant}
-          className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
+          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
             isAiOpen
-              ? 'bg-secondary/20 text-secondary border-l-2 border-secondary'
-              : 'text-outline hover:text-secondary hover:bg-surface-high'
+              ? 'bg-[#ef233c]/20 text-[#ef233c] border-l-2 border-[#ef233c] shadow-red-glow-sm'
+              : 'text-zinc-500 hover:text-[#ef233c] hover:bg-white/10'
           }`}
           title="AI Assistant Drawer"
         >
@@ -94,10 +94,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <button
           onClick={() => setActiveTab('settings')}
-          className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
+          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
             activeTab === 'settings'
-              ? 'bg-primary-container/20 text-primary border-l-2 border-primary'
-              : 'text-outline hover:text-white hover:bg-surface-high'
+              ? 'bg-[#ef233c]/20 text-[#ef233c] border-l-2 border-[#ef233c] shadow-red-glow-sm'
+              : 'text-zinc-500 hover:text-white hover:bg-white/10'
           }`}
           title="Workspace Settings"
         >
