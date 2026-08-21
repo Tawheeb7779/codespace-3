@@ -19,7 +19,8 @@ import {
   Bell,
   CloudUpload,
   HelpCircle,
-  ShieldCheck
+  ShieldCheck,
+  ShieldAlert
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
@@ -42,6 +43,7 @@ interface TopBarProps {
   onOpenVercelModal: () => void;
   onOpenHelpModal: () => void;
   onOpenAdminModal: () => void;
+  onOpenSecurityBackupModal: () => void;
   onOpenCommandPalette: () => void;
 }
 
@@ -60,6 +62,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenVercelModal,
   onOpenHelpModal,
   onOpenAdminModal,
+  onOpenSecurityBackupModal,
   onOpenCommandPalette,
 }) => {
   const navigate = useNavigate();
@@ -208,8 +211,17 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
         </div>
 
-        {/* Right: Help, Admin, Notifications, User Profile & AI & Toggles */}
+        {/* Right: Security Backup, Admin, Help, Notifications, User Profile & AI & Toggles */}
         <div className="flex items-center gap-2">
+          {/* Security Backup & Snapshot Vault Trigger */}
+          <button
+            onClick={onOpenSecurityBackupModal}
+            className="p-1.5 rounded text-outline hover:text-emerald-400 hover:bg-surface-high transition-colors"
+            title="Security Backup & Snapshot Vault"
+          >
+            <ShieldAlert className="w-4 h-4 text-emerald-400" />
+          </button>
+
           {/* Admin Control Center Trigger Button */}
           <button
             onClick={onOpenAdminModal}
