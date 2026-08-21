@@ -14,6 +14,7 @@ import { BottomPanel } from '../components/workspace/BottomPanel';
 import { AiAssistantDrawer } from '../components/workspace/AiAssistantDrawer';
 import { NotificationsDrawer } from '../components/workspace/NotificationsDrawer';
 import { VercelDeploymentModal } from '../components/workspace/VercelDeploymentModal';
+import { HelpSupportModal } from '../components/help/HelpSupportModal';
 import { PackageManagerPanel } from '../components/workspace/PackageManagerPanel';
 import { AssetsManagerPanel } from '../components/workspace/AssetsManagerPanel';
 import { TaskManagerPanel } from '../components/workspace/TaskManagerPanel';
@@ -35,6 +36,7 @@ export default function Workspace() {
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isVercelModalOpen, setIsVercelModalOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
 
@@ -68,6 +70,7 @@ export default function Workspace() {
         toggleNotifications={() => setIsNotificationsOpen(!isNotificationsOpen)}
         isNotificationsOpen={isNotificationsOpen}
         onOpenVercelModal={() => setIsVercelModalOpen(true)}
+        onOpenHelpModal={() => setIsHelpModalOpen(true)}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
@@ -168,6 +171,7 @@ export default function Workspace() {
 
         {/* Modals */}
         <VercelDeploymentModal isOpen={isVercelModalOpen} onClose={() => setIsVercelModalOpen(false)} />
+        <HelpSupportModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
         <CommandPaletteModal
           isOpen={isCommandPaletteOpen}
           onClose={() => setIsCommandPaletteOpen(false)}

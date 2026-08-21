@@ -17,7 +17,8 @@ import {
   Command,
   User,
   Bell,
-  CloudUpload
+  CloudUpload,
+  HelpCircle
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
@@ -38,6 +39,7 @@ interface TopBarProps {
   toggleNotifications: () => void;
   isNotificationsOpen: boolean;
   onOpenVercelModal: () => void;
+  onOpenHelpModal: () => void;
   onOpenCommandPalette: () => void;
 }
 
@@ -54,6 +56,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   toggleNotifications,
   isNotificationsOpen,
   onOpenVercelModal,
+  onOpenHelpModal,
   onOpenCommandPalette,
 }) => {
   const navigate = useNavigate();
@@ -203,8 +206,17 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
         </div>
 
-        {/* Right: Notifications, User Profile & AI & Toggles */}
+        {/* Right: Help, Notifications, User Profile & AI & Toggles */}
         <div className="flex items-center gap-2">
+          {/* Help & Support Portal Trigger */}
+          <button
+            onClick={onOpenHelpModal}
+            className="p-1.5 rounded text-outline hover:text-white hover:bg-surface-high transition-colors"
+            title="Help & Support Portal"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
+
           {/* Notification Bell Icon Trigger */}
           <button
             onClick={toggleNotifications}
