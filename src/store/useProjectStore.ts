@@ -206,6 +206,7 @@ interface ProjectState {
   deleteProject: (id: string) => void;
   openFile: (fileId: string) => void;
   closeTab: (fileId: string) => void;
+  saveFile: (fileId: string) => void;
   updateFileContent: (fileId: string, content: string) => void;
   createFile: (name: string, parentId?: string | null, isFolder?: boolean) => void;
   deleteFile: (fileId: string) => void;
@@ -313,6 +314,30 @@ export const useProjectStore = create<ProjectState>()(
           const newTabs = state.openTabIds.filter(id => id !== fileId);
           const nextActive = state.activeFileId === fileId ? (newTabs[newTabs.length - 1] || null) : state.activeFileId;
           return { openTabIds: newTabs, activeFileId: nextActive };
+        });
+      },
+
+      saveFile: (fileId) => {
+        if (get().currentUserRole === 'viewer') return;
+        set(state => {
+          const { activeProjectId, projects } = state;
+          if (!activeProjectId) return state;
+
+          const updatedProjects = projects.map(p => {
+            if (p.id !== activeProjectId) return p;
+            const file = p.files[fileId];
+            if (!file) return p;
+
+            return {
+              ...p,
+              files: {
+                ...p.files,
+                [fileId]: { ...file, isUnsaved: false }
+              }
+            };
+          });
+
+          return { projects: updatedProjects };
         });
       },
 
