@@ -175,7 +175,7 @@ export const WorkspaceView: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {renderFileTree(files)}
 
-          {creatingInParent !== undefined && (
+          {creatingInParent !== null && (
             <form onSubmit={handleCreateSubmit} className="mt-2 p-2 bg-white/5 border border-blue-500/40 rounded-lg">
               <div className="text-[10px] text-blue-400 font-mono mb-1">
                 New {isFolder ? 'Folder' : 'File'} in {creatingInParent ? 'directory' : 'root'}

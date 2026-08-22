@@ -130,9 +130,10 @@ class WebContainerService {
   }
 
   public async runCommand(cmd: string, args: string[]): Promise<number> {
-    if (this.currentStatus.engine === 'WEBCONTAINER_NODE' && this.container) {
+    const container = this.container;
+    if (this.currentStatus.engine === 'WEBCONTAINER_NODE' && container) {
       try {
-        const process = await this.container.spawn(cmd, args);
+        const process = await container.spawn(cmd, args);
         process.output.pipeTo(
           new WritableStream({
             write: (data) => this.notifyOutput(data)

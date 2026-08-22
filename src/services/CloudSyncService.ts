@@ -33,7 +33,8 @@ class CloudSyncService {
   }
 
   public async processSyncQueue(): Promise<{ processed: number; errors: number }> {
-    if (this.isSyncing || !this.client) {
+    const client = this.client;
+    if (this.isSyncing || !client) {
       return { processed: 0, errors: 0 };
     }
 
@@ -45,7 +46,7 @@ class CloudSyncService {
       const queue = await dbManager.getAll<CloudSyncQueueItem>('sync_queue');
       for (const item of queue) {
         try {
-          const { error } = await this.client
+          const { error } = await client
             .from(item.entity)
             .upsert({ ...item.data, updated_at: new Date().toISOString() });
 
