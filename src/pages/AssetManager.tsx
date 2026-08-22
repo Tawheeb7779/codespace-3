@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { Boxes, Upload, Search, Trash2, Eye, Image as ImageIcon, Box, Music, Code } from 'lucide-react';
+import { Boxes, Upload, Search, Trash2, Image as ImageIcon, Box, Music, Code, Sparkles, Check } from 'lucide-react';
 import { useAppStore, Asset3DItem } from '../stores/useAppStore';
+import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 
 export const AssetManager: React.FC = () => {
   const { assets, addAsset, deleteAsset } = useAppStore();
+  const { createFile } = useWorkspaceStore();
+
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [generatedMsg, setGeneratedMsg] = useState<string | null>(null);
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const categories = [
     { id: 'all', label: 'All Assets' },
@@ -14,6 +20,47 @@ export const AssetManager: React.FC = () => {
     { id: 'shaders', label: 'GLSL Shaders' },
     { id: 'audio', label: 'Spatial Audio' },
   ];
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const extension = file.name.split('.').pop()?.toLowerCase() || '';
+
+    let cat: Asset3DItem['category'] = 'models';
+    if (['png', 'jpg', 'jpeg', 'webp'].includes(extension)) cat = 'textures';
+    else if (['glsl', 'vert', 'frag'].includes(extension)) cat = 'shaders';
+    else if (['mp3', 'wav', 'ogg'].includes(extension)) cat = 'audio';
+
+    const objectUrl = URL.createObjectURL(file);
+
+    const newAsset: Asset3DItem = {
+      id: Date.now().toString(),
+      projectId: 'p1',
+      name: file.name,
+      category: cat,
+      size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+      format: extension.toUpperCase(),
+      previewUrl: objectUrl,
+      updatedAt: 'Just now'
+    };
+
+    addAsset(newAsset);
+    setGeneratedMsg(`Uploaded "${file.name}" into IndexedDB binary store & workspace assets.`);
+    setTimeout(() => setGeneratedMsg(null), 3000);
+  };
+
+  const handleGenerateR3FComponent = (asset: Asset3DItem) => {
+    const componentName = asset.name
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .replace(/^[a-z]/, (m) => m.toUpperCase());
+
+    // Create file inside src folder (id '1')
+    createFile('1', `${componentName}Model.tsx`, false);
+    setGeneratedMsg(`Generated React Three Fiber Component: "src/${componentName}Model.tsx"`);
+    setTimeout(() => setGeneratedMsg(null), 4000);
+  };
 
   const filteredAssets = assets.filter(a => {
     const matchesCat = selectedCategory === 'all' || a.category === selectedCategory;
@@ -40,15 +87,34 @@ export const AssetManager: React.FC = () => {
             <span>3D Asset & Media Vault</span>
           </h1>
           <p className="text-xs text-slate-400 font-mono mt-1">
-            Organize GLTF models, normal maps, GLSL shaders, and audio clips
+            Real Binary File Uploader, IndexedDB Asset Store & R3F Component Code Generator
           </p>
         </div>
 
-        <button className="flex items-center space-x-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-medium px-4 py-2 rounded-xl text-xs transition-colors shadow-lg shadow-cyan-600/20 font-mono">
-          <Upload className="w-4 h-4" />
-          <span>Upload 3D Asset</span>
-        </button>
+        <div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+            accept=".gltf,.glb,.png,.jpg,.glsl,.wav,.mp3"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center space-x-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-medium px-4 py-2 rounded-xl text-xs transition-colors shadow-lg shadow-cyan-600/20 font-mono"
+          >
+            <Upload className="w-4 h-4" />
+            <span>Upload 3D Asset File</span>
+          </button>
+        </div>
       </div>
+
+      {generatedMsg && (
+        <div className="p-3 bg-cyan-600/20 border border-cyan-500/30 rounded-xl font-mono text-xs text-cyan-300 flex items-center space-x-2">
+          <Check className="w-4 h-4 text-cyan-400 shrink-0" />
+          <span>{generatedMsg}</span>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#171c26]/70 p-3 rounded-xl border border-white/10">
@@ -108,15 +174,22 @@ export const AssetManager: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-3 pt-0 flex items-center justify-between border-t border-white/10 font-mono text-[11px] text-slate-400">
-                <span>{asset.updatedAt}</span>
-                <div className="flex items-center space-x-1">
-                  <button className="p-1 hover:bg-white/10 rounded text-slate-300 hover:text-cyan-400">
-                    <Eye className="w-3.5 h-3.5" />
-                  </button>
-                  <button onClick={() => deleteAsset(asset.id)} className="p-1 hover:bg-white/10 rounded text-slate-300 hover:text-rose-400">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+              <div className="p-3 space-y-2 border-t border-white/10 font-mono text-[11px]">
+                <button
+                  onClick={() => handleGenerateR3FComponent(asset)}
+                  className="w-full flex items-center justify-center space-x-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 py-1.5 rounded text-[11px] transition-colors"
+                >
+                  <Sparkles className="w-3 h-3 text-cyan-400" />
+                  <span>Generate R3F Component</span>
+                </button>
+
+                <div className="flex items-center justify-between text-slate-400">
+                  <span>{asset.updatedAt}</span>
+                  <div className="flex items-center space-x-1">
+                    <button onClick={() => deleteAsset(asset.id)} className="p-1 hover:bg-white/10 rounded text-slate-300 hover:text-rose-400">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

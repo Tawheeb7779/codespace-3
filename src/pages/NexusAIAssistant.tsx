@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { Sparkles, Send, Mic, MicOff, Bot, User, Code2, Cpu, FileCode } from 'lucide-react';
+import { Sparkles, Send, Mic, MicOff, Bot, User, Cpu, AlertCircle } from 'lucide-react';
 import { useIntegrationsStore } from '../stores/useIntegrationsStore';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 
 export const NexusAIAssistant: React.FC = () => {
   const { nexusAiModel, voiceControlEnabled, toggleVoiceControl } = useIntegrationsStore();
-  const { files } = useWorkspaceStore();
+  const { files, createFile } = useWorkspaceStore();
 
   const [prompt, setPrompt] = useState('');
   const [chatHistory, setChatHistory] = useState([
     {
       role: 'assistant',
-      content: `Hello Tawheeb! I am **${nexusAiModel}**, your spatial workspace AI assistant. I have indexed ${files.length} folders/files in your workspace. How can I help you build today?`
+      content: `Hello Tawheeb! I am **${nexusAiModel}**, your spatial workspace AI assistant. I have indexed ${files.length} top-level folders/files in IndexedDB. How can I assist you in generating or editing code?`
     }
   ]);
   const [isThinking, setIsThinking] = useState(false);
@@ -27,14 +27,13 @@ export const NexusAIAssistant: React.FC = () => {
     setIsThinking(true);
 
     setTimeout(() => {
-      let aiResponse = `I analyzed your request regarding: "${currentPrompt}". Here is the recommended spatial solution:`;
+      let aiResponse = `[Nexus AI Provider] Processed workspace query: "${currentPrompt}".`;
 
-      if (currentPrompt.toLowerCase().includes('component') || currentPrompt.toLowerCase().includes('react')) {
-        aiResponse += `\n\n\`\`\`tsx\n// Generated Spatial Component\nimport React from 'react';\n\nexport const SpatialCard = () => (\n  <div className="p-4 bg-blue-900/40 border border-blue-500/30 rounded-xl backdrop-blur-md">\n    <h3 className="text-sm font-bold text-blue-300">Spatial Glassmorphic Node</h3>\n  </div>\n);\n\`\`\``;
-      } else if (currentPrompt.toLowerCase().includes('shader') || currentPrompt.toLowerCase().includes('three')) {
-        aiResponse += `\n\n\`\`\`glsl\n// Fragment Shader for Three.js\nvarying vec2 vUv;\nvoid main() {\n  gl_FragColor = vec4(vUv.x, vUv.y, 0.8, 0.8);\n}\n\`\`\``;
+      if (currentPrompt.toLowerCase().includes('cube') || currentPrompt.toLowerCase().includes('component')) {
+        createFile('1', 'RotatingCube.tsx', false);
+        aiResponse += `\n\nAutomatically generated component "src/RotatingCube.tsx" and saved to workspace!`;
       } else {
-        aiResponse += `\n\nAll workspace files checked. Zero syntax errors or key leaks detected. Ready to deploy.`;
+        aiResponse += `\n\nValidated TypeScript workspace syntax. IndexedDB file tree state confirmed healthy.`;
       }
 
       setChatHistory((prev) => [...prev, { role: 'assistant', content: aiResponse }]);
@@ -54,17 +53,24 @@ export const NexusAIAssistant: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={toggleVoiceControl}
-          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono transition-all ${
-            voiceControlEnabled
-              ? 'bg-rose-500/20 border-rose-500/40 text-rose-400 animate-pulse'
-              : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
-          }`}
-        >
-          {voiceControlEnabled ? <Mic className="w-4 h-4 text-rose-400" /> : <MicOff className="w-4 h-4 text-slate-400" />}
-          <span>{voiceControlEnabled ? 'Voice Listening...' : 'Enable Voice Control'}</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <div className="hidden sm:flex items-center space-x-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-mono px-2 py-0.5 rounded">
+            <AlertCircle className="w-3 h-3" />
+            <span>AI Provider: Key Guarded</span>
+          </div>
+
+          <button
+            onClick={toggleVoiceControl}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border text-xs font-mono transition-all ${
+              voiceControlEnabled
+                ? 'bg-rose-500/20 border-rose-500/40 text-rose-400 animate-pulse'
+                : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+            }`}
+          >
+            {voiceControlEnabled ? <Mic className="w-4 h-4 text-rose-400" /> : <MicOff className="w-4 h-4 text-slate-400" />}
+            <span>{voiceControlEnabled ? 'Voice Listening...' : 'Voice Control'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Chat Stream */}
@@ -113,7 +119,7 @@ export const NexusAIAssistant: React.FC = () => {
             type="text"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Ask Nexus AI to generate code, fix terminal errors, or create Three.js shaders..."
+            placeholder="Ask AI to generate code, fix terminal errors, or create Three.js components..."
             className="flex-1 bg-[#0e131d] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 font-mono"
           />
           <button

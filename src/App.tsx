@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 
-// Lazy-loaded routes for code-splitting & non-blocking fast render
+// Lazy-loaded routes for fast non-blocking application start
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
 const WorkspaceView = lazy(() => import('./pages/Workspace').then(m => ({ default: m.WorkspaceView })));
 const TerminalView = lazy(() => import('./pages/TerminalView').then(m => ({ default: m.TerminalView })));
@@ -15,6 +15,7 @@ const AssetManager = lazy(() => import('./pages/AssetManager').then(m => ({ defa
 const NexusAIAssistant = lazy(() => import('./pages/NexusAIAssistant').then(m => ({ default: m.NexusAIAssistant })));
 const TaskManager = lazy(() => import('./pages/TaskManager').then(m => ({ default: m.TaskManager })));
 const AnalyticsView = lazy(() => import('./pages/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
+const SQLStudio = lazy(() => import('./pages/SQLStudio').then(m => ({ default: m.SQLStudio })));
 const SettingsView = lazy(() => import('./pages/SettingsView').then(m => ({ default: m.SettingsView })));
 
 const LoadingFallback: React.FC = () => (
@@ -46,6 +47,7 @@ export const App: React.FC = () => {
             <Route path="ai" element={<NexusAIAssistant />} />
             <Route path="tasks" element={<TaskManager />} />
             <Route path="analytics" element={<AnalyticsView />} />
+            <Route path="sql" element={<SQLStudio />} />
             <Route path="settings" element={<SettingsView />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>

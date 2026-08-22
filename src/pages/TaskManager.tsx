@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckSquare, Plus, Trash2, ArrowRight } from 'lucide-react';
+import { CheckSquare, Plus, Trash2 } from 'lucide-react';
 import { useAppStore, TaskItem } from '../stores/useAppStore';
 
 export const TaskManager: React.FC = () => {
@@ -12,6 +12,7 @@ export const TaskManager: React.FC = () => {
 
     const newTask: TaskItem = {
       id: Date.now().toString(),
+      projectId: 'p1',
       title: newTitle.trim(),
       status: 'todo',
       priority: 'medium',

@@ -14,6 +14,7 @@ import {
   Sparkles,
   CheckSquare,
   BarChart3,
+  Database,
   Settings,
   X
 } from 'lucide-react';
@@ -37,6 +38,7 @@ export const navItems = [
   { path: '/ai', label: 'Nexus AI', icon: Sparkles },
   { path: '/tasks', label: 'Tasks', icon: CheckSquare },
   { path: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { path: '/sql', label: 'SQL Studio', icon: Database },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 

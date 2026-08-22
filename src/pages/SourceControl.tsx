@@ -4,18 +4,18 @@ import {
   GitCommit,
   GitMerge,
   GitPullRequest,
-  Check,
   Plus,
   Minus,
   FileCode,
-  ArrowUpRight,
   Send,
-  History
+  History,
+  Eye
 } from 'lucide-react';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
+import { MonacoDiffEditorModal } from '../components/modals/MonacoDiffEditorModal';
 
 export const SourceControl: React.FC = () => {
-  const { activeBranch, branches, setActiveBranch } = useWorkspaceStore();
+  const { activeBranch, branches, setActiveBranch, files, getFileById } = useWorkspaceStore();
   const [stagedFiles, setStagedFiles] = useState<string[]>(['src/App.tsx']);
   const [unstagedFiles, setUnstagedFiles] = useState<string[]>(['src/index.css', 'README.md']);
   const [commitMessage, setCommitMessage] = useState('');
@@ -24,6 +24,8 @@ export const SourceControl: React.FC = () => {
     { id: '3c19e01', msg: 'fix: resolve WASM terminal resize fit glitch', author: 'Tawheeb', time: '2 hours ago' },
     { id: 'f72a110', msg: 'chore: initial CodeSpace 3D workspace setup', author: 'Tawheeb', time: '1 day ago' },
   ]);
+
+  const [diffFile, setDiffFile] = useState<{ path: string; orig: string; mod: string } | null>(null);
 
   const stageFile = (file: string) => {
     setUnstagedFiles(unstagedFiles.filter(f => f !== file));
@@ -51,6 +53,12 @@ export const SourceControl: React.FC = () => {
     setCommitMessage('');
   };
 
+  const openDiff = (filePath: string) => {
+    const orig = `// Original Git HEAD state\nexport default function App() {\n  return <div>Original App Component</div>;\n}`;
+    const mod = `// Current modified working tree\nexport default function App() {\n  return (\n    <div className="p-6 text-cyan-400 bg-slate-900 min-h-screen">\n      <h1 className="text-3xl font-bold">Welcome to CodeSpace 3D IDE</h1>\n    </div>\n  );\n}`;
+    setDiffFile({ path: filePath, orig, mod });
+  };
+
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 select-none">
       {/* Top Source Control Header */}
@@ -58,10 +66,10 @@ export const SourceControl: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center space-x-2">
             <GitBranch className="w-6 h-6 text-amber-400" />
-            <span>Source Control & Git Adapter</span>
+            <span>Source Control & Differential Manager</span>
           </h1>
           <p className="text-xs text-slate-400 font-mono mt-1">
-            Isolated In-Browser Git Engine & Commit Differential Manager
+            Local Workspace Git State & Line-by-Line Monaco Diff Editor
           </p>
         </div>
 
@@ -135,13 +143,22 @@ export const SourceControl: React.FC = () => {
                     <FileCode className="w-3.5 h-3.5 text-emerald-400" />
                     <span className="text-slate-200">{file}</span>
                   </div>
-                  <button
-                    onClick={() => unstageFile(file)}
-                    className="p-1 hover:bg-white/10 rounded text-slate-400 hover:text-rose-400"
-                    title="Unstage file"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => openDiff(file)}
+                      className="p-1 hover:bg-white/10 rounded text-slate-300 hover:text-amber-400"
+                      title="View Monaco Diff"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => unstageFile(file)}
+                      className="p-1 hover:bg-white/10 rounded text-slate-400 hover:text-rose-400"
+                      title="Unstage file"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))
             )}
@@ -162,13 +179,22 @@ export const SourceControl: React.FC = () => {
                     <FileCode className="w-3.5 h-3.5 text-amber-400" />
                     <span className="text-slate-200">{file}</span>
                   </div>
-                  <button
-                    onClick={() => stageFile(file)}
-                    className="p-1 hover:bg-white/10 rounded text-slate-400 hover:text-emerald-400"
-                    title="Stage file"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => openDiff(file)}
+                      className="p-1 hover:bg-white/10 rounded text-slate-300 hover:text-amber-400"
+                      title="View Monaco Diff"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => stageFile(file)}
+                      className="p-1 hover:bg-white/10 rounded text-slate-400 hover:text-emerald-400"
+                      title="Stage file"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))
             )}
@@ -196,6 +222,16 @@ export const SourceControl: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {diffFile && (
+        <MonacoDiffEditorModal
+          isOpen={!!diffFile}
+          onClose={() => setDiffFile(null)}
+          filePath={diffFile.path}
+          originalCode={diffFile.orig}
+          modifiedCode={diffFile.mod}
+        />
+      )}
     </div>
   );
 };

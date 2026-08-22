@@ -1,25 +1,21 @@
 import { create } from 'zustand';
+import { dbManager, StoredFile } from '../utils/db';
 
-export interface FileItem {
-  id: string;
-  name: string;
-  path: string;
-  type: 'file' | 'folder';
-  language?: string;
-  content?: string;
+export interface FileItem extends StoredFile {
   children?: FileItem[];
-  parentId?: string | null;
 }
 
 const defaultFiles: FileItem[] = [
   {
     id: '1',
+    projectId: 'p1',
     name: 'src',
     path: '/src',
     type: 'folder',
     children: [
       {
         id: '1-1',
+        projectId: 'p1',
         name: 'App.tsx',
         path: '/src/App.tsx',
         type: 'file',
@@ -28,6 +24,7 @@ const defaultFiles: FileItem[] = [
       },
       {
         id: '1-2',
+        projectId: 'p1',
         name: 'index.css',
         path: '/src/index.css',
         type: 'file',
@@ -36,6 +33,7 @@ const defaultFiles: FileItem[] = [
       },
       {
         id: '1-3',
+        projectId: 'p1',
         name: 'main.ts',
         path: '/src/main.ts',
         type: 'file',
@@ -46,12 +44,14 @@ const defaultFiles: FileItem[] = [
   },
   {
     id: '2',
+    projectId: 'p1',
     name: 'public',
     path: '/public',
     type: 'folder',
     children: [
       {
         id: '2-1',
+        projectId: 'p1',
         name: 'index.html',
         path: '/public/index.html',
         type: 'file',
@@ -62,6 +62,7 @@ const defaultFiles: FileItem[] = [
   },
   {
     id: '3',
+    projectId: 'p1',
     name: 'package.json',
     path: '/package.json',
     type: 'file',
@@ -70,6 +71,7 @@ const defaultFiles: FileItem[] = [
   },
   {
     id: '4',
+    projectId: 'p1',
     name: 'README.md',
     path: '/README.md',
     type: 'file',
@@ -84,7 +86,9 @@ interface WorkspaceState {
   openFileIds: string[];
   activeBranch: string;
   branches: string[];
-  activeTab: string; // 'explorer' | 'search' | 'git' | 'ai' | 'settings'
+  activeTab: string;
+  isHydrated: boolean;
+  initWorkspace: () => Promise<void>;
   setFiles: (files: FileItem[]) => void;
   openFile: (fileId: string) => void;
   closeFile: (fileId: string) => void;
@@ -104,8 +108,27 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   activeBranch: 'main',
   branches: ['main', 'feature/3d-canvas', 'fix/terminal-adapter'],
   activeTab: 'explorer',
+  isHydrated: false,
 
-  setFiles: (files) => set({ files }),
+  initWorkspace: async () => {
+    try {
+      const stored = await dbManager.getAll<FileItem>('workspace');
+      if (stored && stored.length > 0) {
+        set({ files: stored, isHydrated: true });
+      } else {
+        await dbManager.saveAll('workspace', defaultFiles);
+        set({ files: defaultFiles, isHydrated: true });
+      }
+    } catch (e) {
+      console.warn('Workspace store hydration failed:', e);
+      set({ isHydrated: true });
+    }
+  },
+
+  setFiles: (files) => {
+    set({ files });
+    dbManager.saveAll('workspace', files);
+  },
 
   openFile: (fileId) => {
     const { openFileIds } = get();
@@ -140,7 +163,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         return item;
       });
     };
-    set({ files: updateRecursive(get().files) });
+    const newFiles = updateRecursive(get().files);
+    set({ files: newFiles });
+    dbManager.saveAll('workspace', newFiles);
   },
 
   createFile: (parentId, name, isFolder) => {
@@ -159,6 +184,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
     const newItem: FileItem = {
       id: newId,
+      projectId: 'p1',
       name,
       path: parentId ? `${parentId}/${name}` : `/${name}`,
       type: isFolder ? 'folder' : 'file',
@@ -167,25 +193,27 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       children: isFolder ? [] : undefined
     };
 
+    let updatedFiles: FileItem[] = [];
+
     if (!parentId) {
-      set({ files: [...get().files, newItem] });
-      if (!isFolder) get().openFile(newId);
-      return;
+      updatedFiles = [...get().files, newItem];
+    } else {
+      const addToParent = (items: FileItem[]): FileItem[] => {
+        return items.map(item => {
+          if (item.id === parentId && item.type === 'folder') {
+            return { ...item, children: [...(item.children || []), newItem] };
+          }
+          if (item.children) {
+            return { ...item, children: addToParent(item.children) };
+          }
+          return item;
+        });
+      };
+      updatedFiles = addToParent(get().files);
     }
 
-    const addToParent = (items: FileItem[]): FileItem[] => {
-      return items.map(item => {
-        if (item.id === parentId && item.type === 'folder') {
-          return { ...item, children: [...(item.children || []), newItem] };
-        }
-        if (item.children) {
-          return { ...item, children: addToParent(item.children) };
-        }
-        return item;
-      });
-    };
-
-    set({ files: addToParent(get().files) });
+    set({ files: updatedFiles });
+    dbManager.saveAll('workspace', updatedFiles);
     if (!isFolder) get().openFile(newId);
   },
 
@@ -197,7 +225,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       }));
     };
     get().closeFile(fileId);
-    set({ files: deleteRecursive(get().files) });
+    const updatedFiles = deleteRecursive(get().files);
+    set({ files: updatedFiles });
+    dbManager.saveAll('workspace', updatedFiles);
   },
 
   setActiveBranch: (branch) => set({ activeBranch: branch }),
