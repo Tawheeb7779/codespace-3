@@ -211,6 +211,7 @@ interface ProjectState {
   createFile: (name: string, parentId?: string | null, isFolder?: boolean) => void;
   deleteFile: (fileId: string) => void;
   renameFile: (fileId: string, newName: string) => void;
+  moveFile: (fileId: string, newParentId: string) => void;
   setGithubRepo: (repo: string | null) => void;
   setGithubConnected: (connected: boolean) => void;
   setUserRole: (role: UserRole) => void;
@@ -335,6 +336,46 @@ export const useProjectStore = create<ProjectState>()(
                 [fileId]: { ...file, isUnsaved: false }
               }
             };
+          });
+
+          return { projects: updatedProjects };
+        });
+      },
+
+      moveFile: (fileId, newParentId) => {
+        if (get().currentUserRole === 'viewer') return; // RBAC Guard
+        set(state => {
+          const { activeProjectId, projects } = state;
+          if (!activeProjectId) return state;
+
+          const updatedProjects = projects.map(p => {
+            if (p.id !== activeProjectId) return p;
+            const file = p.files[fileId];
+            const newParent = p.files[newParentId];
+            if (!file || !newParent || !newParent.isFolder || file.parentId === newParentId) return p;
+
+            const oldParentId = file.parentId;
+            const newFiles = { ...p.files };
+
+            // Remove from old parent
+            if (oldParentId && newFiles[oldParentId] && newFiles[oldParentId].children) {
+              newFiles[oldParentId] = {
+                ...newFiles[oldParentId],
+                children: newFiles[oldParentId].children?.filter(id => id !== fileId)
+              };
+            }
+
+            // Add to new parent
+            newFiles[newParentId] = {
+              ...newParent,
+              children: Array.from(new Set([...(newParent.children || []), fileId]))
+            };
+
+            // Update file path & parentId
+            const newPath = `${newParent.path}/${file.name}`.replace('//', '/');
+            newFiles[fileId] = { ...file, parentId: newParentId, path: newPath };
+
+            return { ...p, files: newFiles };
           });
 
           return { projects: updatedProjects };

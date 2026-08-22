@@ -23,6 +23,29 @@ describe('useProjectStore Hardening Pass', () => {
     expect(state.projectChats[proj.id].length).toBe(1);
   });
 
+  it('moves files between folders while updating parent-child relationships and paths', () => {
+    const store = useProjectStore.getState();
+    const proj = store.createProject('Move File Test', 'Testing file move operation');
+    store.setActiveProject(proj.id);
+
+    // Create file in src
+    store.createFile('MovableFile.tsx', 'src', false);
+    // Create new folder in src
+    store.createFile('subfolder', 'src', true);
+
+    // Move file into subfolder
+    store.moveFile('MovableFile.tsx', 'subfolder');
+
+    const updatedProj = useProjectStore.getState().projects.find(p => p.id === proj.id)!;
+    const movedFile = updatedProj.files['MovableFile.tsx'];
+    const subfolder = updatedProj.files['subfolder'];
+    const srcFolder = updatedProj.files['src'];
+
+    expect(movedFile.parentId).toBe('subfolder');
+    expect(subfolder.children).toContain('MovableFile.tsx');
+    expect(srcFolder.children).not.toContain('MovableFile.tsx');
+  });
+
   it('guarantees complete isolation between Project A and Project B', () => {
     const store = useProjectStore.getState();
     const projA = store.createProject('Project A', 'First project');
