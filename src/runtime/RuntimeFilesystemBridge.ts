@@ -4,6 +4,10 @@ import { WebContainerProvider } from './WebContainerProvider';
 export class RuntimeFilesystemBridge {
   private static isMounted = false;
 
+  public static setMounted(mounted: boolean): void {
+    this.isMounted = mounted;
+  }
+
   public static async initializeProject(files: Record<string, ProjectFile>): Promise<void> {
     if (!WebContainerProvider.isSupported()) return;
     try {

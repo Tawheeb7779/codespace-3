@@ -1,15 +1,26 @@
-import { WebContainer, FileSystemTree } from '@webcontainer/api';
+import { WebContainer, FileSystemTree, WebContainerProcess } from '@webcontainer/api';
 import { ProjectFile } from '../types';
+
+export type ServerReadyListener = (url: string, port: number) => void;
 
 export class WebContainerProvider {
   private static instance: WebContainer | null = null;
   private static bootPromise: Promise<WebContainer> | null = null;
   private static serverUrl: string | null = null;
   private static serverPort: number | null = null;
-  private static onServerReadyCallback: ((url: string, port: number) => void) | null = null;
+  private static serverReadyListeners = new Set<ServerReadyListener>();
 
   public static isSupported(): boolean {
     return typeof window !== 'undefined' && 'SharedArrayBuffer' in window && window.isSecureContext;
+  }
+
+  public static unsupportedReason(): string {
+    if (typeof window === 'undefined') return 'WebContainer requires a browser environment.';
+    if (!window.isSecureContext) return 'WebContainer requires a secure context (HTTPS or localhost).';
+    if (!('SharedArrayBuffer' in window)) {
+      return 'WebContainer requires cross-origin isolation (COOP/COEP headers) so SharedArrayBuffer is available.';
+    }
+    return '';
   }
 
   public static async getInstance(): Promise<WebContainer> {
@@ -21,9 +32,7 @@ export class WebContainerProvider {
         container.on('server-ready', (port, url) => {
           this.serverPort = port;
           this.serverUrl = url;
-          if (this.onServerReadyCallback) {
-            this.onServerReadyCallback(url, port);
-          }
+          this.serverReadyListeners.forEach((listener) => listener(url, port));
         });
         this.instance = container;
         return container;
@@ -33,15 +42,24 @@ export class WebContainerProvider {
     return this.bootPromise;
   }
 
-  public static setOnServerReady(cb: (url: string, port: number) => void) {
-    this.onServerReadyCallback = cb;
-    if (this.serverUrl && this.serverPort) {
-      cb(this.serverUrl, this.serverPort);
+  /** Registers a server-ready listener and returns an unsubscribe function. */
+  public static addServerReadyListener(listener: ServerReadyListener): () => void {
+    this.serverReadyListeners.add(listener);
+    if (this.serverUrl && this.serverPort !== null) {
+      listener(this.serverUrl, this.serverPort);
     }
+    return () => {
+      this.serverReadyListeners.delete(listener);
+    };
   }
 
   public static getServerUrl(): string | null {
     return this.serverUrl;
+  }
+
+  public static clearServerUrl(): void {
+    this.serverUrl = null;
+    this.serverPort = null;
   }
 
   public static convertToTree(files: Record<string, ProjectFile>): FileSystemTree {
@@ -78,7 +96,7 @@ export class WebContainerProvider {
   }
 
   public static async mountFiles(files: Record<string, ProjectFile>): Promise<void> {
-    if (!this.isSupported()) return;
+    if (!this.isSupported()) throw new Error(this.unsupportedReason());
     const container = await this.getInstance();
     const tree = this.convertToTree(files);
     await container.mount(tree);
@@ -96,12 +114,13 @@ export class WebContainerProvider {
     await container.fs.rm(path, { recursive: true });
   }
 
-  public static async spawnProcess(
+  /** Spawns a process and streams its output. Returns the process handle so callers can kill it. */
+  public static async spawn(
     command: string,
     args: string[],
     onData: (data: string) => void
-  ): Promise<number> {
-    if (!this.isSupported()) throw new Error('WebContainer not supported on this browser context.');
+  ): Promise<WebContainerProcess> {
+    if (!this.isSupported()) throw new Error(this.unsupportedReason());
     const container = await this.getInstance();
     const process = await container.spawn(command, args);
 
@@ -113,6 +132,15 @@ export class WebContainerProvider {
       })
     );
 
+    return process;
+  }
+
+  public static async spawnProcess(
+    command: string,
+    args: string[],
+    onData: (data: string) => void
+  ): Promise<number> {
+    const process = await this.spawn(command, args, onData);
     return process.exit;
   }
 }

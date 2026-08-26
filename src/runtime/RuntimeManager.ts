@@ -1,69 +1,63 @@
 import { create } from 'zustand';
 import { ProjectFile } from '../types';
-import { RuntimeLog, RuntimeStatus, PackageManifest, BuildResult } from '../types/runtime';
+import { RuntimeLog, RuntimeStatus, PreviewPhase, BuildResult } from '../types/runtime';
 import { CompilerEngine } from './CompilerEngine';
+import { PreviewRuntime } from './PreviewRuntime';
 
 interface RuntimeStoreState extends RuntimeStatus {
-  webContainerUrl: string | null;
   // Actions
-  setWebContainerUrl: (url: string | null) => void;
-  startDevServer: (files: Record<string, ProjectFile>) => void;
-  stopDevServer: () => void;
+  setPhase: (phase: PreviewPhase, error?: string | null) => void;
+  setServerUrl: (url: string | null, port?: number | null) => void;
+  startPreview: (files: Record<string, ProjectFile>) => Promise<void>;
+  stopPreview: () => Promise<void>;
   buildProject: (files: Record<string, ProjectFile>) => BuildResult;
-  installPackages: (packageJsonContent?: string) => Promise<void>;
+  installPackages: (files: Record<string, ProjectFile>) => Promise<void>;
   addLog: (type: RuntimeLog['type'], message: string) => void;
   clearLogs: () => void;
 }
 
+const RUNNING_PHASES: PreviewPhase[] = ['running'];
+
 export const useRuntimeStore = create<RuntimeStoreState>((set, get) => ({
-  isRunning: true,
+  phase: 'idle',
+  isRunning: false,
   isBuilding: false,
-  port: 5173,
-  url: 'http://localhost:5173/',
-  webContainerUrl: null,
-  logs: [
-    {
-      id: '1',
-      type: 'info',
-      message: '[Vite Runtime] Dev server initializing on port 5173...',
-      timestamp: new Date().toLocaleTimeString(),
-    },
-  ],
+  serverUrl: null,
+  serverPort: null,
+  error: null,
+  logs: [],
   errors: [],
   manifest: null,
 
-  setWebContainerUrl: (url) => set({ webContainerUrl: url }),
-
-  startDevServer: (files) => {
-    const pkgFile = Object.values(files).find((f) => f.name === 'package.json');
-    const manifest = pkgFile ? CompilerEngine.parseManifest(pkgFile.content) : null;
-
+  setPhase: (phase, error = null) =>
     set({
-      isRunning: true,
-      manifest,
-    });
+      phase,
+      error,
+      isRunning: RUNNING_PHASES.includes(phase),
+    }),
 
-    get().addLog('info', '[Vite Runtime] VITE v5.2.11 ready in 218 ms');
-    get().addLog('info', '  ➜  Local:   http://localhost:5173/');
-    get().addLog('info', '  ➜  Network: use --host to expose');
+  setServerUrl: (url, port = null) => set({ serverUrl: url, serverPort: port }),
+
+  startPreview: async (files) => {
+    const manifestFile = Object.values(files).find((f) => f.path === '/package.json');
+    set({ manifest: manifestFile ? CompilerEngine.parseManifest(manifestFile.content) : null });
+    await PreviewRuntime.start(files);
   },
 
-  stopDevServer: () => {
-    set({ isRunning: false, webContainerUrl: null });
-    get().addLog('info', '[Vite Runtime] Dev server stopped.');
+  stopPreview: async () => {
+    await PreviewRuntime.stop();
   },
 
   buildProject: (files) => {
     set({ isBuilding: true });
-    get().addLog('info', '[Vite Runtime] Running tsc && vite build...');
+    get().addLog('info', 'Compiling project with the in-browser TSX compiler...');
 
     const result = CompilerEngine.compileProject(files);
 
     if (result.success) {
-      get().addLog('stdout', `[Vite Runtime] Build completed successfully in ${result.durationMs}ms!`);
-      get().addLog('stdout', `[Vite Runtime] Bundled ${Object.keys(result.outputFiles).length} modules into dist/`);
+      get().addLog('stdout', `Compiled ${Object.keys(result.outputFiles).length} modules in ${result.durationMs}ms.`);
     } else {
-      get().addLog('error', `[Vite Runtime] Build failed with ${result.errors.length} errors.`);
+      get().addLog('error', `Compile failed with ${result.errors.length} errors.`);
       result.errors.forEach((err) => get().addLog('error', err));
     }
 
@@ -71,26 +65,10 @@ export const useRuntimeStore = create<RuntimeStoreState>((set, get) => ({
     return result;
   },
 
-  installPackages: async (packageJsonContent) => {
-    get().addLog('info', 'npm install');
-    get().addLog('info', 'Resolving dependencies from package.json...');
-
-    let manifest: PackageManifest = {};
-    if (packageJsonContent) {
-      manifest = CompilerEngine.parseManifest(packageJsonContent);
-    }
-
-    const deps = { ...(manifest.dependencies || {}), ...(manifest.devDependencies || {}) };
-    const depCount = Object.keys(deps).length;
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        get().addLog('stdout', `added ${depCount || 12} packages, and audited ${depCount + 10 || 22} packages in 1.2s`);
-        get().addLog('stdout', 'found 0 vulnerabilities');
-        set({ manifest });
-        resolve();
-      }, 800);
-    });
+  installPackages: async (files) => {
+    const manifestFile = Object.values(files).find((f) => f.path === '/package.json');
+    await PreviewRuntime.install(files);
+    set({ manifest: manifestFile ? CompilerEngine.parseManifest(manifestFile.content) : null });
   },
 
   addLog: (type, message) => {
@@ -100,8 +78,18 @@ export const useRuntimeStore = create<RuntimeStoreState>((set, get) => ({
       message,
       timestamp: new Date().toLocaleTimeString(),
     };
-    set((state) => ({ logs: [...state.logs, log] }));
+    set((state) => ({
+      logs: [...state.logs, log].slice(-500),
+      errors: type === 'error' ? [...state.errors, message].slice(-50) : state.errors,
+    }));
   },
 
   clearLogs: () => set({ logs: [], errors: [] }),
 }));
+
+// Bridge the runtime lifecycle events into the store.
+PreviewRuntime.setEvents({
+  onPhase: (phase, error) => useRuntimeStore.getState().setPhase(phase, error),
+  onLog: (type, message) => useRuntimeStore.getState().addLog(type, message),
+  onServerUrl: (url, port) => useRuntimeStore.getState().setServerUrl(url, port),
+});

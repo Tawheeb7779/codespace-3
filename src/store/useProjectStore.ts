@@ -12,8 +12,19 @@ export interface ExtendedProject extends Project {
   visibility?: 'public' | 'private';
 }
 
+export const DEFAULT_ROOT_FILE_IDS = [
+  'index.html',
+  'package.json',
+  'tsconfig.json',
+  'tsconfig.node.json',
+  'vite.config.ts',
+  'src',
+  'public',
+  'README.md',
+];
+
 export const DEFAULT_REACT_THREE_FILES: Record<string, ProjectFile> = {
-  'root': { id: 'root', name: 'root', path: '/', content: '', language: '', isFolder: true, parentId: null, children: ['src', 'public', 'package.json', 'README.md'] },
+  'root': { id: 'root', name: 'root', path: '/', content: '', language: '', isFolder: true, parentId: null, children: [...DEFAULT_ROOT_FILE_IDS] },
   'src': { id: 'src', name: 'src', path: '/src', content: '', language: '', isFolder: true, parentId: 'root', children: ['App.tsx', 'main.tsx', 'index.css', 'components'] },
   'public': { id: 'public', name: 'public', path: '/public', content: '', language: '', isFolder: true, parentId: 'root', children: ['assets'] },
   'assets': { id: 'assets', name: 'assets', path: '/public/assets', content: '', language: '', isFolder: true, parentId: 'public', children: [] },
@@ -25,7 +36,7 @@ export const DEFAULT_REACT_THREE_FILES: Record<string, ProjectFile> = {
     language: 'typescript',
     isFolder: false,
     parentId: 'src',
-    content: `import React, { useState } from 'react';
+    content: `import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Scene3D } from './components/Scene3D';
@@ -35,9 +46,9 @@ export default function App() {
   const [activeNode, setActiveNode] = useState<string | null>('root');
 
   return (
-    <div className="w-full h-screen bg-slate-950 text-white flex flex-col">
+    <div className="app-shell">
       <Header title="CodeSpace 3D Canvas" />
-      <div className="flex-1 relative">
+      <div className="canvas-wrap">
         <Canvas camera={{ position: [0, 2, 5], fov: 60 }}>
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} />
@@ -45,6 +56,9 @@ export default function App() {
           <OrbitControls enablePan={true} enableZoom={true} />
         </Canvas>
       </div>
+      <footer className="app-footer">
+        Selected node: <strong>{activeNode ?? 'none'}</strong>
+      </footer>
     </div>
   );
 }`
@@ -59,6 +73,7 @@ export default function App() {
     content: `import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -73,11 +88,64 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     language: 'css',
     isFolder: false,
     parentId: 'src',
-    content: `body {
+    content: `:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: #0e131d;
   color: #dee2f1;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.canvas-wrap {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: #131a27;
+  border-bottom: 1px solid #1f2937;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #4d8eff;
+}
+
+.app-header span {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.app-footer {
+  padding: 8px 24px;
+  font-size: 12px;
+  background: #131a27;
+  border-top: 1px solid #1f2937;
+  color: #94a3b8;
 }`
   },
   'Scene3D.tsx': {
@@ -87,7 +155,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     language: 'typescript',
     isFolder: false,
     parentId: 'components',
-    content: `import React, { useRef } from 'react';
+    content: `import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -99,7 +167,7 @@ interface Scene3DProps {
 export function Scene3D({ activeNode, onSelectNode }: Scene3DProps) {
   const meshRef = useRef<THREE.Mesh>(null);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (meshRef.current) {
       meshRef.current.rotation.x += delta * 0.5;
       meshRef.current.rotation.y += delta * 0.8;
@@ -125,13 +193,11 @@ export function Scene3D({ activeNode, onSelectNode }: Scene3DProps) {
     language: 'typescript',
     isFolder: false,
     parentId: 'components',
-    content: `import React from 'react';
-
-export function Header({ title }: { title: string }) {
+    content: `export function Header({ title }: { title: string }) {
   return (
-    <header className="px-6 py-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
-      <h1 className="text-lg font-semibold tracking-wide text-blue-400">{title}</h1>
-      <span className="text-xs text-slate-400 font-mono">v1.0.0</span>
+    <header className="app-header">
+      <h1>{title}</h1>
+      <span>v1.0.0</span>
     </header>
   );
 }`
@@ -145,12 +211,116 @@ export function Header({ title }: { title: string }) {
     parentId: 'root',
     content: `{
   "name": "codespace-3d-demo",
+  "private": true,
   "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
   "dependencies": {
-    "react": "^18.3.1",
-    "three": "^0.164.1",
-    "@react-three/fiber": "^8.16.6"
+    "@react-three/drei": "9.105.6",
+    "@react-three/fiber": "8.16.6",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "three": "0.164.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "@types/three": "0.164.0",
+    "@vitejs/plugin-react": "4.3.1",
+    "typescript": "5.4.5",
+    "vite": "5.2.11"
   }
+}`
+  },
+  'index.html': {
+    id: 'index.html',
+    name: 'index.html',
+    path: '/index.html',
+    language: 'html',
+    isFolder: false,
+    parentId: 'root',
+    content: `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CodeSpace 3D Canvas</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>`
+  },
+  'vite.config.ts': {
+    id: 'vite.config.ts',
+    name: 'vite.config.ts',
+    path: '/vite.config.ts',
+    language: 'typescript',
+    isFolder: false,
+    parentId: 'root',
+    content: `import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    host: true,
+    port: 5173,
+    strictPort: true,
+  },
+});`
+  },
+  'tsconfig.json': {
+    id: 'tsconfig.json',
+    name: 'tsconfig.json',
+    path: '/tsconfig.json',
+    language: 'json',
+    isFolder: false,
+    parentId: 'root',
+    content: `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}`
+  },
+  'tsconfig.node.json': {
+    id: 'tsconfig.node.json',
+    name: 'tsconfig.node.json',
+    path: '/tsconfig.node.json',
+    language: 'json',
+    isFolder: false,
+    parentId: 'root',
+    content: `{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true
+  },
+  "include": ["vite.config.ts"]
 }`
   },
   'README.md': {
@@ -162,9 +332,54 @@ export function Header({ title }: { title: string }) {
     parentId: 'root',
     content: `# CodeSpace 3D Workspace
 
-Welcome to **CodeSpace 3D**, a real browser-based 3D Web IDE.
+A Vite + React + TypeScript + React Three Fiber starter that runs inside the
+CodeSpace 3D WebContainer runtime.
+
+\`\`\`bash
+npm install
+npm run dev
+\`\`\`
 `
   }
+};
+
+const SCAFFOLD_FILE_IDS = ['index.html', 'vite.config.ts', 'tsconfig.json', 'tsconfig.node.json'];
+
+/**
+ * Adds the Vite scaffolding (index.html, vite config, tsconfigs, package.json scripts)
+ * to projects persisted before the template became a runnable Vite project.
+ * User-authored source files are left untouched.
+ */
+const upgradeProjectToViteScaffold = (project: ExtendedProject): ExtendedProject => {
+  const files: Record<string, ProjectFile> = { ...project.files };
+  const rootFileIds = [...(project.rootFileIds || [])];
+  let changed = false;
+
+  SCAFFOLD_FILE_IDS.forEach(id => {
+    if (files[id]) return;
+    files[id] = JSON.parse(JSON.stringify(DEFAULT_REACT_THREE_FILES[id]));
+    if (!rootFileIds.includes(id)) rootFileIds.push(id);
+    changed = true;
+  });
+
+  const pkg = files['package.json'];
+  if (!pkg || !pkg.content.includes('"scripts"')) {
+    files['package.json'] = JSON.parse(JSON.stringify(DEFAULT_REACT_THREE_FILES['package.json']));
+    if (!rootFileIds.includes('package.json')) rootFileIds.push('package.json');
+    changed = true;
+  }
+
+  if (!changed) return project;
+
+  const root = files['root'];
+  if (root) {
+    files['root'] = {
+      ...root,
+      children: Array.from(new Set([...(root.children || []), ...rootFileIds])),
+    };
+  }
+
+  return { ...project, files, rootFileIds };
 };
 
 const DEFAULT_PROJECTS: ExtendedProject[] = [
@@ -176,7 +391,7 @@ const DEFAULT_PROJECTS: ExtendedProject[] = [
     template: 'react-three',
     branch: 'main',
     files: DEFAULT_REACT_THREE_FILES,
-    rootFileIds: ['src', 'public', 'package.json', 'README.md'],
+    rootFileIds: [...DEFAULT_ROOT_FILE_IDS],
     userId: 'guest-local',
     visibility: 'public',
   }
@@ -280,7 +495,7 @@ export const useProjectStore = create<ProjectState>()(
           template,
           branch: 'main',
           files: JSON.parse(JSON.stringify(DEFAULT_REACT_THREE_FILES)),
-          rootFileIds: ['src', 'public', 'package.json', 'README.md'],
+          rootFileIds: [...DEFAULT_ROOT_FILE_IDS],
           userId: currentUser?.id || 'guest-local',
           visibility: 'private',
         };
@@ -575,6 +790,15 @@ export const useProjectStore = create<ProjectState>()(
     }),
     {
       name: 'codespace-3d-projects',
+      version: 2,
+      migrate: (persistedState, version) => {
+        const state = persistedState as Partial<ProjectState> | undefined;
+        if (!state || version >= 2) return state as ProjectState;
+        return {
+          ...state,
+          projects: (state.projects || []).map(upgradeProjectToViteScaffold),
+        } as ProjectState;
+      },
     }
   )
 );

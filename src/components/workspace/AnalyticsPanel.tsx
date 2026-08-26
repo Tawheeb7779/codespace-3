@@ -14,7 +14,7 @@ import { useRuntimeStore } from '../../runtime/RuntimeManager';
 
 export const AnalyticsPanel: React.FC = () => {
   const { render3DQuality } = usePreferenceStore();
-  const { isRunning, webContainerUrl } = useRuntimeStore();
+  const { phase, serverUrl } = useRuntimeStore();
   const [fps, setFps] = useState<number>(60);
   const [memoryMb, setMemoryMb] = useState<string>('Unavailable');
 
@@ -89,15 +89,15 @@ export const AnalyticsPanel: React.FC = () => {
           <span className="font-medium text-slate-200 flex items-center gap-2">
             <TerminalIcon className="w-4 h-4 text-secondary" /> WebContainer Runtime Engine
           </span>
-          <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${isRunning ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-surface-high text-outline'}`}>
-            {isRunning ? 'Dev Server Active' : 'Idle / Standby'}
+          <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${phase === 'running' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-surface-high text-outline'}`}>
+            {phase}
           </span>
         </div>
         <div className="space-y-1.5 text-[11px]">
           <div className="flex justify-between text-slate-300">
             <span>Dev Server Endpoint:</span>
             <span className="font-mono text-emerald-400 truncate max-w-[140px]">
-              {webContainerUrl ? webContainerUrl : 'Not Spawning'}
+              {serverUrl ? serverUrl : 'No server running'}
             </span>
           </div>
           <div className="flex justify-between text-slate-300">

@@ -13,7 +13,7 @@ export const Terminal: React.FC = () => {
   const currentPathRef = useRef<string>('/src');
 
   const { activeProjectId, createFile, deleteFile, gitStatus } = useProjectStore();
-  const { installPackages, buildProject, startDevServer, setWebContainerUrl } = useRuntimeStore();
+  const { setServerUrl, setPhase, addLog } = useRuntimeStore();
 
   useEffect(() => {
     if (!terminalRef.current) return;
@@ -161,7 +161,9 @@ export const Terminal: React.FC = () => {
           break;
 
         case 'node':
-          if (WebContainerProvider.isSupported() && currentProject) {
+          if (!WebContainerProvider.isSupported()) {
+            term.writeln(`\r\n\x1b[31m${WebContainerProvider.unsupportedReason()}\x1b[0m`);
+          } else if (currentProject) {
             term.writeln(`\r\n\x1b[31m[WebContainer Process]\x1b[0m Spawning node ${args.join(' ')}...`);
             await RuntimeFilesystemBridge.initializeProject(currentProject.files);
 
@@ -178,49 +180,18 @@ export const Terminal: React.FC = () => {
               const msg = e instanceof Error ? e.message : String(e);
               term.writeln(`\r\n\x1b[31m[WebContainer Process Error]\x1b[0m ${msg}`);
             }
-          } else {
-            if (args.length === 0 || args[0] === '-v' || args[0] === '--version') {
-              term.writeln('\r\n\x1b[33m[In-Browser Fallback Engine]\x1b[0m Node.js v22.0.0 (Browser Isolated JS Shell)');
-            } else if (args[0] === '-e' && args[1]) {
-              try {
-                // Safe evaluation of expression in isolated scope
-                const res = new Function(`return ${args[1]}`)();
-                term.writeln(`\r\n${res}`);
-              } catch (e: unknown) {
-                const msg = e instanceof Error ? e.message : String(e);
-                term.writeln(`\r\n\x1b[31mEval Error: ${msg}\x1b[0m`);
-              }
-            } else if (currentProject) {
-              const target = Object.values(currentProject.files).find(f => f.name === args[0]);
-              if (target && !target.isFolder) {
-                term.writeln(`\r\n\x1b[33m[In-Browser JS Evaluation]\x1b[0m Executing ${args[0]}:`);
-                try {
-                  const logs: string[] = [];
-                  const customConsole = { log: (...a: unknown[]) => logs.push(a.join(' ')) };
-                  new Function('console', target.content)(customConsole);
-                  term.writeln(logs.join('\r\n') || 'Program completed with no stdout.');
-                } catch (e: unknown) {
-                  const msg = e instanceof Error ? e.message : String(e);
-                  term.writeln(`\r\n\x1b[31mExecution Error: ${msg}\x1b[0m`);
-                }
-              } else {
-                term.writeln(`\r\n\x1b[31mnode: internal/modules/cjs/loader.js: Cannot find module '${args[0]}'\x1b[0m`);
-              }
-            }
           }
           break;
 
         case 'npm':
-          if (WebContainerProvider.isSupported() && currentProject) {
+          if (!WebContainerProvider.isSupported()) {
+            term.writeln(`\r\n\x1b[31m${WebContainerProvider.unsupportedReason()}\x1b[0m`);
+          } else if (currentProject) {
             term.writeln(`\r\n\x1b[31m[WebContainer Process]\x1b[0m Spawning npm ${args.join(' ')}...`);
-            await RuntimeFilesystemBridge.initializeProject(currentProject.files);
-
-            WebContainerProvider.setOnServerReady((url) => {
-              setWebContainerUrl(url);
-              term.writeln(`\x1b[32m[WebContainer Server Ready]\x1b[0m ${url}`);
-            });
 
             try {
+              await RuntimeFilesystemBridge.initializeProject(currentProject.files);
+
               const exitCode = await WebContainerProvider.spawnProcess(
                 'npm',
                 args,
@@ -231,27 +202,8 @@ export const Terminal: React.FC = () => {
               term.writeln(`\r\n\x1b[32m[Process Exited]\x1b[0m Code: ${exitCode}`);
             } catch (e: unknown) {
               const msg = e instanceof Error ? e.message : String(e);
-              term.writeln(`\r\n\x1b[31m[WebContainer Fallback]\x1b[0m ${msg}`);
-              if (args[0] === 'install') {
-                const pkg = currentProject.files['package.json'];
-                await installPackages(pkg?.content);
-              } else if (args.join(' ') === 'run dev') {
-                startDevServer(currentProject.files);
-              } else if (args.join(' ') === 'run build') {
-                buildProject(currentProject.files);
-              }
-            }
-          } else {
-            if (args[0] === 'install') {
-              term.writeln('\r\n\x1b[33m[In-Browser Package Resolver]\x1b[0m Resolving manifest dependencies...');
-              const pkg = currentProject?.files['package.json'];
-              await installPackages(pkg?.content);
-            } else if (args.join(' ') === 'run dev') {
-              term.writeln('\r\n\x1b[31m[In-Browser Vite Compiler]\x1b[0m Dev server started on port 5173.');
-              if (currentProject) startDevServer(currentProject.files);
-            } else if (args.join(' ') === 'run build') {
-              term.writeln('\r\n\x1b[31m[In-Browser TSX Compiler]\x1b[0m Building bundle...');
-              if (currentProject) buildProject(currentProject.files);
+              term.writeln(`\r\n\x1b[31m[WebContainer Process Error]\x1b[0m ${msg}`);
+              addLog('error', `npm ${args.join(' ')}: ${msg}`);
             }
           }
           break;
@@ -297,15 +249,23 @@ export const Terminal: React.FC = () => {
       }
     });
 
+    // A dev server started from the terminal is a real server: report it to the runtime store.
+    const disposeServerReady = WebContainerProvider.addServerReadyListener((url, port) => {
+      setServerUrl(url, port);
+      setPhase('running');
+      term.writeln(`\r\n\x1b[32m[WebContainer Server Ready]\x1b[0m ${url}`);
+    });
+
     const handleResize = () => fitAddon.fit();
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      disposeServerReady();
       disposeData.dispose();
       term.dispose();
     };
-  }, [activeProjectId, createFile, deleteFile, gitStatus, installPackages, buildProject, startDevServer, setWebContainerUrl]);
+  }, [activeProjectId, createFile, deleteFile, gitStatus, addLog, setServerUrl, setPhase]);
 
   return <div ref={terminalRef} className="w-full h-full min-h-[140px] overflow-hidden bg-[#050507]" />;
 };

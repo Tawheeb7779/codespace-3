@@ -20,11 +20,27 @@ export interface BuildResult {
   durationMs: number;
 }
 
+/**
+ * Lifecycle of the real WebContainer dev server backing the live preview.
+ * `unsupported` means the browser context cannot run WebContainer at all.
+ */
+export type PreviewPhase =
+  | 'idle'
+  | 'unsupported'
+  | 'booting'
+  | 'installing'
+  | 'starting'
+  | 'running'
+  | 'stopped'
+  | 'failed';
+
 export interface RuntimeStatus {
+  phase: PreviewPhase;
   isRunning: boolean;
   isBuilding: boolean;
-  port: number;
-  url: string;
+  serverUrl: string | null;
+  serverPort: number | null;
+  error: string | null;
   logs: RuntimeLog[];
   errors: string[];
   manifest: PackageManifest | null;

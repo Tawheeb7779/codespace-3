@@ -152,7 +152,9 @@ export const PackageManagerPanel: React.FC = () => {
       const updatedJson = JSON.stringify(parsed, null, 2);
       updateFileContent('package.json', updatedJson);
 
-      await installPackages(updatedJson);
+      const refreshed = useProjectStore.getState().projects.find((p) => p.id === activeProjectId);
+      if (!refreshed) throw new Error('No active project.');
+      await installPackages(refreshed.files);
       addLog('stdout', `+ ${pkgName}@${version} added to ${targetGroup}`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
