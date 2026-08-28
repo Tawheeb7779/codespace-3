@@ -65,7 +65,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
             <p className="text-[11px] text-outline font-mono truncate">@{profile?.username || 'user'}</p>
             <div className="flex items-center gap-2 pt-1">
               <span className="px-1.5 py-0.5 rounded text-[10px] bg-primary-container/30 text-primary border border-primary/30 font-mono uppercase font-semibold">
-                {profile?.plan || 'PRO'} PLAN
+                {(profile?.plan || 'free').toUpperCase()} PLAN
               </span>
               <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono uppercase font-semibold">
                 {profile?.role || 'USER'}

@@ -1,48 +1,56 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useAuthStore } from './useAuthStore';
 
-describe('useAuthStore', () => {
+// Supabase is not configured under test, so the store runs in local-profile mode.
+describe('useAuthStore (local profile mode)', () => {
   beforeEach(() => {
     useAuthStore.setState({
       user: null,
       profile: null,
       isAuthenticated: false,
+      authMode: 'local',
       isLoading: false,
       error: null,
     });
   });
 
-  it('initializes in unauthenticated state by default', () => {
+  it('starts unauthenticated', () => {
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(false);
     expect(state.user).toBeNull();
     expect(state.profile).toBeNull();
   });
 
-  it('simulates local signup and sets user profile state', async () => {
-    const store = useAuthStore.getState();
-    const ok = await store.signUp('test@codespace3d.dev', 'secret123', 'test_user');
+  it('creates a local profile on signup', async () => {
+    const ok = await useAuthStore.getState().signUp('test@codespace3d.dev', 'secret12345', 'test_user');
     expect(ok).toBe(true);
 
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(true);
+    expect(state.authMode).toBe('local');
     expect(state.user?.email).toBe('test@codespace3d.dev');
     expect(state.profile?.username).toBe('test_user');
   });
 
-  it('simulates local signin', async () => {
-    const store = useAuthStore.getState();
-    const ok = await store.signIn('user@codespace3d.dev', 'pass123');
-    expect(ok).toBe(true);
-
-    const state = useAuthStore.getState();
-    expect(state.isAuthenticated).toBe(true);
-    expect(state.user?.email).toBe('user@codespace3d.dev');
+  it('never grants a paid plan or admin role to a local profile', async () => {
+    await useAuthStore.getState().signUp('test@codespace3d.dev', 'secret12345', 'test_user');
+    const profile = useAuthStore.getState().profile;
+    expect(profile?.plan).toBe('free');
+    expect(profile?.role).toBe('user');
   });
 
-  it('handles signout cleanly', async () => {
-    const store = useAuthStore.getState();
-    await store.signIn('user@codespace3d.dev', 'pass123');
+  it('rejects a malformed email and a short password', async () => {
+    expect(await useAuthStore.getState().signUp('not-an-email', 'secret12345', 'u')).toBe(false);
+    expect(useAuthStore.getState().error).toMatch(/valid email/i);
+
+    expect(await useAuthStore.getState().signUp('a@b.dev', 'short', 'u')).toBe(false);
+    expect(useAuthStore.getState().error).toMatch(/8 characters/i);
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  });
+
+  it('signs in and out', async () => {
+    expect(await useAuthStore.getState().signIn('user@codespace3d.dev', 'pass12345')).toBe(true);
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
 
     await useAuthStore.getState().signOut();
@@ -50,11 +58,32 @@ describe('useAuthStore', () => {
     expect(useAuthStore.getState().user).toBeNull();
   });
 
-  it('updates user profile information', async () => {
-    const store = useAuthStore.getState();
-    await store.signUp('dev@codespace3d.dev', 'pass123', 'dev_user');
-
+  it('updates editable profile fields', async () => {
+    await useAuthStore.getState().signUp('dev@codespace3d.dev', 'password123', 'dev_user');
     await useAuthStore.getState().updateProfile({ displayName: 'Senior Engineer' });
     expect(useAuthStore.getState().profile?.displayName).toBe('Senior Engineer');
+  });
+
+  it('ignores client attempts to change plan, role or id', async () => {
+    await useAuthStore.getState().signUp('dev@codespace3d.dev', 'password123', 'dev_user');
+    const originalId = useAuthStore.getState().profile?.id;
+
+    await useAuthStore.getState().updateProfile({
+      plan: 'enterprise',
+      role: 'admin',
+      id: 'someone-else',
+      displayName: 'Renamed',
+    });
+
+    const profile = useAuthStore.getState().profile;
+    expect(profile?.plan).toBe('free');
+    expect(profile?.role).toBe('user');
+    expect(profile?.id).toBe(originalId);
+    expect(profile?.displayName).toBe('Renamed');
+  });
+
+  it('reports that password recovery needs a backend', async () => {
+    expect(await useAuthStore.getState().recoverPassword('user@codespace3d.dev')).toBe(false);
+    expect(useAuthStore.getState().error).toMatch(/Supabase/i);
   });
 });

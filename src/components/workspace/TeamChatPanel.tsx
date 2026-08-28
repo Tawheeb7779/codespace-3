@@ -11,15 +11,15 @@ import { ChatMessage } from '../../types/stitch';
 import { useProjectStore } from '../../store/useProjectStore';
 
 export const TeamChatPanel: React.FC = () => {
-  const { activeProjectId, projectChats, setChatForProject, createFile, updateFileContent } = useProjectStore();
+  const { activeProjectId, projectChats, setChatForProject, createFile, updateFileContent, saveFile } =
+    useProjectStore();
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [inputText, setInputText] = useState('');
   const [activeChannel, setActiveChannel] = useState<'general' | 'dev-3d' | 'ai-nexus'>('general');
 
   const currentProjectId = activeProjectId || 'demo-3d-app';
-  const messages = projectChats[currentProjectId] || [
-    { id: '1', sender: 'Nexus AI [Offline Agent]', text: '3D Spatial Graph nodes compiled. 12 file nodes mounted to workspace.', timestamp: '10:14 AM', isAi: true }
-  ];
+  const messages = projectChats[currentProjectId] || [];
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,20 +36,6 @@ export const TeamChatPanel: React.FC = () => {
     setChatForProject(currentProjectId, updated);
     setInputText('');
 
-    // Trigger AI response if in AI channel or tagged
-    if (activeChannel === 'ai-nexus' || inputText.toLowerCase().includes('@ai')) {
-      setTimeout(() => {
-        const aiMsg: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          sender: 'Nexus AI [Offline Fallback Agent]',
-          text: 'Context analyzed. Click below to generate a new R3F Spatial Shader mesh component directly on the workspace filesystem.',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isAi: true,
-        };
-        const withAi = [...updated, aiMsg];
-        setChatForProject(currentProjectId, withAi);
-      }, 800);
-    }
   };
 
   const handleAiAction = () => {
@@ -64,21 +50,48 @@ export function ChannelShaderMesh() {
     </mesh>
   );
 }`;
-    createFile(fileName, 'src', false);
-    updateFileContent(fileName, content);
+    const result = createFile(fileName, '/src', false);
+    if (!result.ok || !result.id) {
+      setActionError(result.error || 'Unable to create the component file.');
+      return;
+    }
+    setActionError(null);
+    updateFileContent(result.id, content);
+    saveFile(result.id);
   };
 
   return (
     <div className="h-full flex flex-col bg-surface-low text-xs select-none border-r border-outline-variant/15 p-3 space-y-3">
+      {actionError && (
+        <div className="px-2 py-1.5 rounded bg-red-500/10 border border-red-500/30 text-red-300 text-[11px]">
+          {actionError}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
         <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-primary" /> TEAM CHANNELS
         </span>
-        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30 text-[10px]">
-          3 Online
+        <span
+          className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30 text-[10px]"
+          title="Notes are stored with this project on this device only"
+        >
+          Local notes
         </span>
       </div>
+
+      <p className="text-[10px] text-outline leading-relaxed">
+        These notes are saved with the project on this device. There is no server, so nothing is shared with
+        other people.
+      </p>
+
+      <button
+        onClick={handleAiAction}
+        className="py-1 px-2.5 bg-secondary/20 hover:bg-secondary/30 text-secondary rounded text-[10px] font-medium flex items-center justify-center gap-1 border border-secondary/30 transition-colors"
+        title="Writes a new React Three Fiber component file into /src"
+      >
+        <Sparkles className="w-3 h-3" /> Scaffold an R3F mesh component in /src
+      </button>
 
       {/* Channel Switcher */}
       <div className="flex bg-surface-container p-0.5 rounded-lg border border-outline-variant/15 text-[11px]">
@@ -122,14 +135,7 @@ export function ChannelShaderMesh() {
             <p className="text-slate-300 text-xs leading-relaxed bg-surface-container p-2.5 rounded-lg border border-outline-variant/10">
               {m.text}
             </p>
-            {m.isAi && (
-              <button
-                onClick={handleAiAction}
-                className="mt-1 py-1 px-2.5 bg-secondary/20 hover:bg-secondary/30 text-secondary rounded text-[10px] font-medium flex items-center justify-center gap-1 border border-secondary/30 transition-colors"
-              >
-                <Sparkles className="w-3 h-3" /> Generate R3F Channel Mesh to Workspace File
-              </button>
-            )}
+
           </div>
         ))}
       </div>
