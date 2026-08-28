@@ -1,11 +1,17 @@
 import React, { useRef, useState, useMemo, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
-import { OrbitControls, Text, Html } from '@react-three/drei';
+import { OrbitControls, Html } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
 import { Box, Layers, RefreshCw, Eye, Sliders } from 'lucide-react';
+
+/** Above this node count, labels only appear on hover or selection. */
+const MAX_ALWAYS_ON_LABELS = 40;
+
+/** Hard cap on rendered nodes so a large imported repository cannot stall WebGL. */
+const MAX_RENDERED_NODES = 300;
 
 interface Node3DData {
   id: string;
@@ -23,9 +29,19 @@ interface NodeMeshProps {
   onFocus: (position: [number, number, number]) => void;
   isLowQuality: boolean;
   shaderPreset: 'standard' | 'hologram' | 'neon';
+  /** Labels are hidden on large graphs; hover and selection still show them. */
+  showLabel: boolean;
 }
 
-const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, isLowQuality, shaderPreset }) => {
+const NodeMesh: React.FC<NodeMeshProps> = ({
+  node,
+  isActive,
+  onSelect,
+  onFocus,
+  isLowQuality,
+  shaderPreset,
+  showLabel,
+}) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const lastTapRef = useRef<number>(0);
@@ -83,20 +99,29 @@ const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, 
         />
       </mesh>
 
-      <Text
-        position={[0, 0.7, 0]}
-        fontSize={0.25}
-        color={isActive ? '#adc6ff' : '#ffffff'}
-        anchorX="center"
-        anchorY="middle"
-      >
-        {node.name}
-      </Text>
+      {/*
+        Labels are DOM overlays rather than drei's <Text>. Troika, which backs
+        <Text>, fetches font data from a CDN at runtime - that request is blocked
+        by the Cross-Origin-Embedder-Policy the workspace needs for WebContainer,
+        so the labels would silently fail to appear.
+      */}
+      {(showLabel || hovered || isActive) && (
+        <Html position={[0, 0.75, 0]} center pointerEvents="none" zIndexRange={[10, 0]}>
+          <div
+            className={`px-1 rounded text-[10px] font-mono whitespace-nowrap pointer-events-none ${
+              isActive ? 'text-[#adc6ff] font-semibold' : 'text-white/90'
+            }`}
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+          >
+            {node.name}
+          </div>
+        </Html>
+      )}
 
       {hovered && (
-        <Html position={[0, 1.1, 0]} center pointerEvents="none">
+        <Html position={[0, 1.15, 0]} center pointerEvents="none" zIndexRange={[20, 10]}>
           <div className="bg-slate-900/90 backdrop-blur border border-primary/40 px-2.5 py-1 rounded shadow-xl text-[10px] text-white font-mono whitespace-nowrap">
-            {node.isFolder ? 'Folder Node' : 'Source File'} • Double Tap to Focus
+            {node.isFolder ? 'Folder' : 'File'} - double tap to focus
           </div>
         </Html>
       )}
@@ -320,9 +345,14 @@ export const Spatial3DWorkspace: React.FC = () => {
   }, [treeSignature]);
 
   const filteredNodes = useMemo(
-    () => nodes.filter((n) => n.name.toLowerCase().includes(searchFilter.toLowerCase())),
+    () =>
+      nodes
+        .filter((n) => n.name.toLowerCase().includes(searchFilter.toLowerCase()))
+        .slice(0, MAX_RENDERED_NODES),
     [nodes, searchFilter]
   );
+
+  const hiddenNodeCount = Math.max(0, nodes.length - filteredNodes.length);
 
   return (
     <WebGLBoundary>
@@ -337,8 +367,12 @@ export const Spatial3DWorkspace: React.FC = () => {
               onChange={(e) => setSearchFilter(e.target.value)}
               className="bg-surface-container text-xs text-white px-2.5 py-1 rounded border border-outline-variant/20 focus:outline-none focus:border-primary w-36"
             />
-            <span className="text-[10px] text-outline font-mono flex items-center gap-1">
+            <span
+              className="text-[10px] text-outline font-mono flex items-center gap-1"
+              title={hiddenNodeCount > 0 ? `${hiddenNodeCount} more node(s) not shown` : undefined}
+            >
               <Layers className="w-3 h-3 text-primary" /> {filteredNodes.length}
+              {hiddenNodeCount > 0 && <span className="text-amber-400">+{hiddenNodeCount}</span>}
             </span>
           </div>
 
@@ -397,6 +431,7 @@ export const Spatial3DWorkspace: React.FC = () => {
               onFocus={setTargetFocus}
               isLowQuality={render3DQuality === 'low'}
               shaderPreset={shaderPreset}
+              showLabel={filteredNodes.length <= MAX_ALWAYS_ON_LABELS}
             />
           ))}
 

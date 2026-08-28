@@ -75,7 +75,7 @@ export default function Workspace() {
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setIsCommandPaletteOpen(true);
+        setIsCommandPaletteOpen((open) => !open);
       }
     };
     window.addEventListener('keydown', onKeyDown);

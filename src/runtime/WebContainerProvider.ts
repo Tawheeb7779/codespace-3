@@ -17,6 +17,13 @@ export interface RunningProcess {
 }
 
 /**
+ * Booting fetches the runtime from an external host. Without a bound, an
+ * unreachable host leaves the terminal sitting on "Booting..." forever, so the
+ * boot is raced against this timeout and fails with an explanation instead.
+ */
+const BOOT_TIMEOUT_MS = 30_000;
+
+/**
  * Single owner of the WebContainer instance.
  *
  * WebContainer allows exactly one booted instance per page, so booting is
@@ -71,7 +78,25 @@ export class WebContainerProvider {
       this.bootPromise = (async () => {
         // Loaded lazily so browsers without cross-origin isolation never pay for it.
         const { WebContainer } = await import('@webcontainer/api');
-        const container = await WebContainer.boot();
+
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const timeout = new Promise<never>((_resolve, reject) => {
+          timer = setTimeout(
+            () =>
+              reject(
+                new Error(
+                  `The WebContainer runtime did not start within ${BOOT_TIMEOUT_MS / 1000}s. ` +
+                    'Booting downloads the runtime from an external host, so this usually means the ' +
+                    'network blocked it. The editor and file system keep working without it.'
+                )
+              ),
+            BOOT_TIMEOUT_MS
+          );
+        });
+
+        const container = await Promise.race([WebContainer.boot(), timeout]).finally(() => {
+          if (timer) clearTimeout(timer);
+        });
         container.on('server-ready', (port, url) => {
           this.serverPort = port;
           this.serverUrl = url;

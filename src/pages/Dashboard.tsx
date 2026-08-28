@@ -30,7 +30,7 @@ export default function Dashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
-  const [newProjectTemplate, setNewProjectTemplate] = useState<'react-three' | 'vanilla'>('react-three');
+  const [newProjectTemplate, setNewProjectTemplate] = useState<'react-three' | 'vanilla' | 'node'>('react-three');
   const [searchTerm, setSearchTerm] = useState('');
 
   // GitHub import state. The token is session-only and never persisted.
@@ -530,11 +530,12 @@ export default function Dashboard() {
                 <label className="block text-xs font-medium text-slate-300 mb-1">Template</label>
                 <select
                   value={newProjectTemplate}
-                  onChange={(e) => setNewProjectTemplate(e.target.value as 'react-three' | 'vanilla')}
+                  onChange={(e) => setNewProjectTemplate(e.target.value as 'react-three' | 'vanilla' | 'node')}
                   className="w-full px-3.5 py-2 bg-surface-container border border-outline-variant/20 rounded-lg text-sm text-white focus:outline-none focus:border-primary-container"
                 >
-                  <option value="react-three">React + Three.js / React Three Fiber Spatial Starter</option>
-                  <option value="vanilla">Vanilla Web IDE Template</option>
+                  <option value="react-three">React + Three.js (Vite dev server)</option>
+                  <option value="vanilla">Vanilla HTML/CSS/JS (static preview)</option>
+                  <option value="node">Node HTTP server</option>
                 </select>
               </div>
 

@@ -4,6 +4,12 @@ import { ROOT_ID, joinPath, normalizePath, parentPath } from '../lib/paths';
 interface ShellIO {
   write: (text: string) => void;
   writeln: (text: string) => void;
+  /**
+   * Called when the user runs a command that needs a real process. Return true
+   * if the command was taken over (e.g. by starting the WebContainer shell);
+   * returning false or omitting the handler makes the shell refuse it.
+   */
+  onProcessCommand?: (command: string) => boolean;
 }
 
 const CSI = String.fromCharCode(27) + '[';
@@ -55,8 +61,7 @@ export class LocalShell {
   public printBanner(reason: string): void {
     this.unsupportedReason = reason;
     this.io.writeln(`${CYAN}CodeSpace 3D local shell${RESET}`);
-    this.io.writeln(`${YELLOW}Process execution is unavailable in this browser context.${RESET}`);
-    this.io.writeln(`${YELLOW}Reason: ${reason}${RESET}`);
+    this.io.writeln(`${YELLOW}${reason}${RESET}`);
     this.io.writeln('File commands operate on the real project tree. Type "help" for the list.');
     this.prompt();
   }
@@ -184,7 +189,11 @@ export class LocalShell {
         this.io.writeln('  echo <text>         print text');
         this.io.writeln('  clear               clear the screen');
         this.io.writeln('');
-        this.io.writeln(`${YELLOW}npm, node, git and other processes are NOT available here.${RESET}`);
+        this.io.writeln(
+          this.io.onProcessCommand
+            ? `${CYAN}Running npm, node or git starts the WebContainer shell, where they execute for real.${RESET}`
+            : `${YELLOW}npm, node, git and other processes are NOT available here.${RESET}`
+        );
         break;
 
       case 'clear':
@@ -300,6 +309,10 @@ export class LocalShell {
 
       default:
         if (PROCESS_COMMANDS.has(cmd)) {
+          if (this.io.onProcessCommand?.(input)) {
+            this.io.writeln(`${CYAN}Starting the WebContainer shell to run: ${input}${RESET}`);
+            return;
+          }
           this.io.writeln(
             `${YELLOW}${cmd}: not executed. This shell cannot run processes.${RESET}`
           );
