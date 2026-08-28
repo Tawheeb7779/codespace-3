@@ -30,7 +30,7 @@ export const GitSourceControlPanel: React.FC = () => {
     githubRepo,
     setGithubConnected,
     setGithubRepo,
-    createProject
+    importProject
   } = useProjectStore();
 
   const [commitMessage, setCommitMessage] = useState('');
@@ -59,6 +59,27 @@ export const GitSourceControlPanel: React.FC = () => {
     }
   }, [sessionToken, githubConnected]);
 
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [githubLogin, setGithubLogin] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  /** Confirms the token really works before showing the session as active. */
+  const handleVerifyToken = async () => {
+    setIsVerifying(true);
+    setAuthError(null);
+    const verification = await GitHubPushService.verifyToken(sessionToken);
+    setIsVerifying(false);
+
+    if (!verification.ok) {
+      setGithubLogin(null);
+      setGithubConnected(false);
+      setAuthError(verification.error || 'Token verification failed.');
+      return;
+    }
+    setGithubLogin(verification.login || null);
+    setGithubConnected(true);
+  };
+
   const handleCommit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!commitMessage.trim()) return;
@@ -71,32 +92,32 @@ export const GitSourceControlPanel: React.FC = () => {
     if (!selectedRepoFullName || !sessionToken) return;
 
     setIsImporting(true);
-    setImportStatusMsg('Fetching repository files from GitHub REST API...');
+    setImportStatusMsg('Reading repository tree from the GitHub REST API...');
 
     const res = await GitHubImportService.importRepository(
-      sessionToken,
       selectedRepoFullName,
-      gitBranch || 'main'
+      sessionToken,
+      (progress) => setImportStatusMsg(`Downloading ${progress.loaded}/${progress.total}: ${progress.path}`)
     );
 
     setIsImporting(false);
 
-    if (res.success && res.files) {
-      const repoName = selectedRepoFullName.split('/')[1] || selectedRepoFullName;
-      const newProj = createProject(repoName, `Imported from ${selectedRepoFullName}`, 'react-three');
-
-      useProjectStore.setState((state) => ({
-        projects: state.projects.map((p) =>
-          p.id === newProj.id ? { ...p, files: res.files!, rootFileIds: res.rootFileIds || [] } : p
-        ),
-      }));
-
-      setGithubRepo(selectedRepoFullName);
-      setImportStatusMsg(`Imported ${Object.keys(res.files).length} files successfully.`);
-      setTimeout(() => setImportStatusMsg(null), 4000);
-    } else {
-      setImportStatusMsg(`Import Error: ${res.error}`);
+    if (!res.success || !res.repository) {
+      setImportStatusMsg(`Import error: ${res.error}`);
+      return;
     }
+
+    const { owner, repo, branch, files, fileCount, skipped, truncated } = res.repository;
+    importProject(repo, `Imported from ${owner}/${repo}@${branch}`, files, {
+      githubRepo: `${owner}/${repo}`,
+      branch,
+    });
+    setGithubRepo(`${owner}/${repo}`);
+    setImportStatusMsg(
+      `Imported ${fileCount} files from ${owner}/${repo}@${branch}` +
+        (skipped.length ? ` (${skipped.length} skipped: binary, oversized or over the import limit)` : '') +
+        (truncated ? '. GitHub truncated the tree, so some files were not listed.' : '')
+    );
   };
 
   const handlePush = async () => {
@@ -115,6 +136,12 @@ export const GitSourceControlPanel: React.FC = () => {
       });
       return;
     }
+
+    const confirmed = window.confirm(
+      `Push the entire workspace to ${githubRepo}@${gitBranch || 'main'}?\n\n` +
+        'Files that exist on the remote branch but not in this workspace will be deleted by the commit.'
+    );
+    if (!confirmed) return;
 
     setIsPushing(true);
     setPushResult(null);
@@ -174,16 +201,32 @@ export const GitSourceControlPanel: React.FC = () => {
 
         <div className="space-y-1 pt-1">
           <label className="block text-[10px] text-zinc-400">GitHub Personal Token (Session Memory Only)</label>
-          <input
-            type="password"
-            placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-            value={sessionToken}
-            onChange={(e) => {
-              setSessionToken(e.target.value);
-              if (e.target.value) setGithubConnected(true);
-            }}
-            className="w-full px-2.5 py-1.5 bg-[#121215] border border-white/10 rounded-lg text-[11px] text-white focus:outline-none focus:border-[#ef233c]/50 font-mono"
-          />
+          <div className="flex gap-1.5">
+            <input
+              type="password"
+              autoComplete="off"
+              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+              value={sessionToken}
+              onChange={(e) => {
+                setSessionToken(e.target.value);
+                setGithubConnected(false);
+                setGithubLogin(null);
+              }}
+              className="flex-1 px-2.5 py-1.5 bg-[#121215] border border-white/10 rounded-lg text-[11px] text-white focus:outline-none focus:border-[#ef233c]/50 font-mono"
+            />
+            <button
+              type="button"
+              onClick={handleVerifyToken}
+              disabled={!sessionToken.trim() || isVerifying}
+              className="px-2.5 py-1.5 bg-[#ef233c] text-white rounded-lg text-[11px] font-semibold disabled:opacity-40 hover:bg-[#d90429] transition-colors"
+            >
+              {isVerifying ? 'Checking...' : 'Verify'}
+            </button>
+          </div>
+          {githubLogin && (
+            <p className="text-[10px] text-emerald-300 font-mono">Authenticated as @{githubLogin}</p>
+          )}
+          {authError && <p className="text-[10px] text-[#ef233c]">{authError}</p>}
         </div>
       </div>
 

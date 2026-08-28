@@ -1,5 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { Project, ProjectFile } from '../types';
+import { buildFileMap } from '../store/projectTemplates';
+import { normalizePath } from '../lib/paths';
 import { ExtendedProject } from '../store/useProjectStore';
 
 export interface CloudSyncResult {
@@ -41,7 +43,7 @@ export class CloudSyncService {
 
       // 2. Upsert Files
       const fileRecords = Object.values(project.files).map((f) => ({
-        id: `${project.id}:${f.id}`,
+        id: `${project.id}:${f.path}`,
         project_id: project.id,
         name: f.name,
         path: f.path,
@@ -88,26 +90,17 @@ export class CloudSyncService {
           .select('*')
           .eq('project_id', p.id);
 
-        const files: Record<string, ProjectFile> = {};
-        const rootFileIds: string[] = [];
-
-        if (filesData) {
-          filesData.forEach((f) => {
-            const rawFileId = f.id.includes(':') ? f.id.split(':')[1] : f.id;
-            files[rawFileId] = {
-              id: rawFileId,
-              name: f.name,
-              path: f.path,
-              content: f.content,
-              language: f.language,
-              isFolder: f.is_folder,
-              parentId: f.parent_id,
-            };
-            if (f.parent_id === 'root' || (!f.parent_id && f.name !== 'root')) {
-              rootFileIds.push(rawFileId);
-            }
-          });
-        }
+        // Rebuild the path-keyed tree: rows carry the absolute path, and
+        // buildFileMap re-creates the parent links and folder children.
+        const files: Record<string, ProjectFile> = buildFileMap(
+          (filesData || [])
+            .filter((f) => f.path && f.path !== '/')
+            .map((f) =>
+              f.is_folder
+                ? { path: normalizePath(f.path), isFolder: true }
+                : { path: normalizePath(f.path), content: f.content ?? '' }
+            )
+        );
 
         projects.push({
           id: p.id,
@@ -117,7 +110,6 @@ export class CloudSyncService {
           template: p.template as Project['template'],
           branch: p.branch || 'main',
           files,
-          rootFileIds,
           userId: p.user_id,
           visibility: p.visibility as 'public' | 'private',
         });

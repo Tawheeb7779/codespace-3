@@ -165,8 +165,8 @@ export const SecurityBackupModal: React.FC<SecurityBackupModalProps> = ({ isOpen
         )
       }));
 
-      // 2. Synchronize Runtime Filesystem Bridge
-      RuntimeFilesystemBridge.initializeProject(snap.files);
+      // 2. Synchronize the runtime filesystem with the restored tree.
+      RuntimeFilesystemBridge.initializeProject(currentProject.id, snap.files, true);
 
       setSuccessMsg(`Project files restored successfully from Snapshot ${snap.id}`);
     } catch (err: any) {
@@ -193,11 +193,20 @@ export const SecurityBackupModal: React.FC<SecurityBackupModalProps> = ({ isOpen
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    setTimeout(() => {
-      RuntimeFilesystemBridge.initializeProject(currentProject.files);
-      setIsSyncing(false);
-      setSuccessMsg('Force Manual Sync: Local state synchronized with WebContainer & IndexedDB');
-    }, 600);
+    // Re-mount the workspace into the runtime and report the real outcome.
+    void RuntimeFilesystemBridge.initializeProject(currentProject.id, currentProject.files, true)
+      .then(() => RuntimeFilesystemBridge.flush())
+      .then(() => {
+        setIsSyncing(false);
+        const failure = RuntimeFilesystemBridge.getLastError();
+        if (!RuntimeFilesystemBridge.isActive()) {
+          setSuccessMsg('Workspace state saved locally. The runtime is not booted, so nothing was mounted.');
+        } else if (failure) {
+          setErrorMsg(`Runtime sync reported: ${failure}`);
+        } else {
+          setSuccessMsg('Workspace synchronized with the WebContainer filesystem.');
+        }
+      });
   };
 
   return (

@@ -20,9 +20,12 @@ import {
   CloudUpload,
   HelpCircle,
   ShieldCheck,
-  ShieldAlert
+  ShieldAlert,
+  Loader2,
+  Save
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
+import { useRuntimeStore, isRuntimeBusy } from '../../runtime/RuntimeManager';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { UserProfileModal } from '../account/UserProfileModal';
@@ -34,7 +37,7 @@ interface TopBarProps {
   previewDevice: 'desktop' | 'tablet' | 'mobile';
   setPreviewDevice: (device: 'desktop' | 'tablet' | 'mobile') => void;
   isRunActive: boolean;
-  setIsRunActive: (run: boolean) => void;
+  onToggleRun: () => void;
   onRefreshPreview: () => void;
   toggleAiAssistant: () => void;
   isAiOpen: boolean;
@@ -53,7 +56,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   previewDevice,
   setPreviewDevice,
   isRunActive,
-  setIsRunActive,
+  onToggleRun,
   onRefreshPreview,
   toggleAiAssistant,
   isAiOpen,
@@ -66,7 +69,13 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenCommandPalette,
 }) => {
   const navigate = useNavigate();
-  const { projects, activeProjectId, gitBranch, gitStatus } = useProjectStore();
+  const projects = useProjectStore((s) => s.projects);
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const gitBranch = useProjectStore((s) => s.gitBranch);
+  const gitStatus = useProjectStore((s) => s.gitStatus);
+  const saveAllFiles = useProjectStore((s) => s.saveAllFiles);
+  const runtimePhase = useRuntimeStore((s) => s.phase);
+  const runtimeBusy = isRuntimeBusy(runtimePhase);
   const { enable3DWorkspace, setEnable3DWorkspace } = usePreferenceStore();
   const { isAuthenticated, profile } = useAuthStore();
 
@@ -172,15 +181,30 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           <div className="flex items-center gap-1.5 pl-2 border-l border-white/10">
             <button
-              onClick={() => setIsRunActive(!isRunActive)}
+              onClick={onToggleRun}
+              title={`Runtime: ${runtimePhase}`}
               className={`px-3 py-1 rounded-xl font-semibold text-[11px] flex items-center gap-1.5 transition-all ${
                 isRunActive
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                   : 'bg-[#ef233c] text-white shadow-red-glow-sm hover:bg-[#d90429]'
               }`}
             >
-              {isRunActive ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-              <span>{isRunActive ? 'Stop' : 'Run Preview'}</span>
+              {runtimeBusy ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : isRunActive ? (
+                <Square className="w-3 h-3 fill-current" />
+              ) : (
+                <Play className="w-3 h-3 fill-current" />
+              )}
+              <span>{runtimeBusy ? runtimePhase : isRunActive ? 'Stop' : 'Run Preview'}</span>
+            </button>
+
+            <button
+              onClick={saveAllFiles}
+              className="p-1.5 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
+              title="Save all files (Ctrl/Cmd+S)"
+            >
+              <Save className="w-3.5 h-3.5" />
             </button>
 
             <button

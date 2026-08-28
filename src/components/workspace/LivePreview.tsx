@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Monitor,
   Tablet,
@@ -15,6 +15,7 @@ import {
 import { useProjectStore } from '../../store/useProjectStore';
 import { useRuntimeStore } from '../../runtime/RuntimeManager';
 import { PreviewPhase } from '../../types/runtime';
+import { buildStaticPreview } from '../../runtime/staticPreview';
 
 interface LivePreviewProps {
   previewDevice: 'desktop' | 'tablet' | 'mobile';
@@ -27,9 +28,11 @@ const PHASE_LABEL: Record<PreviewPhase, string> = {
   idle: 'Idle',
   unsupported: 'WebContainer Unsupported',
   booting: 'Booting WebContainer',
+  mounting: 'Mounting Project Files',
   installing: 'Installing Dependencies',
   starting: 'Starting Dev Server',
   running: 'Dev Server Running',
+  stopping: 'Stopping',
   stopped: 'Stopped',
   failed: 'Failed',
 };
@@ -38,14 +41,16 @@ const PHASE_BADGE: Record<PreviewPhase, string> = {
   idle: 'bg-surface-high text-outline border-outline-variant/30',
   unsupported: 'bg-red-500/20 text-red-300 border-red-500/30',
   booting: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  mounting: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   installing: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   starting: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   running: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+  stopping: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   stopped: 'bg-surface-high text-outline border-outline-variant/30',
   failed: 'bg-red-500/20 text-red-300 border-red-500/30',
 };
 
-const BUSY_PHASES: PreviewPhase[] = ['booting', 'installing', 'starting'];
+const BUSY_PHASES: PreviewPhase[] = ['booting', 'mounting', 'installing', 'starting'];
 
 export const LivePreview: React.FC<LivePreviewProps> = ({
   previewDevice,
@@ -53,18 +58,31 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
   isRunActive,
   setIsRunActive,
 }) => {
-  const { projects, activeProjectId } = useProjectStore();
-  const { phase, serverUrl, error, logs, startPreview, stopPreview } = useRuntimeStore();
+  const projects = useProjectStore((s) => s.projects);
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const phase = useRuntimeStore((s) => s.phase);
+  const serverUrl = useRuntimeStore((s) => s.serverUrl);
+  const error = useRuntimeStore((s) => s.error);
+  const logs = useRuntimeStore((s) => s.logs);
+  const startPreview = useRuntimeStore((s) => s.startPreview);
+  const stopPreview = useRuntimeStore((s) => s.stopPreview);
+  const refreshSupport = useRuntimeStore((s) => s.refreshSupport);
+  const addLog = useRuntimeStore((s) => s.addLog);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [key, setKey] = useState(0);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   const currentProject = projects.find((p) => p.id === activeProjectId);
 
   const start = useCallback(() => {
     if (!currentProject) return;
-    void startPreview(currentProject.files);
+    void startPreview(currentProject.id, currentProject.files);
   }, [currentProject, startPreview]);
+
+  useEffect(() => {
+    refreshSupport();
+  }, [refreshSupport]);
 
   useEffect(() => {
     if (isRunActive) {
@@ -73,6 +91,28 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
       void stopPreview();
     }
   }, [isRunActive, start, stopPreview]);
+
+  /**
+   * Static fallback for projects that ship an index.html needing no build step.
+   * It is labelled as such so it is never mistaken for the real dev server, and
+   * returns null for anything that needs a bundler.
+   */
+  const staticPreview = useMemo(
+    () => (currentProject ? buildStaticPreview(currentProject.files) : null),
+    [currentProject]
+  );
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent): void => {
+      if (event.data && event.data.type === 'CODESPACE_PREVIEW_ERROR') {
+        const message = String(event.data.error);
+        setPreviewError(message);
+        addLog('error', `[Preview] ${message}`);
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [addLog]);
 
   const getViewportDimensions = () => {
     switch (previewDevice) {
@@ -163,6 +203,18 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
 
       {/* Main Preview Container */}
       <div className="flex-1 overflow-auto flex items-center justify-center p-4 relative bg-[#090d16]">
+        {previewError && (
+          <div className="absolute top-3 left-4 right-4 z-20 p-2.5 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span className="truncate">Preview error: {previewError}</span>
+            </div>
+            <button onClick={() => setPreviewError(null)} className="shrink-0 hover:text-white">
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {phase === 'running' && serverUrl ? (
           <div className={`transition-all duration-300 overflow-hidden bg-slate-950 ${getViewportDimensions()}`}>
             <iframe
@@ -172,6 +224,22 @@ export const LivePreview: React.FC<LivePreviewProps> = ({
               className="w-full h-full border-0"
               allow="cross-origin-isolated"
             />
+          </div>
+        ) : staticPreview && !isBusy ? (
+          <div className="w-full h-full flex flex-col items-center gap-2">
+            <div className={`transition-all duration-300 overflow-hidden bg-white ${getViewportDimensions()}`}>
+              <iframe
+                key={key}
+                title="Static HTML Preview"
+                srcDoc={staticPreview.html}
+                sandbox="allow-scripts allow-modals allow-forms"
+                className="w-full h-full border-0"
+              />
+            </div>
+            <p className="text-[10px] text-amber-300/90 bg-amber-500/10 border border-amber-500/25 rounded px-2 py-1">
+              Static preview of {staticPreview.entryPath} - no bundler or npm packages. Start the dev server for the
+              full application.
+            </p>
           </div>
         ) : (
           <div className="w-full max-w-xl flex flex-col items-center justify-center gap-4 text-center">

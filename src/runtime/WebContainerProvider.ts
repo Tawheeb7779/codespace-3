@@ -1,55 +1,135 @@
-import { WebContainer, FileSystemTree, WebContainerProcess } from '@webcontainer/api';
+import type { WebContainer, WebContainerProcess, FileSystemTree } from '@webcontainer/api';
 import { ProjectFile } from '../types';
+import { parentPath, toRuntimePath } from '../lib/paths';
 
 export type ServerReadyListener = (url: string, port: number) => void;
 
+export interface SpawnOptions {
+  cwd?: string;
+  env?: Record<string, string>;
+  terminal?: { cols: number; rows: number };
+  onData?: (chunk: string) => void;
+}
+
+export interface RunningProcess {
+  process: WebContainerProcess;
+  exit: Promise<number>;
+}
+
+/**
+ * Booting fetches the runtime from an external host. Without a bound, an
+ * unreachable host leaves the UI sitting on "Booting..." forever, so the boot is
+ * raced against this timeout and fails with an explanation instead.
+ */
+const BOOT_TIMEOUT_MS = 30_000;
+
+/**
+ * Single owner of the WebContainer instance.
+ *
+ * WebContainer allows exactly one booted instance per page, so booting is
+ * single-flight and every consumer shares the same handle.
+ */
 export class WebContainerProvider {
   private static instance: WebContainer | null = null;
   private static bootPromise: Promise<WebContainer> | null = null;
   private static serverUrl: string | null = null;
   private static serverPort: number | null = null;
-  private static serverReadyListeners = new Set<ServerReadyListener>();
+  private static listeners = new Set<ServerReadyListener>();
+  private static processes = new Set<WebContainerProcess>();
+  private static mountedProjectId: string | null = null;
+  private static mountPromise: Promise<void> | null = null;
 
+  /** WebContainer needs cross-origin isolation for SharedArrayBuffer. */
   public static isSupported(): boolean {
-    return typeof window !== 'undefined' && 'SharedArrayBuffer' in window && window.isSecureContext;
+    if (typeof window === 'undefined') return false;
+    return (
+      typeof SharedArrayBuffer !== 'undefined' &&
+      window.isSecureContext === true &&
+      window.crossOriginIsolated === true
+    );
   }
 
+  /**
+   * Human-readable explanation of why the runtime cannot start, or an empty
+   * string when it can. Empty (not null) so callers can render it directly.
+   */
   public static unsupportedReason(): string {
     if (typeof window === 'undefined') return 'WebContainer requires a browser environment.';
-    if (!window.isSecureContext) return 'WebContainer requires a secure context (HTTPS or localhost).';
-    if (!('SharedArrayBuffer' in window)) {
-      return 'WebContainer requires cross-origin isolation (COOP/COEP headers) so SharedArrayBuffer is available.';
+    if (!window.isSecureContext) {
+      return 'WebContainer requires a secure context (HTTPS or localhost).';
+    }
+    if (typeof SharedArrayBuffer === 'undefined' || !window.crossOriginIsolated) {
+      return 'WebContainer requires cross-origin isolation so SharedArrayBuffer is available. The server must send Cross-Origin-Opener-Policy: same-origin and Cross-Origin-Embedder-Policy: require-corp.';
     }
     return '';
   }
 
+  public static isBooted(): boolean {
+    return this.instance !== null;
+  }
+
+  public static getMountedProjectId(): string | null {
+    return this.mountedProjectId;
+  }
+
   public static async getInstance(): Promise<WebContainer> {
+    const reason = this.unsupportedReason();
+    if (reason) throw new Error(reason);
     if (this.instance) return this.instance;
 
     if (!this.bootPromise) {
       this.bootPromise = (async () => {
-        const container = await WebContainer.boot();
+        // Loaded lazily so browsers without cross-origin isolation never pay for it.
+        const { WebContainer } = await import('@webcontainer/api');
+
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const timeout = new Promise<never>((_resolve, reject) => {
+          timer = setTimeout(
+            () =>
+              reject(
+                new Error(
+                  `The WebContainer runtime did not start within ${BOOT_TIMEOUT_MS / 1000}s. ` +
+                    'Booting downloads the runtime from an external host, so this usually means the ' +
+                    'network blocked it. The editor and file system keep working without it.'
+                )
+              ),
+            BOOT_TIMEOUT_MS
+          );
+        });
+
+        const container = await Promise.race([WebContainer.boot(), timeout]).finally(() => {
+          if (timer) clearTimeout(timer);
+        });
+
         container.on('server-ready', (port, url) => {
           this.serverPort = port;
           this.serverUrl = url;
-          this.serverReadyListeners.forEach((listener) => listener(url, port));
+          this.listeners.forEach((listener) => listener(url, port));
         });
+        container.on('error', (error) => {
+          console.error('[WebContainer]', error.message);
+        });
+
         this.instance = container;
         return container;
-      })();
+      })().catch((error) => {
+        // Allow a later retry instead of caching a rejected boot forever.
+        this.bootPromise = null;
+        throw error;
+      });
     }
 
     return this.bootPromise;
   }
 
-  /** Registers a server-ready listener and returns an unsubscribe function. */
+  /** Registers a server-ready listener; fires immediately if a server is already up. */
   public static addServerReadyListener(listener: ServerReadyListener): () => void {
-    this.serverReadyListeners.add(listener);
-    if (this.serverUrl && this.serverPort !== null) {
+    this.listeners.add(listener);
+    if (this.serverUrl !== null && this.serverPort !== null) {
       listener(this.serverUrl, this.serverPort);
     }
     return () => {
-      this.serverReadyListeners.delete(listener);
+      this.listeners.delete(listener);
     };
   }
 
@@ -57,90 +137,192 @@ export class WebContainerProvider {
     return this.serverUrl;
   }
 
+  /** Forgets the current dev-server URL (after the process that served it exits). */
   public static clearServerUrl(): void {
     this.serverUrl = null;
     this.serverPort = null;
   }
 
+  /** Converts the flat, path-keyed project map into a WebContainer mount tree. */
   public static convertToTree(files: Record<string, ProjectFile>): FileSystemTree {
     const tree: FileSystemTree = {};
 
-    Object.values(files).forEach((file) => {
-      if (file.id === 'root') return;
-
-      const pathParts = file.path.split('/').filter(Boolean);
-      let currentDir = tree;
-
-      for (let i = 0; i < pathParts.length; i++) {
-        const part = pathParts[i];
-        const isLast = i === pathParts.length - 1;
-
-        if (isLast) {
-          if (file.isFolder) {
-            if (!currentDir[part]) {
-              currentDir[part] = { directory: {} };
-            }
-          } else {
-            currentDir[part] = { file: { contents: file.content } };
-          }
-        } else {
-          if (!currentDir[part]) {
-            currentDir[part] = { directory: {} };
-          }
-          currentDir = (currentDir[part] as { directory: FileSystemTree }).directory;
+    const ensureDir = (segments: string[]): FileSystemTree => {
+      let current = tree;
+      for (const segment of segments) {
+        if (!current[segment] || !('directory' in current[segment])) {
+          current[segment] = { directory: {} };
         }
+        current = (current[segment] as { directory: FileSystemTree }).directory;
       }
-    });
+      return current;
+    };
+
+    for (const file of Object.values(files)) {
+      const runtimePath = toRuntimePath(file.path);
+      if (!runtimePath) continue;
+      const segments = runtimePath.split('/');
+      const name = segments.pop() as string;
+      const dir = ensureDir(segments);
+
+      if (file.isFolder) {
+        if (!dir[name] || !('directory' in dir[name])) dir[name] = { directory: {} };
+      } else {
+        dir[name] = { file: { contents: file.content } };
+      }
+    }
 
     return tree;
   }
 
+  /**
+   * Mounts a project. Re-mounting the same project is a no-op so switching
+   * panels or re-rendering never wipes runtime state.
+   */
+  public static async mountProject(
+    projectId: string,
+    files: Record<string, ProjectFile>,
+    force = false
+  ): Promise<void> {
+    if (!force && this.mountedProjectId === projectId) {
+      if (this.mountPromise) await this.mountPromise;
+      return;
+    }
+
+    this.mountPromise = (async () => {
+      const container = await this.getInstance();
+      await container.mount(this.convertToTree(files));
+      this.mountedProjectId = projectId;
+    })();
+
+    try {
+      await this.mountPromise;
+    } finally {
+      this.mountPromise = null;
+    }
+  }
+
+  /** Mounts files without project scoping. Prefer `mountProject`. */
   public static async mountFiles(files: Record<string, ProjectFile>): Promise<void> {
-    if (!this.isSupported()) throw new Error(this.unsupportedReason());
     const container = await this.getInstance();
-    const tree = this.convertToTree(files);
-    await container.mount(tree);
+    await container.mount(this.convertToTree(files));
+  }
+
+  /** Creates every missing parent directory for `path`. */
+  private static async ensureParentDir(container: WebContainer, path: string): Promise<void> {
+    const parent = toRuntimePath(parentPath(path));
+    if (!parent) return;
+    await container.fs.mkdir(parent, { recursive: true }).catch(() => undefined);
   }
 
   public static async writeFile(path: string, content: string): Promise<void> {
-    if (!this.isSupported()) return;
     const container = await this.getInstance();
-    await container.fs.writeFile(path, content, 'utf-8');
+    await this.ensureParentDir(container, path);
+    await container.fs.writeFile(toRuntimePath(path), content, 'utf-8');
   }
 
-  public static async deleteFile(path: string): Promise<void> {
-    if (!this.isSupported()) return;
+  public static async mkdir(path: string): Promise<void> {
     const container = await this.getInstance();
-    await container.fs.rm(path, { recursive: true });
+    await container.fs.mkdir(toRuntimePath(path), { recursive: true });
   }
 
-  /** Spawns a process and streams its output. Returns the process handle so callers can kill it. */
+  public static async remove(path: string): Promise<void> {
+    const container = await this.getInstance();
+    await container.fs.rm(toRuntimePath(path), { recursive: true, force: true });
+  }
+
+  /** True when a file or directory exists in the runtime filesystem. */
+  public static async exists(path: string): Promise<boolean> {
+    const container = await this.getInstance();
+    const runtimePath = toRuntimePath(path);
+    try {
+      await container.fs.readdir(runtimePath);
+      return true;
+    } catch {
+      try {
+        await container.fs.readFile(runtimePath);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  }
+
+  public static async readFile(path: string): Promise<string> {
+    const container = await this.getInstance();
+    return container.fs.readFile(toRuntimePath(path), 'utf-8');
+  }
+
+  /** Spawns a tracked process. Callers own the returned handle. */
   public static async spawn(
     command: string,
-    args: string[],
-    onData: (data: string) => void
-  ): Promise<WebContainerProcess> {
-    if (!this.isSupported()) throw new Error(this.unsupportedReason());
+    args: string[] = [],
+    options: SpawnOptions = {}
+  ): Promise<RunningProcess> {
     const container = await this.getInstance();
-    const process = await container.spawn(command, args);
+    const process = await container.spawn(command, args, {
+      cwd: options.cwd,
+      env: options.env,
+      terminal: options.terminal,
+    });
 
-    process.output.pipeTo(
-      new WritableStream({
-        write(chunk) {
-          onData(chunk);
-        },
-      })
-    );
+    this.processes.add(process);
 
-    return process;
+    if (options.onData) {
+      const onData = options.onData;
+      process.output.pipeTo(new WritableStream({ write: (chunk) => onData(chunk) })).catch(() => undefined);
+    }
+
+    const exit = process.exit.finally(() => {
+      this.processes.delete(process);
+    });
+
+    return { process, exit };
   }
 
+  /** Runs a command to completion and returns its exit code. */
+  public static async run(
+    command: string,
+    args: string[] = [],
+    options: SpawnOptions = {}
+  ): Promise<number> {
+    const { exit } = await this.spawn(command, args, options);
+    return exit;
+  }
+
+  /** Convenience wrapper returning only the exit code, streaming output. */
   public static async spawnProcess(
     command: string,
     args: string[],
     onData: (data: string) => void
   ): Promise<number> {
-    const process = await this.spawn(command, args, onData);
-    return process.exit;
+    return this.run(command, args, { onData });
+  }
+
+  /** Kills every process this provider started. */
+  public static killAll(): void {
+    for (const process of this.processes) {
+      try {
+        process.kill();
+      } catch {
+        /* already gone */
+      }
+    }
+    this.processes.clear();
+  }
+
+  /** Tears the container down completely (used on hard reset). */
+  public static teardown(): void {
+    this.killAll();
+    try {
+      this.instance?.teardown();
+    } catch {
+      /* ignore */
+    }
+    this.instance = null;
+    this.bootPromise = null;
+    this.mountedProjectId = null;
+    this.mountPromise = null;
+    this.clearServerUrl();
   }
 }

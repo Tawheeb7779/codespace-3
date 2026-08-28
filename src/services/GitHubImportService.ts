@@ -1,5 +1,29 @@
 import { ProjectFile } from '../types';
+import { buildFileMap } from '../store/projectTemplates';
 
+export interface ImportedRepository {
+  owner: string;
+  repo: string;
+  branch: string;
+  files: Record<string, ProjectFile>;
+  fileCount: number;
+  skipped: string[];
+  truncated: boolean;
+}
+
+export interface ImportResult {
+  success: boolean;
+  repository?: ImportedRepository;
+  error?: string;
+}
+
+export interface ImportProgress {
+  loaded: number;
+  total: number;
+  path: string;
+}
+
+/** A repository as shown in the repository picker. */
 export interface GitHubRepoItem {
   id: number;
   name: string;
@@ -10,215 +34,247 @@ export interface GitHubRepoItem {
   htmlUrl: string;
 }
 
-export interface ImportRepoResult {
-  success: boolean;
-  files?: Record<string, ProjectFile>;
-  rootFileIds?: string[];
-  skippedFiles?: string[];
-  error?: string;
+const API_ROOT = 'https://api.github.com';
+
+/** Directories that never belong in an imported workspace. */
+const SKIPPED_PREFIXES = ['node_modules/', 'dist/', 'build/', '.git/', '.next/', 'vendor/', 'coverage/'];
+
+/** Extensions treated as binary; content would not survive a text import. */
+const BINARY_EXTENSIONS = new Set([
+  'png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 'bmp', 'tiff', 'avif',
+  'mp3', 'wav', 'ogg', 'mp4', 'webm', 'mov', 'avi',
+  'woff', 'woff2', 'ttf', 'otf', 'eot',
+  'zip', 'gz', 'tar', 'rar', '7z', 'bz2',
+  'pdf', 'psd', 'sketch', 'fig',
+  'glb', 'gltf', 'fbx', 'obj', 'blend',
+  'wasm', 'so', 'dylib', 'dll', 'exe', 'node',
+]);
+
+const MAX_FILE_BYTES = 512 * 1024;
+const MAX_FILES = 600;
+const MAX_TOTAL_BYTES = 12 * 1024 * 1024;
+const CONCURRENCY = 8;
+
+interface TreeEntry {
+  path: string;
+  type: string;
+  sha: string;
+  size?: number;
 }
 
+function authHeaders(token?: string): Record<string, string> {
+  const headers: Record<string, string> = { Accept: 'application/vnd.github+json' };
+  if (token?.trim()) headers.Authorization = `Bearer ${token.trim()}`;
+  return headers;
+}
+
+function isBinaryPath(path: string): boolean {
+  const dot = path.lastIndexOf('.');
+  if (dot < 0) return false;
+  return BINARY_EXTENSIONS.has(path.slice(dot + 1).toLowerCase());
+}
+
+/** Decodes a base64 blob as UTF-8 text. */
+function decodeBase64(base64: string): string {
+  const binary = atob(base64.replace(/\n/g, ''));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+async function readError(response: Response): Promise<string> {
+  if (response.status === 404) {
+    return 'Repository or branch not found. Private repositories need a token with repo access.';
+  }
+  if (response.status === 403) {
+    return 'GitHub rate limit or permission denied. Add a personal access token to raise the limit.';
+  }
+  const body = await response.json().catch(() => null);
+  return body?.message ? `${body.message} (HTTP ${response.status})` : `GitHub API error ${response.status}`;
+}
+
+/** Runs `worker` over `items` with bounded concurrency. */
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let cursor = 0;
+
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor;
+      cursor += 1;
+      results[index] = await worker(items[index], index);
+    }
+  });
+
+  await Promise.all(runners);
+  return results;
+}
+
+/**
+ * Imports a repository's text files into a workspace file map using the GitHub
+ * REST API. Binary blobs and oversized files are skipped and reported rather
+ * than silently dropped.
+ */
 export class GitHubImportService {
   /**
-   * Fetches the list of accessible repositories for an authenticated GitHub user.
+   * Lists repositories the authenticated user can access, for the picker UI.
+   * Returns an empty list (never throws) so the picker can degrade to manual
+   * entry when the token is missing or rate-limited.
    */
   public static async fetchRepositories(token: string): Promise<GitHubRepoItem[]> {
-    if (!token) return [];
+    if (!token?.trim()) return [];
 
     try {
       const res = await fetch('https://api.github.com/user/repos?sort=updated&per_page=100', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
+        headers: authHeaders(token),
       });
-
       if (!res.ok) return [];
 
       const data = await res.json();
       if (!Array.isArray(data)) return [];
 
-      return data.map((repo: any) => ({
-        id: repo.id,
-        name: repo.name,
-        fullName: repo.full_name,
-        isPrivate: repo.private,
-        defaultBranch: repo.default_branch || 'main',
-        description: repo.description,
-        htmlUrl: repo.html_url,
+      return data.map((repo: Record<string, unknown>) => ({
+        id: Number(repo.id),
+        name: String(repo.name),
+        fullName: String(repo.full_name),
+        isPrivate: Boolean(repo.private),
+        defaultBranch: String(repo.default_branch || 'main'),
+        description: (repo.description as string | null) ?? null,
+        htmlUrl: String(repo.html_url || ''),
       }));
     } catch {
       return [];
     }
   }
 
-  /**
-   * Fetches full repository tree and text contents using GitHub REST Git Data API.
-   * Converts the remote tree into CodeSpace 3D ProjectFile map.
-   */
+  /** Parses `owner/repo`, a GitHub URL, or `owner/repo/tree/branch`. */
+  public static parseRepoInput(input: string): { owner: string; repo: string; branch?: string } | null {
+    const trimmed = input.trim().replace(/\.git$/, '').replace(/\/+$/, '');
+    if (!trimmed) return null;
+
+    const withoutHost = trimmed
+      .replace(/^https?:\/\/(www\.)?github\.com\//i, '')
+      .replace(/^github\.com\//i, '');
+
+    const parts = withoutHost.split('/').filter(Boolean);
+    if (parts.length < 2) return null;
+
+    const [owner, repo] = parts;
+    if (!/^[\w.-]+$/.test(owner) || !/^[\w.-]+$/.test(repo)) return null;
+
+    const branch = parts[2] === 'tree' && parts[3] ? parts.slice(3).join('/') : undefined;
+    return { owner, repo, branch };
+  }
+
   public static async importRepository(
-    token: string,
-    repoFullName: string,
-    branchName: string = 'main'
-  ): Promise<ImportRepoResult> {
-    if (!token || !repoFullName) {
-      return { success: false, error: 'Missing GitHub token or repository full name.' };
+    input: string,
+    token?: string,
+    onProgress?: (progress: ImportProgress) => void
+  ): Promise<ImportResult> {
+    const parsed = this.parseRepoInput(input);
+    if (!parsed) {
+      return { success: false, error: 'Enter a repository as "owner/repo" or a github.com URL.' };
     }
 
+    const { owner, repo } = parsed;
+    const headers = authHeaders(token);
+
     try {
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/vnd.github.v3+json',
-      };
-
-      // 1. Get branch reference
-      const refRes = await fetch(
-        `https://api.github.com/repos/${repoFullName}/git/ref/heads/${branchName}`,
-        { headers }
-      );
-      if (!refRes.ok) {
-        return {
-          success: false,
-          error: `Failed to fetch branch '${branchName}' (${refRes.status}): ${refRes.statusText}`,
-        };
+      let branch = parsed.branch;
+      if (!branch) {
+        const repoRes = await fetch(`${API_ROOT}/repos/${owner}/${repo}`, { headers });
+        if (!repoRes.ok) return { success: false, error: await readError(repoRes) };
+        branch = (await repoRes.json()).default_branch || 'main';
       }
-      const refData = await refRes.json();
-      const latestCommitSha = refData.object.sha;
 
-      // 2. Get tree SHA from latest commit
-      const commitRes = await fetch(
-        `https://api.github.com/repos/${repoFullName}/git/commits/${latestCommitSha}`,
-        { headers }
-      );
-      if (!commitRes.ok) {
-        return {
-          success: false,
-          error: `Failed to fetch commit (${commitRes.status}): ${commitRes.statusText}`,
-        };
-      }
-      const commitData = await commitRes.json();
-      const treeSha = commitData.tree.sha;
-
-      // 3. Fetch full tree recursively
       const treeRes = await fetch(
-        `https://api.github.com/repos/${repoFullName}/git/trees/${treeSha}?recursive=1`,
+        `${API_ROOT}/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch as string)}?recursive=1`,
         { headers }
       );
-      if (!treeRes.ok) {
-        return {
-          success: false,
-          error: `Failed to fetch repository tree (${treeRes.status}): ${treeRes.statusText}`,
-        };
-      }
+      if (!treeRes.ok) return { success: false, error: await readError(treeRes) };
+
       const treeData = await treeRes.json();
-      if (!Array.isArray(treeData.tree)) {
-        return { success: false, error: 'Malformed repository tree returned from GitHub.' };
-      }
+      const entries: TreeEntry[] = Array.isArray(treeData.tree) ? treeData.tree : [];
+      const skipped: string[] = [];
 
-      const filesMap: Record<string, ProjectFile> = {
-        root: {
-          id: 'root',
-          name: 'root',
-          path: '/',
-          content: '',
-          language: '',
-          isFolder: true,
-          parentId: null,
-          children: [],
-        },
-      };
+      const blobs = entries.filter((entry) => {
+        if (entry.type !== 'blob') return false;
+        if (SKIPPED_PREFIXES.some((prefix) => entry.path.startsWith(prefix))) return false;
+        if (isBinaryPath(entry.path)) {
+          skipped.push(`${entry.path} (binary)`);
+          return false;
+        }
+        if ((entry.size ?? 0) > MAX_FILE_BYTES) {
+          skipped.push(`${entry.path} (larger than 512 KB)`);
+          return false;
+        }
+        return true;
+      });
 
-      const skippedFiles: string[] = [];
-
-      // 4. Parse tree nodes (folders first, then blobs)
-      for (const item of treeData.tree) {
-        if (
-          item.path.startsWith('.git/') ||
-          item.path.startsWith('node_modules/') ||
-          item.path.startsWith('dist/')
-        ) {
+      let runningBytes = 0;
+      const selected: TreeEntry[] = [];
+      for (const entry of blobs) {
+        if (selected.length >= MAX_FILES) {
+          skipped.push(`${entry.path} (file limit of ${MAX_FILES} reached)`);
           continue;
         }
-
-        const pathParts = item.path.split('/');
-        const fileName = pathParts[pathParts.length - 1];
-        const parentPath = pathParts.slice(0, -1).join('/');
-        const parentId = parentPath === '' ? 'root' : parentPath;
-
-        if (item.type === 'tree') {
-          filesMap[item.path] = {
-            id: item.path,
-            name: fileName,
-            path: `/${item.path}`,
-            content: '',
-            language: '',
-            isFolder: true,
-            parentId,
-            children: [],
-          };
-        } else if (item.type === 'blob') {
-          // Skip large binary files (> 1MB)
-          if (item.size && item.size > 1000000) {
-            skippedFiles.push(`${item.path} (Exceeds 1MB Limit)`);
-            continue;
-          }
-
-          // Fetch blob content
-          const blobRes = await fetch(item.url, { headers });
-          if (blobRes.ok) {
-            const blobData = await blobRes.json();
-            let content = '';
-            if (blobData.encoding === 'base64') {
-              try {
-                content = atob(blobData.content.replace(/\n/g, ''));
-              } catch {
-                content = '// Binary file content omitted';
-              }
-            } else {
-              content = blobData.content || '';
-            }
-
-            const ext = fileName.split('.').pop() || '';
-            let language = 'plaintext';
-            if (ext === 'tsx' || ext === 'ts') language = 'typescript';
-            else if (ext === 'css') language = 'css';
-            else if (ext === 'json') language = 'json';
-            else if (ext === 'md') language = 'markdown';
-            else if (ext === 'html') language = 'html';
-
-            filesMap[fileName] = {
-              id: fileName,
-              name: fileName,
-              path: `/${item.path}`,
-              content,
-              language,
-              isFolder: false,
-              parentId,
-            };
-          }
+        if (runningBytes + (entry.size ?? 0) > MAX_TOTAL_BYTES) {
+          skipped.push(`${entry.path} (total size limit reached)`);
+          continue;
         }
+        runningBytes += entry.size ?? 0;
+        selected.push(entry);
       }
 
-      // Link parent-child relationships
-      Object.values(filesMap).forEach((f) => {
-        if (f.parentId && filesMap[f.parentId] && filesMap[f.parentId].children) {
-          if (!filesMap[f.parentId].children!.includes(f.id)) {
-            filesMap[f.parentId].children!.push(f.id);
-          }
+      if (selected.length === 0) {
+        return { success: false, error: 'No importable text files were found in this repository.' };
+      }
+
+      let loaded = 0;
+      const contents = await mapWithConcurrency(selected, CONCURRENCY, async (entry) => {
+        const blobRes = await fetch(`${API_ROOT}/repos/${owner}/${repo}/git/blobs/${entry.sha}`, { headers });
+        loaded += 1;
+        onProgress?.({ loaded, total: selected.length, path: entry.path });
+
+        if (!blobRes.ok) {
+          skipped.push(`${entry.path} (HTTP ${blobRes.status})`);
+          return null;
+        }
+
+        const blob = await blobRes.json();
+        try {
+          const content = blob.encoding === 'base64' ? decodeBase64(blob.content) : String(blob.content ?? '');
+          return { path: `/${entry.path}`, content };
+        } catch {
+          skipped.push(`${entry.path} (could not be decoded as text)`);
+          return null;
         }
       });
 
-      const rootFileIds = filesMap['root'].children || [];
+      const usable = contents.filter(Boolean) as Array<{ path: string; content: string }>;
+      if (usable.length === 0) {
+        return { success: false, error: 'Every file failed to download. Check the token and rate limits.' };
+      }
 
       return {
         success: true,
-        files: filesMap,
-        rootFileIds,
-        skippedFiles,
+        repository: {
+          owner,
+          repo,
+          branch: branch as string,
+          files: buildFileMap(usable),
+          fileCount: usable.length,
+          skipped,
+          truncated: Boolean(treeData.truncated),
+        },
       };
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      return { success: false, error: `Repository import exception: ${msg}` };
+      const message = e instanceof Error ? e.message : String(e);
+      return { success: false, error: `Import failed: ${message}` };
     }
   }
 }

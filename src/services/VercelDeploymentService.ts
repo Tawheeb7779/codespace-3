@@ -126,23 +126,52 @@ export class VercelDeploymentService {
   public static async pollDeploymentStatus(
     deploymentId: string,
     token?: string
-  ): Promise<{ readyState: string; url?: string }> {
-    if (!deploymentId || !token) {
-      return { readyState: 'READY' };
+  ): Promise<{ readyState: string; url?: string; error?: string }> {
+    // Never report READY on a guess: a build state we cannot observe is UNKNOWN,
+    // otherwise the modal would show a deployment as live before it is.
+    if (!deploymentId) return { readyState: 'UNKNOWN', error: 'No deployment id to poll.' };
+    if (!token) {
+      return { readyState: 'UNKNOWN', error: 'No Vercel token available to read the build state.' };
     }
 
     try {
       const res = await fetch(`https://api.vercel.com/v13/deployments/${deploymentId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) return { readyState: 'READY' };
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        return {
+          readyState: 'UNKNOWN',
+          error: body?.error?.message || `Vercel API error ${res.status} while polling.`,
+        };
+      }
       const data = await res.json();
       return {
-        readyState: data.readyState || 'READY',
+        readyState: data.readyState || data.status || 'UNKNOWN',
         url: data.url ? `https://${data.url}` : undefined,
       };
-    } catch {
-      return { readyState: 'READY' };
+    } catch (e: unknown) {
+      return { readyState: 'UNKNOWN', error: e instanceof Error ? e.message : String(e) };
+    }
+  }
+
+  /** Verifies a token and returns the account username. */
+  public static async verifyToken(
+    token: string
+  ): Promise<{ ok: boolean; username?: string; error?: string }> {
+    if (!token.trim()) return { ok: false, error: 'A Vercel access token is required.' };
+    try {
+      const res = await fetch('https://api.vercel.com/v2/user', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        return { ok: false, error: body?.error?.message || `Vercel API error ${res.status}` };
+      }
+      const data = await res.json();
+      return { ok: true, username: data?.user?.username || data?.user?.email };
+    } catch (e: unknown) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
   }
 }

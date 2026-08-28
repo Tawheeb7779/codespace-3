@@ -1,271 +1,267 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
+import { Play, Loader2 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { useRuntimeStore } from '../../runtime/RuntimeManager';
 import { WebContainerProvider } from '../../runtime/WebContainerProvider';
 import { RuntimeFilesystemBridge } from '../../runtime/RuntimeFilesystemBridge';
+import { LocalShell } from '../../runtime/LocalShell';
 
+// Red Noir terminal palette.
+const THEME = {
+  background: '#050507',
+  foreground: '#e4e4e7',
+  cursor: '#ef233c',
+  selectionBackground: 'rgba(239, 35, 60, 0.35)',
+  black: '#050507',
+  red: '#ef233c',
+  green: '#50fa7b',
+  yellow: '#ffb786',
+  blue: '#ef233c',
+  magenta: '#ff79c6',
+  cyan: '#8be9fd',
+  white: '#e4e4e7',
+};
+
+/**
+ * `local` means the browser cannot run WebContainer at all. `ready` means it
+ * can, but the container has not been booted yet - booting downloads several
+ * megabytes, so it happens on demand rather than on every workspace open.
+ */
+type TerminalMode = 'ready' | 'starting' | 'webcontainer' | 'local' | 'error';
+
+const MODE_LABEL: Record<TerminalMode, string> = {
+  ready: 'Local shell - process execution not started',
+  starting: 'Starting WebContainer shell...',
+  webcontainer: 'WebContainer shell (real processes)',
+  local: 'Local shell - no process execution',
+  error: 'Shell error',
+};
+
+const MODE_TONE: Record<TerminalMode, string> = {
+  ready: 'bg-surface-high text-outline border-outline-variant/20',
+  starting: 'bg-primary/15 text-primary border-primary/30',
+  webcontainer: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  local: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  error: 'bg-primary/20 text-primary border-primary/40',
+};
+
+/**
+ * Terminal surface.
+ *
+ * When the browser supports WebContainer, xterm is attached to a real `jsh`
+ * process so every command is executed by the runtime. Otherwise it falls back
+ * to a clearly-labelled local shell that manipulates the project tree and
+ * refuses process commands rather than pretending they ran.
+ */
 export const Terminal: React.FC = () => {
-  const terminalRef = useRef<HTMLDivElement>(null);
-  const xtermRef = useRef<XTerm | null>(null);
-  const currentPathRef = useRef<string>('/src');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const startShellRef = useRef<(pendingCommand?: string) => void>(() => undefined);
 
-  const { activeProjectId, createFile, deleteFile, gitStatus } = useProjectStore();
-  const { setServerUrl, setPhase, addLog } = useRuntimeStore();
+  const [mode, setMode] = useState<TerminalMode>('ready');
+  const [statusText, setStatusText] = useState<string | null>(null);
+
+  const serverUrl = useRuntimeStore((s) => s.serverUrl);
+
+  const handleStartClick = useCallback(() => {
+    startShellRef.current();
+  }, []);
 
   useEffect(() => {
-    if (!terminalRef.current) return;
+    const host = containerRef.current;
+    if (!host) return undefined;
 
     const term = new XTerm({
-      theme: {
-        background: '#050507',
-        foreground: '#e4e4e7',
-        cursor: '#ef233c',
-        selectionBackground: 'rgba(239, 35, 60, 0.35)',
-        black: '#050507',
-        red: '#ef233c',
-        green: '#50fa7b',
-        yellow: '#ffb786',
-        blue: '#ef233c',
-        magenta: '#ff79c6',
-        cyan: '#8be9fd',
-        white: '#e4e4e7',
-      },
+      theme: THEME,
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 13,
       cursorBlink: true,
-      rows: 8,
+      convertEol: true,
+      scrollback: 5000,
     });
-
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
-    term.open(terminalRef.current);
-    fitAddon.fit();
 
-    xtermRef.current = term;
+    let disposed = false;
+    let opened = false;
+    let shellStarted = false;
+    let shellProcess: Awaited<ReturnType<typeof WebContainerProvider.spawn>> | null = null;
+    let writer: WritableStreamDefaultWriter<string> | null = null;
+    let inputHandler: { dispose: () => void } | null = null;
 
-    term.writeln('\x1b[31mCodeSpace 3D Red Noir Terminal & WASM Process Engine v1.0.0\x1b[0m');
-    term.writeln('Type \x1b[33mhelp\x1b[0m for available filesystem & process commands.\r\n');
-
-    let currentLine = '';
-
-    const prompt = () => {
-      term.write(`\r\n\x1b[31mcodespace@3d-ide\x1b[0m:\x1b[37m${currentPathRef.current}\x1b[0m$ `);
+    const safeFit = (): void => {
+      if (disposed || !opened) return;
+      try {
+        fitAddon.fit();
+      } catch {
+        /* host is not laid out yet */
+      }
     };
 
-    prompt();
+    const startWebContainerShell = async (pendingCommand?: string): Promise<void> => {
+      term.writeln('');
+      term.writeln('\x1b[36mBooting WebContainer runtime...\x1b[0m');
 
-    const handleCommand = async (cmdStr: string) => {
-      const parts = cmdStr.trim().split(' ').filter(Boolean);
-      if (parts.length === 0) {
-        prompt();
+      const project = useProjectStore.getState().getActiveProject();
+      if (!project) throw new Error('No active project to mount.');
+
+      await RuntimeFilesystemBridge.mountProject(project.id, project.files);
+      if (disposed) return;
+
+      shellProcess = await WebContainerProvider.spawn('jsh', [], {
+        terminal: { cols: term.cols, rows: term.rows },
+      });
+      if (disposed) {
+        shellProcess.process.kill();
         return;
       }
 
-      const cmd = parts[0];
-      const args = parts.slice(1);
+      void shellProcess.process.output
+        .pipeTo(new WritableStream({ write: (chunk) => term.write(chunk) }))
+        .catch(() => undefined);
 
-      const currentProject = useProjectStore.getState().projects.find(p => p.id === useProjectStore.getState().activeProjectId);
+      writer = shellProcess.process.input.getWriter();
+      inputHandler?.dispose();
+      inputHandler = term.onData((data) => {
+        void writer?.write(data);
+      });
 
-      switch (cmd) {
-        case 'help':
-          term.writeln('\r\n\x1b[1mSupported Commands:\x1b[0m');
-          term.writeln('  ls              - List files in current directory');
-          term.writeln('  cd <dir>        - Change working directory');
-          term.writeln('  pwd             - Print working directory');
-          term.writeln('  cat <file>      - View file contents');
-          term.writeln('  touch <file>    - Create a new file');
-          term.writeln('  mkdir <dir>     - Create a new directory');
-          term.writeln('  rm <file>       - Remove file');
-          term.writeln('  node <script>   - Execute Node.js process');
-          term.writeln('  npm install     - Run npm package installer');
-          term.writeln('  npm run dev     - Execute Vite development server');
-          term.writeln('  npm run build   - Run Vite/Rollup production build');
-          term.writeln('  git status      - Show git staging status');
-          term.writeln('  clear           - Clear terminal output');
-          break;
+      setMode('webcontainer');
+      setStatusText(null);
 
-        case 'clear':
-          term.clear();
-          break;
+      if (pendingCommand) void writer.write(`${pendingCommand}\n`);
 
-        case 'pwd':
-          term.writeln(`\r\n${currentPathRef.current}`);
-          break;
-
-        case 'ls':
-          if (currentProject) {
-            term.writeln('');
-            Object.values(currentProject.files).forEach(f => {
-              if (f.id === 'root') return;
-              if (f.isFolder) {
-                term.writeln(`\x1b[31m${f.name}/\x1b[0m`);
-              } else {
-                term.writeln(`  ${f.name}`);
-              }
-            });
-          }
-          break;
-
-        case 'cd':
-          if (!args[0] || args[0] === '/' || args[0] === '~') {
-            currentPathRef.current = '/';
-          } else if (args[0] === '..') {
-            currentPathRef.current = '/';
-          } else {
-            currentPathRef.current = `/${args[0].replace(/^\//, '')}`;
-          }
-          term.writeln(`\r\nChanged directory to ${currentPathRef.current}`);
-          break;
-
-        case 'cat':
-          if (!args[0]) {
-            term.writeln('\r\nUsage: cat <filename>');
-          } else if (currentProject) {
-            const targetFile = Object.values(currentProject.files).find(f => f.name === args[0]);
-            if (targetFile && !targetFile.isFolder) {
-              term.writeln(`\r\n${targetFile.content}`);
-            } else {
-              term.writeln(`\r\n\x1b[31mcat: ${args[0]}: No such file\x1b[0m`);
-            }
-          }
-          break;
-
-        case 'touch':
-          if (!args[0]) {
-            term.writeln('\r\nUsage: touch <filename>');
-          } else {
-            createFile(args[0], 'src', false);
-            term.writeln(`\r\nCreated file ${args[0]}`);
-          }
-          break;
-
-        case 'mkdir':
-          if (!args[0]) {
-            term.writeln('\r\nUsage: mkdir <foldername>');
-          } else {
-            createFile(args[0], 'root', true);
-            term.writeln(`\r\nCreated directory ${args[0]}`);
-          }
-          break;
-
-        case 'rm':
-          if (!args[0]) {
-            term.writeln('\r\nUsage: rm <file>');
-          } else {
-            deleteFile(args[0]);
-            term.writeln(`\r\nRemoved ${args[0]}`);
-          }
-          break;
-
-        case 'node':
-          if (!WebContainerProvider.isSupported()) {
-            term.writeln(`\r\n\x1b[31m${WebContainerProvider.unsupportedReason()}\x1b[0m`);
-          } else if (currentProject) {
-            term.writeln(`\r\n\x1b[31m[WebContainer Process]\x1b[0m Spawning node ${args.join(' ')}...`);
-            await RuntimeFilesystemBridge.initializeProject(currentProject.files);
-
-            try {
-              const exitCode = await WebContainerProvider.spawnProcess(
-                'node',
-                args,
-                (chunk) => {
-                  term.write(chunk.replace(/\n/g, '\r\n'));
-                }
-              );
-              term.writeln(`\r\n\x1b[32m[Node Process Exited]\x1b[0m Exit Code: ${exitCode}`);
-            } catch (e: unknown) {
-              const msg = e instanceof Error ? e.message : String(e);
-              term.writeln(`\r\n\x1b[31m[WebContainer Process Error]\x1b[0m ${msg}`);
-            }
-          }
-          break;
-
-        case 'npm':
-          if (!WebContainerProvider.isSupported()) {
-            term.writeln(`\r\n\x1b[31m${WebContainerProvider.unsupportedReason()}\x1b[0m`);
-          } else if (currentProject) {
-            term.writeln(`\r\n\x1b[31m[WebContainer Process]\x1b[0m Spawning npm ${args.join(' ')}...`);
-
-            try {
-              await RuntimeFilesystemBridge.initializeProject(currentProject.files);
-
-              const exitCode = await WebContainerProvider.spawnProcess(
-                'npm',
-                args,
-                (chunk) => {
-                  term.write(chunk.replace(/\n/g, '\r\n'));
-                }
-              );
-              term.writeln(`\r\n\x1b[32m[Process Exited]\x1b[0m Code: ${exitCode}`);
-            } catch (e: unknown) {
-              const msg = e instanceof Error ? e.message : String(e);
-              term.writeln(`\r\n\x1b[31m[WebContainer Process Error]\x1b[0m ${msg}`);
-              addLog('error', `npm ${args.join(' ')}: ${msg}`);
-            }
-          }
-          break;
-
-        case 'git':
-          if (args[0] === 'status') {
-            term.writeln('\r\nOn branch main');
-            if (gitStatus.unstaged.length === 0 && gitStatus.staged.length === 0) {
-              term.writeln('nothing to commit, working tree clean');
-            } else {
-              term.writeln('\x1b[31mUnstaged changes:\x1b[0m');
-              gitStatus.unstaged.forEach(u => term.writeln(`  modified:   ${u}`));
-              if (gitStatus.staged.length > 0) {
-                term.writeln('\x1b[32mStaged changes:\x1b[0m');
-                gitStatus.staged.forEach(s => term.writeln(`  staged:     ${s}`));
-              }
-            }
-          } else {
-            term.writeln(`\r\n\x1b[31mgit ${args.join(' ')}\x1b[0m executed.`);
-          }
-          break;
-
-        default:
-          term.writeln(`\r\n\x1b[31mCommand not found: ${cmd}\x1b[0m. Type \x1b[33mhelp\x1b[0m for command list.`);
-          break;
-      }
-
-      prompt();
+      void shellProcess.exit.then((code) => {
+        if (disposed) return;
+        term.writeln(`\r\n\x1b[33m[shell exited with code ${code}]\x1b[0m`);
+        setMode('ready');
+        shellStarted = false;
+      });
     };
 
-    const disposeData = term.onData((data) => {
-      if (data === '\r') {
-        handleCommand(currentLine);
-        currentLine = '';
-      } else if (data === '\u007F') {
-        if (currentLine.length > 0) {
-          currentLine = currentLine.slice(0, -1);
-          term.write('\b \b');
+    const attachLocalShell = (reason: string, canEscalate: boolean): void => {
+      const shell = new LocalShell({
+        write: (text) => term.write(text),
+        writeln: (text) => term.writeln(text),
+        // Typing a process command in the on-demand state starts the real shell
+        // and forwards the command, instead of refusing it.
+        onProcessCommand: canEscalate
+          ? (command) => {
+              startShellRef.current(command);
+              return true;
+            }
+          : undefined,
+      });
+      shell.printBanner(reason);
+      inputHandler?.dispose();
+      inputHandler = term.onData((data) => shell.handleInput(data));
+    };
+
+    // A dev server started by a command typed here is a real server - report it
+    // so the Live Preview and status bar pick it up.
+    const disposeServerReady = WebContainerProvider.addServerReadyListener((url, port) => {
+      const runtime = useRuntimeStore.getState();
+      runtime.setServerUrl(url, port);
+      runtime.setPhase('running');
+    });
+
+    const resizeObserver = new ResizeObserver(() => {
+      safeFit();
+      if (shellProcess) {
+        try {
+          shellProcess.process.resize({ cols: term.cols, rows: term.rows });
+        } catch {
+          /* process already gone */
         }
-      } else if (data >= ' ' || data === '\t') {
-        currentLine += data;
-        term.write(data);
       }
     });
 
-    // A dev server started from the terminal is a real server: report it to the runtime store.
-    const disposeServerReady = WebContainerProvider.addServerReadyListener((url, port) => {
-      setServerUrl(url, port);
-      setPhase('running');
-      term.writeln(`\r\n\x1b[32m[WebContainer Server Ready]\x1b[0m ${url}`);
-    });
+    startShellRef.current = (pendingCommand?: string): void => {
+      if (disposed || shellStarted || WebContainerProvider.unsupportedReason()) return;
+      shellStarted = true;
+      setMode('starting');
 
-    const handleResize = () => fitAddon.fit();
-    window.addEventListener('resize', handleResize);
+      startWebContainerShell(pendingCommand).catch((e: unknown) => {
+        if (disposed) return;
+        const message = e instanceof Error ? e.message : String(e);
+        term.writeln(`\r\n\x1b[31mWebContainer shell failed to start: ${message}\x1b[0m`);
+        shellStarted = false;
+        setStatusText(message);
+        setMode('error');
+        attachLocalShell(`WebContainer shell unavailable: ${message}`, true);
+      });
+    };
+
+    // xterm schedules internal work the moment it is attached. Opening on the
+    // next frame lets React's StrictMode mount/cleanup/mount cycle dispose an
+    // unopened terminal instead of one with callbacks already in flight.
+    const frame = requestAnimationFrame(() => {
+      if (disposed) return;
+      term.open(host);
+      opened = true;
+      safeFit();
+      resizeObserver.observe(host);
+
+      const unsupportedReason = WebContainerProvider.unsupportedReason();
+      if (unsupportedReason) {
+        setMode('local');
+        setStatusText(unsupportedReason);
+        attachLocalShell(unsupportedReason, false);
+      } else {
+        setMode('ready');
+        attachLocalShell(
+          'Process execution is available but not started. Run a command such as "npm install", or press Start shell.',
+          true
+        );
+      }
+    });
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      disposed = true;
+      cancelAnimationFrame(frame);
       disposeServerReady();
-      disposeData.dispose();
-      term.dispose();
+      resizeObserver.disconnect();
+      inputHandler?.dispose();
+      try {
+        writer?.releaseLock();
+      } catch {
+        /* stream already closed */
+      }
+      shellProcess?.process.kill();
+      try {
+        term.dispose();
+      } catch {
+        /* already torn down */
+      }
+      startShellRef.current = () => undefined;
     };
-  }, [activeProjectId, createFile, deleteFile, gitStatus, addLog, setServerUrl, setPhase]);
+  }, []);
 
-  return <div ref={terminalRef} className="w-full h-full min-h-[140px] overflow-hidden bg-[#050507]" />;
+  return (
+    <div className="w-full h-full flex flex-col min-h-[140px]">
+      <div className="flex items-center gap-2 px-1 pb-1 text-[10px] font-mono text-outline shrink-0">
+        <span className={`px-1.5 py-0.5 rounded border shrink-0 ${MODE_TONE[mode]}`}>{MODE_LABEL[mode]}</span>
+
+        {(mode === 'ready' || mode === 'error') && (
+          <button
+            onClick={handleStartClick}
+            className="px-1.5 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 flex items-center gap-1 shrink-0"
+          >
+            <Play className="w-2.5 h-2.5 fill-current" /> Start shell
+          </button>
+        )}
+        {mode === 'starting' && <Loader2 className="w-3 h-3 animate-spin text-primary shrink-0" />}
+
+        {serverUrl && <span className="truncate text-emerald-400">{serverUrl}</span>}
+        {statusText && (
+          <span className="truncate text-outline/80" title={statusText}>
+            {statusText}
+          </span>
+        )}
+      </div>
+      <div ref={containerRef} className="flex-1 min-h-0 overflow-hidden bg-background" />
+    </div>
+  );
 };

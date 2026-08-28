@@ -31,9 +31,11 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        display: ['Manrope', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        // Real fallbacks matter here: the webfont stylesheet is cross-origin and
+        // can be blocked by the workspace's embedder policy or an offline client.
+        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        display: ['Manrope', 'Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'],
       },
       boxShadow: {
         'red-glow': '0 0 25px rgba(239, 35, 60, 0.35)',

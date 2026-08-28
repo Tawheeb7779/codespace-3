@@ -27,8 +27,14 @@ describe('Phase 1C — Vercel Deployment Integration Unit Tests', () => {
     expect(res.error).toContain('No workspace files available');
   });
 
-  it('VercelDeploymentService returns default READY state when polling status without API errors', async () => {
+  it('VercelDeploymentService reports UNKNOWN rather than READY when it cannot observe the build', async () => {
+    // Without a token there is no way to read the real state; claiming READY
+    // would show a deployment as live before the build finished.
     const res = await VercelDeploymentService.pollDeploymentStatus('dpl_123');
-    expect(res.readyState).toBe('READY');
+    expect(res.readyState).toBe('UNKNOWN');
+    expect(res.error).toBeTruthy();
+
+    const noId = await VercelDeploymentService.pollDeploymentStatus('');
+    expect(noId.readyState).toBe('UNKNOWN');
   });
 });

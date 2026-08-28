@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Cloud,
   Send,
@@ -19,6 +19,9 @@ interface VercelDeploymentModalProps {
   onClose: () => void;
 }
 
+/** Build states after which polling stops. UNKNOWN keeps polling. */
+const TERMINAL_STATES = new Set(['READY', 'ERROR', 'CANCELED']);
+
 export const VercelDeploymentModal: React.FC<VercelDeploymentModalProps> = ({ isOpen, onClose }) => {
   const { projects, activeProjectId } = useProjectStore();
   const currentProject = projects.find((p) => p.id === activeProjectId);
@@ -31,6 +34,23 @@ export const VercelDeploymentModal: React.FC<VercelDeploymentModalProps> = ({ is
   const [deployError, setDeployError] = useState<string | null>(null);
   const [deployHistory, setDeployHistory] = useState<DeploymentRecord[]>([]);
   const [activeTab, setActiveTab] = useState<'deploy' | 'history'>('deploy');
+  const [readyState, setReadyState] = useState<string | null>(null);
+
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!isOpen && pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -52,10 +72,21 @@ export const VercelDeploymentModal: React.FC<VercelDeploymentModalProps> = ({ is
       }
     });
 
-    await new Promise((r) => setTimeout(r, 400));
-    setDeployLogs((prev) => [...prev, '[CodeSpace Build Engine] Packaging Vite bundle and dependencies...']);
+    // 2. Verify the token up front so an invalid one fails before upload.
+    if (vercelToken.trim()) {
+      const verification = await VercelDeploymentService.verifyToken(vercelToken);
+      if (!verification.ok) {
+        setIsDeploying(false);
+        setDeployError(verification.error || 'Token verification failed.');
+        setDeployLogs((prev) => [...prev, `[Auth Failed] ${verification.error}`]);
+        return;
+      }
+      setDeployLogs((prev) => [...prev, `[Vercel] Authenticated as ${verification.username ?? 'account'}.`]);
+    }
 
-    // 2. Trigger deployment via Vercel service
+    setDeployLogs((prev) => [...prev, '[CodeSpace] Uploading workspace files...']);
+
+    // 3. Trigger the real deployment.
     const res = await VercelDeploymentService.triggerDeployment(
       currentProject.name,
       currentProject.files,
@@ -63,33 +94,50 @@ export const VercelDeploymentModal: React.FC<VercelDeploymentModalProps> = ({ is
       envVarsRecord
     );
 
-    if (!res.success) {
-      setIsDeploying(false);
+    setIsDeploying(false);
+
+    if (!res.success || !res.deploymentId) {
       setDeployError(res.error || 'Deployment failed');
       setDeployLogs((prev) => [...prev, `[Deployment Failed] ${res.error}`]);
       return;
     }
 
-    setDeployLogs((prev) => [...prev, '[Vercel Edge] Deployment created. Initializing remote build isolate...']);
+    setDeployLogs((prev) => [...prev, `[Vercel] Deployment ${res.deploymentId} created.`]);
+    setDeployUrl(res.url ?? null);
+    setReadyState(res.readyState || 'QUEUED');
 
-    // 3. Poll or generate URL
-    const generatedUrl = res.url || `https://${currentProject.id.toLowerCase().replace(/[^a-z0-9]/g, '-')}.vercel.app`;
-
-    await new Promise((r) => setTimeout(r, 800));
-    setDeployLogs((prev) => [...prev, `[Vercel Edge] Build complete. Ready at ${generatedUrl}`]);
-
-    setIsDeploying(false);
-    setDeployUrl(generatedUrl);
-
-    // 4. Save to local deployment history
     const record: DeploymentRecord = {
-      id: res.deploymentId || `dpl_${Date.now()}`,
+      id: res.deploymentId,
       projectId: currentProject.id,
-      url: generatedUrl,
-      readyState: 'READY',
+      url: res.url || '',
+      readyState: res.readyState || 'QUEUED',
       timestamp: new Date().toLocaleTimeString(),
     };
     setDeployHistory((prev) => [record, ...prev]);
+
+    // 4. Poll the real build state until it reaches a terminal one. The URL is
+    //    never announced as live before Vercel reports READY.
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      const status = await VercelDeploymentService.pollDeploymentStatus(
+        res.deploymentId as string,
+        vercelToken || undefined
+      );
+      setReadyState(status.readyState);
+      setDeployLogs((prev) => [
+        ...prev,
+        `[Vercel] Build state: ${status.readyState}${status.error ? ` (${status.error})` : ''}`,
+      ]);
+      if (status.url) setDeployUrl(status.url);
+      setDeployHistory((prev) =>
+        prev.map((r) => (r.id === res.deploymentId ? { ...r, readyState: status.readyState } : r))
+      );
+
+      if (TERMINAL_STATES.has(status.readyState)) {
+        if (pollRef.current) clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    }, 4000);
   };
 
   return (
@@ -197,19 +245,41 @@ export const VercelDeploymentModal: React.FC<VercelDeploymentModalProps> = ({ is
               </div>
             )}
 
-            {deployUrl && (
-              <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs space-y-1">
+            {readyState && (
+              <div
+                className={`p-3.5 rounded-xl text-xs space-y-1 border ${
+                  readyState === 'READY'
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                    : readyState === 'ERROR' || readyState === 'CANCELED'
+                      ? 'bg-[#ef233c]/10 border-[#ef233c]/30 text-[#ef233c]'
+                      : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                }`}
+              >
                 <div className="font-semibold flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Deployment Ready on Vercel Edge!
+                  {readyState === 'READY' ? (
+                    <CheckCircle2 className="w-4 h-4" />
+                  ) : readyState === 'ERROR' || readyState === 'CANCELED' ? (
+                    <AlertTriangle className="w-4 h-4" />
+                  ) : (
+                    <Clock className="w-4 h-4" />
+                  )}
+                  Build state: {readyState}
                 </div>
-                <a
-                  href={deployUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[#ef233c] hover:underline font-mono text-[11px] flex items-center gap-1 pt-1 font-semibold"
-                >
-                  {deployUrl} <ExternalLink className="w-3 h-3" />
-                </a>
+                {deployUrl && (
+                  <a
+                    href={deployUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="text-[#ef233c] hover:underline font-mono text-[11px] flex items-center gap-1 pt-1 font-semibold break-all"
+                  >
+                    {deployUrl} <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+                {readyState !== 'READY' && (
+                  <p className="text-[10px] opacity-80">
+                    The URL only serves the application once the build state reaches READY.
+                  </p>
+                )}
               </div>
             )}
           </>

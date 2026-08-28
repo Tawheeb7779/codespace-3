@@ -1,7 +1,32 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CloudSyncService } from './CloudSyncService';
 import { useAuthStore } from '../store/useAuthStore';
 import { useProjectStore } from '../store/useProjectStore';
+
+// Supabase must be unconfigured for these tests: the repository ships a real
+// .env.local, and Vite inlines those values at transform time, so without this
+// mock the store would take its Supabase code paths and make live network calls.
+vi.mock('./supabaseClient', () => ({
+  isSupabaseConfigured: false,
+  getSupabaseUrl: () => '',
+  supabase: {
+    auth: {
+      getSession: async () => ({ data: { session: null } }),
+      signUp: async () => ({ data: { user: null, session: null }, error: null }),
+      signInWithPassword: async () => ({ data: { user: null }, error: null }),
+      signOut: async () => ({ error: null }),
+      resetPasswordForEmail: async () => ({ error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => undefined } } }),
+    },
+    from: () => ({
+      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }), single: async () => ({ data: null }) }) }),
+      update: () => ({ eq: async () => ({ error: null }) }),
+      upsert: async () => ({ error: null }),
+      delete: () => ({ eq: async () => ({ error: null }) }),
+    }),
+  },
+}));
+
 
 describe('Supabase Phase 1A Integration Tests', () => {
   beforeEach(() => {
@@ -17,7 +42,6 @@ describe('Supabase Phase 1A Integration Tests', () => {
       updatedAt: new Date().toISOString(),
       template: 'react-three',
       files: {},
-      rootFileIds: [],
     });
 
     expect(res.success).toBe(false);
@@ -31,19 +55,19 @@ describe('Supabase Phase 1A Integration Tests', () => {
     const initialFiles = { ...store.projects[0].files };
 
     // Viewer attempts file update
-    store.updateFileContent('App.tsx', '// Unauthorized edit');
+    store.updateFileContent('/src/App.tsx', '// Unauthorized edit');
 
     // Content should remain unmodified
     const currentFiles = useProjectStore.getState().projects[0].files;
-    expect(currentFiles['App.tsx'].content).toBe(initialFiles['App.tsx'].content);
+    expect(currentFiles['/src/App.tsx'].content).toBe(initialFiles['/src/App.tsx'].content);
   });
 
   it('Allows owner and developer role to update project files', () => {
     useProjectStore.setState({ currentUserRole: 'developer' });
     const store = useProjectStore.getState();
 
-    store.updateFileContent('App.tsx', '// Developer edit allowed');
-    const updatedContent = useProjectStore.getState().projects[0].files['App.tsx'].content;
+    store.updateFileContent('/src/App.tsx', '// Developer edit allowed');
+    const updatedContent = useProjectStore.getState().projects[0].files['/src/App.tsx'].content;
     expect(updatedContent).toBe('// Developer edit allowed');
   });
 

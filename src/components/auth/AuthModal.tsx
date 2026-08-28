@@ -8,6 +8,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
+import { isSupabaseConfigured } from '../../services/supabaseClient';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -36,8 +37,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
       if (ok) onClose();
     } else if (mode === 'signup') {
       const ok = await signUp(email, password, username || email.split('@')[0]);
-      if (ok) {
-        setSuccessMsg('Account created successfully! Session initialized.');
+      if (ok && useAuthStore.getState().isAuthenticated) {
+        setSuccessMsg(
+          isSupabaseConfigured ? 'Account created and signed in.' : 'Local profile created on this device.'
+        );
         setTimeout(() => onClose(), 1200);
       }
     } else if (mode === 'recover') {
@@ -63,6 +66,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {!isSupabaseConfigured && (
+          <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] leading-relaxed">
+            No authentication backend is configured, so this creates a profile stored on this device only. It does
+            not verify your identity, sync anything, or protect your projects. Set VITE_SUPABASE_URL and
+            VITE_SUPABASE_ANON_KEY to enable real accounts.
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">

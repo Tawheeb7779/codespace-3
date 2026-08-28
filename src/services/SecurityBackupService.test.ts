@@ -20,7 +20,6 @@ const mockProject: Project = {
       content: 'console.log("hello world snapshot test");',
     },
   },
-  rootFileIds: ['App.tsx'],
 };
 
 describe('SecurityBackupService & SHA-256 Workspace Snapshots', () => {

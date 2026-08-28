@@ -11,41 +11,67 @@ import {
 } from 'lucide-react';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
 import { useRuntimeStore } from '../../runtime/RuntimeManager';
+import { WebContainerProvider } from '../../runtime/WebContainerProvider';
 
 export const AnalyticsPanel: React.FC = () => {
-  const { render3DQuality } = usePreferenceStore();
-  const { phase, serverUrl } = useRuntimeStore();
-  const [fps, setFps] = useState<number>(60);
+  const render3DQuality = usePreferenceStore((s) => s.render3DQuality);
+  const phase = useRuntimeStore((s) => s.phase);
+  const isRunning = useRuntimeStore((s) => s.isRunning);
+  const serverUrl = useRuntimeStore((s) => s.serverUrl);
+  // Read straight from the provider: this reflects the browser context itself,
+  // not whether a run has been attempted yet.
+  const unsupportedReason = WebContainerProvider.unsupportedReason();
+  const [fps, setFps] = useState<number>(0);
   const [memoryMb, setMemoryMb] = useState<string>('Unavailable');
 
-  // Real WebGL requestAnimationFrame FPS counter measurement
+  // Frame-rate sampling stops as soon as the tab is hidden, so a background
+  // workspace does not keep a rAF loop alive.
   useEffect(() => {
     let frameCount = 0;
     let lastTime = performance.now();
-    let animId: number;
+    let animId = 0;
 
     const measureFps = () => {
-      frameCount++;
+      frameCount += 1;
       const now = performance.now();
       if (now - lastTime >= 1000) {
-        setFps(Math.min(60, Math.round((frameCount * 1000) / (now - lastTime))));
+        setFps(Math.round((frameCount * 1000) / (now - lastTime)));
         frameCount = 0;
         lastTime = now;
       }
       animId = requestAnimationFrame(measureFps);
     };
 
-    animId = requestAnimationFrame(measureFps);
+    const startLoop = () => {
+      if (animId) return;
+      lastTime = performance.now();
+      frameCount = 0;
+      animId = requestAnimationFrame(measureFps);
+    };
+    const stopLoop = () => {
+      if (!animId) return;
+      cancelAnimationFrame(animId);
+      animId = 0;
+    };
 
-    // Measure memory if performance.memory API is exposed by browser
-    if ('memory' in performance) {
-      const mem = (performance as unknown as { memory: { usedJSHeapSize: number } }).memory;
-      if (mem && mem.usedJSHeapSize) {
-        setMemoryMb((mem.usedJSHeapSize / (1024 * 1024)).toFixed(1) + ' MB');
+    const onVisibility = () => (document.hidden ? stopLoop() : startLoop());
+    document.addEventListener('visibilitychange', onVisibility);
+    if (!document.hidden) startLoop();
+
+    const readMemory = () => {
+      const perf = performance as unknown as { memory?: { usedJSHeapSize: number } };
+      if (perf.memory?.usedJSHeapSize) {
+        setMemoryMb(`${(perf.memory.usedJSHeapSize / (1024 * 1024)).toFixed(1)} MB`);
       }
-    }
+    };
+    readMemory();
+    const memoryTimer = window.setInterval(readMemory, 2000);
 
-    return () => cancelAnimationFrame(animId);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      stopLoop();
+      window.clearInterval(memoryTimer);
+    };
   }, []);
 
   return (
@@ -89,7 +115,7 @@ export const AnalyticsPanel: React.FC = () => {
           <span className="font-medium text-slate-200 flex items-center gap-2">
             <TerminalIcon className="w-4 h-4 text-secondary" /> WebContainer Runtime Engine
           </span>
-          <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${phase === 'running' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-surface-high text-outline'}`}>
+          <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${isRunning ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-surface-high text-outline'}`}>
             {phase}
           </span>
         </div>
@@ -102,8 +128,12 @@ export const AnalyticsPanel: React.FC = () => {
           </div>
           <div className="flex justify-between text-slate-300">
             <span>Isolation Mode:</span>
-            <span className="font-mono text-emerald-400 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" /> COOP / COEP Active
+            <span
+              className={`font-mono flex items-center gap-1 ${unsupportedReason ? 'text-amber-400' : 'text-emerald-400'}`}
+              title={unsupportedReason || 'Cross-origin isolated'}
+            >
+              <ShieldCheck className="w-3 h-3" />
+              {unsupportedReason ? 'Not cross-origin isolated' : 'COOP / COEP active'}
             </span>
           </div>
         </div>
@@ -113,7 +143,7 @@ export const AnalyticsPanel: React.FC = () => {
       <div className="p-3 bg-surface-container rounded-lg border border-outline-variant/15 space-y-2">
         <div className="flex items-center justify-between text-slate-200 font-medium">
           <span className="flex items-center gap-2"><HardDrive className="w-4 h-4 text-tertiary" /> Client Storage Persistence</span>
-          <span className="font-mono text-[10px] text-emerald-400">IndexedDB & localStorage Active</span>
+          <span className="font-mono text-[10px] text-emerald-400">localStorage (throttled writes)</span>
         </div>
         <div className="w-full h-1.5 bg-surface-high rounded-full overflow-hidden">
           <div className="h-full bg-tertiary rounded-full w-[100%]" />
@@ -126,7 +156,8 @@ export const AnalyticsPanel: React.FC = () => {
           <BarChart2 className="w-4 h-4 text-primary" /> System Metrics Status
         </div>
         <div className="flex items-center gap-1 text-emerald-400">
-          <CheckCircle2 className="w-3.5 h-3.5" /> Telemetry reflects real browser animation frames and WebContainer state.
+          <CheckCircle2 className="w-3.5 h-3.5" /> FPS and heap readings come from real browser APIs; runtime state
+          reflects the actual WebContainer process.
         </div>
       </div>
     </div>

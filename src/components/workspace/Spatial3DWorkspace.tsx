@@ -1,11 +1,17 @@
 import React, { useRef, useState, useMemo, useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
-import { OrbitControls, Text, Html } from '@react-three/drei';
+import { OrbitControls, Html } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
 import { Box, Layers, RefreshCw, Eye, Sliders } from 'lucide-react';
+
+/** Above this node count, labels only appear on hover or selection. */
+const MAX_ALWAYS_ON_LABELS = 40;
+
+/** Hard cap on rendered nodes so a large imported repository cannot stall WebGL. */
+const MAX_RENDERED_NODES = 300;
 
 interface Node3DData {
   id: string;
@@ -23,9 +29,19 @@ interface NodeMeshProps {
   onFocus: (position: [number, number, number]) => void;
   isLowQuality: boolean;
   shaderPreset: 'standard' | 'hologram' | 'neon' | 'custom';
+  /** Labels are hidden on large graphs; hover and selection still show them. */
+  showLabel: boolean;
 }
 
-const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, isLowQuality, shaderPreset }) => {
+const NodeMesh: React.FC<NodeMeshProps> = ({
+  node,
+  isActive,
+  onSelect,
+  onFocus,
+  isLowQuality,
+  shaderPreset,
+  showLabel,
+}) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const [hovered, setHovered] = useState(false);
@@ -112,15 +128,24 @@ const NodeMesh: React.FC<NodeMeshProps> = ({ node, isActive, onSelect, onFocus, 
         )}
       </mesh>
 
-      <Text
-        position={[0, 0.7, 0]}
-        fontSize={0.25}
-        color={isActive ? '#ef233c' : '#ffffff'}
-        anchorX="center"
-        anchorY="middle"
-      >
-        {node.name}
-      </Text>
+      {/*
+        Labels are DOM overlays rather than drei's <Text>. Troika, which backs
+        <Text>, fetches font data from a CDN at runtime - a request the
+        Cross-Origin-Embedder-Policy the workspace needs for WebContainer blocks
+        outright, so the labels would silently fail to appear.
+      */}
+      {(showLabel || hovered || isActive) && (
+        <Html position={[0, 0.75, 0]} center pointerEvents="none" zIndexRange={[10, 0]}>
+          <div
+            className={`px-1 rounded text-[10px] font-mono whitespace-nowrap pointer-events-none ${
+              isActive ? 'text-[#ef233c] font-semibold' : 'text-white/90'
+            }`}
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+          >
+            {node.name}
+          </div>
+        </Html>
+      )}
 
       {hovered && (
         <Html position={[0, 1.1, 0]} center pointerEvents="none">
@@ -147,6 +172,10 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({ connections }) => {
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
     return geometry;
   }, [connections]);
+
+  // Buffer geometries are not garbage collected by three.js; release the old one
+  // whenever the tree changes and on unmount.
+  useEffect(() => () => lineGeometry.dispose(), [lineGeometry]);
 
   return (
     <lineSegments geometry={lineGeometry}>
@@ -241,8 +270,11 @@ class WebGLBoundary extends Component<{ children: ReactNode }, { hasError: boole
 }
 
 export const Spatial3DWorkspace: React.FC = () => {
-  const { projects, activeProjectId, activeFileId, openFile } = useProjectStore();
-  const { render3DQuality } = usePreferenceStore();
+  const projects = useProjectStore((s) => s.projects);
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const activeFileId = useProjectStore((s) => s.activeFileId);
+  const openFile = useProjectStore((s) => s.openFile);
+  const render3DQuality = usePreferenceStore((s) => s.render3DQuality);
 
   const [searchFilter, setSearchFilter] = useState('');
   const [targetFocus, setTargetFocus] = useState<[number, number, number] | null>(null);
@@ -279,10 +311,23 @@ export const Spatial3DWorkspace: React.FC = () => {
     setTimeout(() => setArStatusMsg(null), 4000);
   };
 
-  const { nodes, connections } = useMemo(() => {
-    if (!currentProject) return { nodes: [], connections: [] };
+  /**
+   * Layout depends only on the shape of the tree. Keying the memo on the project
+   * object rebuilt every node on each keystroke, because editing a file produces
+   * a new project reference.
+   */
+  const treeSignature = useMemo(() => {
+    if (!currentProject) return '';
+    return Object.values(currentProject.files)
+      .map((f) => `${f.id}:${f.isFolder ? 'd' : 'f'}:${f.parentId ?? ''}`)
+      .sort()
+      .join('|');
+  }, [currentProject]);
 
-    const fileList = Object.values(currentProject.files);
+  const { nodes, connections } = useMemo(() => {
+    if (!currentProject) return { nodes: [] as Node3DData[], connections: [] };
+
+    const fileList = Object.values(currentProject.files).filter((f) => f.id !== '/');
     const generatedNodes: Node3DData[] = [];
     const generatedConnections: { start: [number, number, number]; end: [number, number, number] }[] = [];
 
@@ -325,11 +370,18 @@ export const Spatial3DWorkspace: React.FC = () => {
     });
 
     return { nodes: generatedNodes, connections: generatedConnections };
-  }, [currentProject]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [treeSignature]);
 
-  const filteredNodes = nodes.filter((n) =>
-    n.name.toLowerCase().includes(searchFilter.toLowerCase())
+  const filteredNodes = useMemo(
+    () =>
+      nodes
+        .filter((n) => n.name.toLowerCase().includes(searchFilter.toLowerCase()))
+        .slice(0, MAX_RENDERED_NODES),
+    [nodes, searchFilter]
   );
+
+  const hiddenNodeCount = Math.max(0, nodes.length - filteredNodes.length);
 
   return (
     <WebGLBoundary>
@@ -344,8 +396,12 @@ export const Spatial3DWorkspace: React.FC = () => {
               onChange={(e) => setSearchFilter(e.target.value)}
               className="bg-[#121215] text-xs text-white px-2.5 py-1 rounded-lg border border-white/10 focus:outline-none focus:border-[#ef233c]/50 w-36 font-sans"
             />
-            <span className="text-[10px] text-zinc-400 font-mono flex items-center gap-1">
+            <span
+              className="text-[10px] text-zinc-400 font-mono flex items-center gap-1"
+              title={hiddenNodeCount > 0 ? `${hiddenNodeCount} more node(s) not shown` : undefined}
+            >
               <Layers className="w-3 h-3 text-[#ef233c]" /> {filteredNodes.length}
+              {hiddenNodeCount > 0 && <span className="text-amber-400">+{hiddenNodeCount}</span>}
             </span>
           </div>
 
@@ -406,10 +462,11 @@ export const Spatial3DWorkspace: React.FC = () => {
               key={node.id}
               node={node}
               isActive={node.id === activeFileId}
-              onSelect={(id) => openFile(id)}
-              onFocus={(pos) => setTargetFocus(pos)}
+              onSelect={openFile}
+              onFocus={setTargetFocus}
               isLowQuality={render3DQuality === 'low'}
               shaderPreset={shaderPreset}
+              showLabel={filteredNodes.length <= MAX_ALWAYS_ON_LABELS}
             />
           ))}
 

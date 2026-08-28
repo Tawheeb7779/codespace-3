@@ -17,10 +17,14 @@ describe('Phase 1B — GitHub Integration Unit Tests', () => {
     expect(res.error).toContain('Missing required GitHub parameters');
   });
 
-  it('GitHubImportService fails gracefully when token or repository is missing', async () => {
-    const res = await GitHubImportService.importRepository('', '');
-    expect(res.success).toBe(false);
-    expect(res.error).toContain('Missing GitHub token');
+  it('GitHubImportService fails gracefully when the repository is missing or malformed', async () => {
+    const empty = await GitHubImportService.importRepository('', '');
+    expect(empty.success).toBe(false);
+    expect(empty.error).toMatch(/owner\/repo/i);
+
+    const malformed = await GitHubImportService.importRepository('not-a-repo', '');
+    expect(malformed.success).toBe(false);
+    expect(malformed.error).toMatch(/owner\/repo/i);
   });
 
   it('GitHubImportService returns empty repository array on unauthenticated listing request', async () => {
