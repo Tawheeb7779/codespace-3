@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
@@ -6,308 +6,205 @@ import { useProjectStore } from '../../store/useProjectStore';
 import { useRuntimeStore } from '../../runtime/RuntimeManager';
 import { WebContainerProvider } from '../../runtime/WebContainerProvider';
 import { RuntimeFilesystemBridge } from '../../runtime/RuntimeFilesystemBridge';
+import { LocalShell } from '../../runtime/LocalShell';
 
+const THEME = {
+  background: '#0e131d',
+  foreground: '#dee2f1',
+  cursor: '#adc6ff',
+  selectionBackground: 'rgba(77, 142, 255, 0.3)',
+  black: '#0e131d',
+  red: '#ffb4ab',
+  green: '#50fa7b',
+  yellow: '#ffb786',
+  blue: '#adc6ff',
+  magenta: '#ff79c6',
+  cyan: '#8be9fd',
+  white: '#dee2f1',
+};
+
+type TerminalMode = 'connecting' | 'webcontainer' | 'local' | 'error';
+
+/**
+ * Terminal surface.
+ *
+ * When the browser supports WebContainer this attaches xterm directly to a real
+ * `jsh` process, so every command (ls, cd, npm, node, git...) is executed by the
+ * runtime rather than emulated. Otherwise it falls back to a clearly-labelled
+ * local shell that can only manipulate the in-memory project tree - it never
+ * pretends a process ran.
+ */
 export const Terminal: React.FC = () => {
-  const terminalRef = useRef<HTMLDivElement>(null);
-  const xtermRef = useRef<XTerm | null>(null);
-  const currentPathRef = useRef<string>('/src');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const termRef = useRef<XTerm | null>(null);
+  const fitRef = useRef<FitAddon | null>(null);
+  const [mode, setMode] = useState<TerminalMode>('connecting');
+  const [errorText, setErrorText] = useState<string | null>(null);
 
-  const { activeProjectId, createFile, deleteFile, gitStatus } = useProjectStore();
-  const { installPackages, buildProject, startDevServer, setWebContainerUrl } = useRuntimeStore();
-
+  // Created once. The terminal must survive project edits, tab switches and
+  // store updates - recreating it would wipe scrollback and the running shell.
   useEffect(() => {
-    if (!terminalRef.current) return;
+    const host = containerRef.current;
+    if (!host) return;
 
     const term = new XTerm({
-      theme: {
-        background: '#0e131d',
-        foreground: '#dee2f1',
-        cursor: '#adc6ff',
-        selectionBackground: 'rgba(77, 142, 255, 0.3)',
-        black: '#0e131d',
-        red: '#ffb4ab',
-        green: '#50fa7b',
-        yellow: '#ffb786',
-        blue: '#adc6ff',
-        magenta: '#ff79c6',
-        cyan: '#8be9fd',
-        white: '#dee2f1',
-      },
+      theme: THEME,
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 13,
       cursorBlink: true,
-      rows: 8,
+      convertEol: true,
+      scrollback: 5000,
     });
-
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
-    term.open(terminalRef.current);
-    fitAddon.fit();
+    term.open(host);
 
-    xtermRef.current = term;
+    termRef.current = term;
+    fitRef.current = fitAddon;
 
-    term.writeln('\x1b[36mCodeSpace 3D Terminal & WebContainer Process Bridge v1.0.0\x1b[0m');
-    term.writeln('Type \x1b[33mhelp\x1b[0m for available filesystem & process commands.\r\n');
-
-    let currentLine = '';
-
-    const prompt = () => {
-      term.write(`\r\n\x1b[32mcodespace@3d-ide\x1b[0m:\x1b[34m${currentPathRef.current}\x1b[0m$ `);
+    const safeFit = (): void => {
+      try {
+        fitAddon.fit();
+      } catch {
+        /* host not laid out yet */
+      }
     };
+    safeFit();
 
-    prompt();
+    let disposed = false;
+    let shellProcess: Awaited<ReturnType<typeof WebContainerProvider.spawn>> | null = null;
+    let writer: WritableStreamDefaultWriter<string> | null = null;
+    const disposables: Array<{ dispose: () => void }> = [];
 
-    const handleCommand = async (cmdStr: string) => {
-      const parts = cmdStr.trim().split(' ').filter(Boolean);
-      if (parts.length === 0) {
-        prompt();
+    const startWebContainerShell = async (): Promise<void> => {
+      term.writeln('\x1b[36mCodeSpace 3D Terminal\x1b[0m - starting WebContainer shell...');
+
+      const project = useProjectStore.getState().getActiveProject();
+      if (!project) {
+        term.writeln('\x1b[31mNo active project.\x1b[0m');
+        setMode('error');
         return;
       }
 
-      const cmd = parts[0];
-      const args = parts.slice(1);
+      await RuntimeFilesystemBridge.mountProject(project.id, project.files);
+      if (disposed) return;
 
-      const currentProject = useProjectStore.getState().projects.find(p => p.id === useProjectStore.getState().activeProjectId);
-
-      switch (cmd) {
-        case 'help':
-          term.writeln('\r\n\x1b[1mSupported Commands:\x1b[0m');
-          term.writeln('  ls              - List files in current directory');
-          term.writeln('  cd <dir>        - Change working directory');
-          term.writeln('  pwd             - Print working directory');
-          term.writeln('  cat <file>      - View file contents');
-          term.writeln('  touch <file>    - Create a new file');
-          term.writeln('  mkdir <dir>     - Create a new directory');
-          term.writeln('  rm <file>       - Remove file');
-          term.writeln('  node <script>   - Execute Node.js process');
-          term.writeln('  npm install     - Run npm package installer');
-          term.writeln('  npm run dev     - Execute Vite development server');
-          term.writeln('  npm run build   - Run Vite/Rollup production build');
-          term.writeln('  git status      - Show git staging status');
-          term.writeln('  clear           - Clear terminal output');
-          break;
-
-        case 'clear':
-          term.clear();
-          break;
-
-        case 'pwd':
-          term.writeln(`\r\n${currentPathRef.current}`);
-          break;
-
-        case 'ls':
-          if (currentProject) {
-            term.writeln('');
-            Object.values(currentProject.files).forEach(f => {
-              if (f.id === 'root') return;
-              if (f.isFolder) {
-                term.writeln(`\x1b[34m${f.name}/\x1b[0m`);
-              } else {
-                term.writeln(`  ${f.name}`);
-              }
-            });
-          }
-          break;
-
-        case 'cd':
-          if (!args[0] || args[0] === '/' || args[0] === '~') {
-            currentPathRef.current = '/';
-          } else if (args[0] === '..') {
-            currentPathRef.current = '/';
-          } else {
-            currentPathRef.current = `/${args[0].replace(/^\//, '')}`;
-          }
-          term.writeln(`\r\nChanged directory to ${currentPathRef.current}`);
-          break;
-
-        case 'cat':
-          if (!args[0]) {
-            term.writeln('\r\nUsage: cat <filename>');
-          } else if (currentProject) {
-            const targetFile = Object.values(currentProject.files).find(f => f.name === args[0]);
-            if (targetFile && !targetFile.isFolder) {
-              term.writeln(`\r\n${targetFile.content}`);
-            } else {
-              term.writeln(`\r\n\x1b[31mcat: ${args[0]}: No such file\x1b[0m`);
-            }
-          }
-          break;
-
-        case 'touch':
-          if (!args[0]) {
-            term.writeln('\r\nUsage: touch <filename>');
-          } else {
-            createFile(args[0], 'src', false);
-            term.writeln(`\r\nCreated file ${args[0]}`);
-          }
-          break;
-
-        case 'mkdir':
-          if (!args[0]) {
-            term.writeln('\r\nUsage: mkdir <foldername>');
-          } else {
-            createFile(args[0], 'root', true);
-            term.writeln(`\r\nCreated directory ${args[0]}`);
-          }
-          break;
-
-        case 'rm':
-          if (!args[0]) {
-            term.writeln('\r\nUsage: rm <file>');
-          } else {
-            deleteFile(args[0]);
-            term.writeln(`\r\nRemoved ${args[0]}`);
-          }
-          break;
-
-        case 'node':
-          if (WebContainerProvider.isSupported() && currentProject) {
-            term.writeln(`\r\n\x1b[36m[WebContainer Process]\x1b[0m Spawning node ${args.join(' ')}...`);
-            await RuntimeFilesystemBridge.initializeProject(currentProject.files);
-
-            try {
-              const exitCode = await WebContainerProvider.spawnProcess(
-                'node',
-                args,
-                (chunk) => {
-                  term.write(chunk.replace(/\n/g, '\r\n'));
-                }
-              );
-              term.writeln(`\r\n\x1b[32m[Node Process Exited]\x1b[0m Exit Code: ${exitCode}`);
-            } catch (e: unknown) {
-              const msg = e instanceof Error ? e.message : String(e);
-              term.writeln(`\r\n\x1b[31m[WebContainer Process Error]\x1b[0m ${msg}`);
-            }
-          } else {
-            if (args.length === 0 || args[0] === '-v' || args[0] === '--version') {
-              term.writeln('\r\n\x1b[33m[In-Browser Fallback Engine]\x1b[0m Node.js v22.0.0 (Browser Isolated JS Shell)');
-            } else if (args[0] === '-e' && args[1]) {
-              try {
-                // Safe evaluation of expression in isolated scope
-                const res = new Function(`return ${args[1]}`)();
-                term.writeln(`\r\n${res}`);
-              } catch (e: unknown) {
-                const msg = e instanceof Error ? e.message : String(e);
-                term.writeln(`\r\n\x1b[31mEval Error: ${msg}\x1b[0m`);
-              }
-            } else if (currentProject) {
-              const target = Object.values(currentProject.files).find(f => f.name === args[0]);
-              if (target && !target.isFolder) {
-                term.writeln(`\r\n\x1b[33m[In-Browser JS Evaluation]\x1b[0m Executing ${args[0]}:`);
-                try {
-                  const logs: string[] = [];
-                  const customConsole = { log: (...a: unknown[]) => logs.push(a.join(' ')) };
-                  new Function('console', target.content)(customConsole);
-                  term.writeln(logs.join('\r\n') || 'Program completed with no stdout.');
-                } catch (e: unknown) {
-                  const msg = e instanceof Error ? e.message : String(e);
-                  term.writeln(`\r\n\x1b[31mExecution Error: ${msg}\x1b[0m`);
-                }
-              } else {
-                term.writeln(`\r\n\x1b[31mnode: internal/modules/cjs/loader.js: Cannot find module '${args[0]}'\x1b[0m`);
-              }
-            }
-          }
-          break;
-
-        case 'npm':
-          if (WebContainerProvider.isSupported() && currentProject) {
-            term.writeln(`\r\n\x1b[36m[WebContainer Process]\x1b[0m Spawning npm ${args.join(' ')}...`);
-            await RuntimeFilesystemBridge.initializeProject(currentProject.files);
-
-            WebContainerProvider.setOnServerReady((url) => {
-              setWebContainerUrl(url);
-              term.writeln(`\x1b[32m[WebContainer Server Ready]\x1b[0m ${url}`);
-            });
-
-            try {
-              const exitCode = await WebContainerProvider.spawnProcess(
-                'npm',
-                args,
-                (chunk) => {
-                  term.write(chunk.replace(/\n/g, '\r\n'));
-                }
-              );
-              term.writeln(`\r\n\x1b[32m[Process Exited]\x1b[0m Code: ${exitCode}`);
-            } catch (e: unknown) {
-              const msg = e instanceof Error ? e.message : String(e);
-              term.writeln(`\r\n\x1b[31m[WebContainer Fallback]\x1b[0m ${msg}`);
-              // Fallback to in-browser compiler engine
-              if (args[0] === 'install') {
-                const pkg = currentProject.files['package.json'];
-                await installPackages(pkg?.content);
-              } else if (args.join(' ') === 'run dev') {
-                startDevServer(currentProject.files);
-              } else if (args.join(' ') === 'run build') {
-                buildProject(currentProject.files);
-              }
-            }
-          } else {
-            // Standard browser fallback
-            if (args[0] === 'install') {
-              term.writeln('\r\n\x1b[33m[In-Browser Package Resolver]\x1b[0m Resolving manifest dependencies...');
-              const pkg = currentProject?.files['package.json'];
-              await installPackages(pkg?.content);
-            } else if (args.join(' ') === 'run dev') {
-              term.writeln('\r\n\x1b[36m[In-Browser Vite Compiler]\x1b[0m Dev server started on port 5173.');
-              if (currentProject) startDevServer(currentProject.files);
-            } else if (args.join(' ') === 'run build') {
-              term.writeln('\r\n\x1b[36m[In-Browser TSX Compiler]\x1b[0m Building bundle...');
-              if (currentProject) buildProject(currentProject.files);
-            }
-          }
-          break;
-
-        case 'git':
-          if (args[0] === 'status') {
-            term.writeln('\r\nOn branch main');
-            if (gitStatus.unstaged.length === 0 && gitStatus.staged.length === 0) {
-              term.writeln('nothing to commit, working tree clean');
-            } else {
-              term.writeln('\x1b[33mUnstaged changes:\x1b[0m');
-              gitStatus.unstaged.forEach(u => term.writeln(`  modified:   ${u}`));
-              if (gitStatus.staged.length > 0) {
-                term.writeln('\x1b[32mStaged changes:\x1b[0m');
-                gitStatus.staged.forEach(s => term.writeln(`  staged:     ${s}`));
-              }
-            }
-          } else {
-            term.writeln(`\r\n\x1b[33mgit ${args.join(' ')}\x1b[0m executed.`);
-          }
-          break;
-
-        default:
-          term.writeln(`\r\n\x1b[31mCommand not found: ${cmd}\x1b[0m. Type \x1b[33mhelp\x1b[0m for command list.`);
-          break;
+      shellProcess = await WebContainerProvider.spawn('jsh', [], {
+        terminal: { cols: term.cols, rows: term.rows },
+      });
+      if (disposed) {
+        shellProcess.process.kill();
+        return;
       }
 
-      prompt();
+      void shellProcess.process.output.pipeTo(
+        new WritableStream({
+          write: (chunk) => {
+            term.write(chunk);
+          },
+        })
+      ).catch(() => undefined);
+
+      writer = shellProcess.process.input.getWriter();
+      disposables.push(
+        term.onData((data) => {
+          void writer?.write(data);
+        })
+      );
+
+      setMode('webcontainer');
+
+      void shellProcess.exit.then((code) => {
+        if (disposed) return;
+        term.writeln(`\r\n\x1b[33m[shell exited with code ${code}]\x1b[0m`);
+      });
     };
 
-    const disposeData = term.onData((data) => {
-      if (data === '\r') {
-        handleCommand(currentLine);
-        currentLine = '';
-      } else if (data === '\u007F') {
-        if (currentLine.length > 0) {
-          currentLine = currentLine.slice(0, -1);
-          term.write('\b \b');
+    const startLocalShell = (reason: string): void => {
+      const shell = new LocalShell({
+        write: (text) => term.write(text),
+        writeln: (text) => term.writeln(text),
+      });
+      shell.printBanner(reason);
+      disposables.push(term.onData((data) => shell.handleInput(data)));
+      setMode('local');
+      setErrorText(reason);
+    };
+
+    const unsupportedReason = WebContainerProvider.unsupportedReason();
+    if (unsupportedReason) {
+      startLocalShell(unsupportedReason);
+    } else {
+      startWebContainerShell().catch((e: unknown) => {
+        if (disposed) return;
+        const message = e instanceof Error ? e.message : String(e);
+        term.writeln(`\r\n\x1b[31mWebContainer shell failed to start: ${message}\x1b[0m`);
+        setErrorText(message);
+        startLocalShell(`WebContainer shell unavailable: ${message}`);
+        setMode('error');
+      });
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      safeFit();
+      if (shellProcess) {
+        try {
+          shellProcess.process.resize({ cols: term.cols, rows: term.rows });
+        } catch {
+          /* process already gone */
         }
-      } else if (data >= ' ' || data === '\t') {
-        currentLine += data;
-        term.write(data);
       }
     });
-
-    const handleResize = () => fitAddon.fit();
-    window.addEventListener('resize', handleResize);
+    resizeObserver.observe(host);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      disposeData.dispose();
+      disposed = true;
+      resizeObserver.disconnect();
+      disposables.forEach((d) => d.dispose());
+      try {
+        writer?.releaseLock();
+      } catch {
+        /* ignore */
+      }
+      shellProcess?.process.kill();
       term.dispose();
+      termRef.current = null;
+      fitRef.current = null;
     };
-  }, [activeProjectId, createFile, deleteFile, gitStatus, installPackages, buildProject, startDevServer, setWebContainerUrl]);
+  }, []);
 
-  return <div ref={terminalRef} className="w-full h-full min-h-[140px] overflow-hidden" />;
+  const serverUrl = useRuntimeStore((s) => s.serverUrl);
+
+  return (
+    <div className="w-full h-full flex flex-col min-h-[140px]">
+      <div className="flex items-center gap-2 px-1 pb-1 text-[10px] font-mono text-outline shrink-0">
+        <span
+          className={`px-1.5 py-0.5 rounded border ${
+            mode === 'webcontainer'
+              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+              : mode === 'local'
+                ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                : mode === 'error'
+                  ? 'bg-red-500/15 text-red-300 border-red-500/30'
+                  : 'bg-surface-high text-outline border-outline-variant/20'
+          }`}
+        >
+          {mode === 'webcontainer'
+            ? 'WebContainer shell (real processes)'
+            : mode === 'local'
+              ? 'Local shell - no process execution'
+              : mode === 'error'
+                ? 'Shell error'
+                : 'Connecting...'}
+        </span>
+        {serverUrl && <span className="truncate text-emerald-400">{serverUrl}</span>}
+        {mode !== 'webcontainer' && errorText && (
+          <span className="truncate text-outline/80" title={errorText}>
+            {errorText}
+          </span>
+        )}
+      </div>
+      <div ref={containerRef} className="flex-1 min-h-0 overflow-hidden" />
+    </div>
+  );
 };

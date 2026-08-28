@@ -119,6 +119,10 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({ connections }) => {
     return geometry;
   }, [connections]);
 
+  // Buffer geometries are not garbage collected by three.js; release the old one
+  // whenever the tree changes and on unmount.
+  useEffect(() => () => lineGeometry.dispose(), [lineGeometry]);
+
   return (
     <lineSegments geometry={lineGeometry}>
       <lineBasicMaterial color="#424754" opacity={0.5} transparent />
@@ -212,8 +216,11 @@ class WebGLBoundary extends Component<{ children: ReactNode }, { hasError: boole
 }
 
 export const Spatial3DWorkspace: React.FC = () => {
-  const { projects, activeProjectId, activeFileId, openFile } = useProjectStore();
-  const { render3DQuality } = usePreferenceStore();
+  const projects = useProjectStore((s) => s.projects);
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const activeFileId = useProjectStore((s) => s.activeFileId);
+  const openFile = useProjectStore((s) => s.openFile);
+  const render3DQuality = usePreferenceStore((s) => s.render3DQuality);
 
   const [searchFilter, setSearchFilter] = useState('');
   const [targetFocus, setTargetFocus] = useState<[number, number, number] | null>(null);
@@ -250,10 +257,23 @@ export const Spatial3DWorkspace: React.FC = () => {
     setTimeout(() => setArStatusMsg(null), 4000);
   };
 
-  const { nodes, connections } = useMemo(() => {
-    if (!currentProject) return { nodes: [], connections: [] };
+  /**
+   * Layout depends only on the shape of the tree. Keying the memo on the project
+   * object rebuilt every node on each keystroke, because editing a file produces
+   * a new project reference.
+   */
+  const treeSignature = useMemo(() => {
+    if (!currentProject) return '';
+    return Object.values(currentProject.files)
+      .map((f) => `${f.id}:${f.isFolder ? 'd' : 'f'}:${f.parentId ?? ''}`)
+      .sort()
+      .join('|');
+  }, [currentProject]);
 
-    const fileList = Object.values(currentProject.files);
+  const { nodes, connections } = useMemo(() => {
+    if (!currentProject) return { nodes: [] as Node3DData[], connections: [] };
+
+    const fileList = Object.values(currentProject.files).filter((f) => f.id !== '/');
     const generatedNodes: Node3DData[] = [];
     const generatedConnections: { start: [number, number, number]; end: [number, number, number] }[] = [];
 
@@ -296,10 +316,12 @@ export const Spatial3DWorkspace: React.FC = () => {
     });
 
     return { nodes: generatedNodes, connections: generatedConnections };
-  }, [currentProject]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [treeSignature]);
 
-  const filteredNodes = nodes.filter((n) =>
-    n.name.toLowerCase().includes(searchFilter.toLowerCase())
+  const filteredNodes = useMemo(
+    () => nodes.filter((n) => n.name.toLowerCase().includes(searchFilter.toLowerCase())),
+    [nodes, searchFilter]
   );
 
   return (
@@ -371,8 +393,8 @@ export const Spatial3DWorkspace: React.FC = () => {
               key={node.id}
               node={node}
               isActive={node.id === activeFileId}
-              onSelect={(id) => openFile(id)}
-              onFocus={(pos) => setTargetFocus(pos)}
+              onSelect={openFile}
+              onFocus={setTargetFocus}
               isLowQuality={render3DQuality === 'low'}
               shaderPreset={shaderPreset}
             />

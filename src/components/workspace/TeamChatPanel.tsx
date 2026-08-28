@@ -11,7 +11,9 @@ import { ChatMessage } from '../../types/stitch';
 import { useProjectStore } from '../../store/useProjectStore';
 
 export const TeamChatPanel: React.FC = () => {
-  const { activeProjectId, projectChats, setChatForProject, createFile, updateFileContent } = useProjectStore();
+  const { activeProjectId, projectChats, setChatForProject, createFile, updateFileContent, saveFile } =
+    useProjectStore();
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [inputText, setInputText] = useState('');
   const [activeChannel, setActiveChannel] = useState<'general' | 'dev-3d' | 'ai-nexus'>('general');
@@ -64,12 +66,23 @@ export function ChannelShaderMesh() {
     </mesh>
   );
 }`;
-    createFile(fileName, 'src', false);
-    updateFileContent(fileName, content);
+    const result = createFile(fileName, '/src', false);
+    if (!result.ok || !result.id) {
+      setActionError(result.error || 'Unable to create the component file.');
+      return;
+    }
+    setActionError(null);
+    updateFileContent(result.id, content);
+    saveFile(result.id);
   };
 
   return (
     <div className="h-full flex flex-col bg-surface-low text-xs select-none border-r border-outline-variant/15 p-3 space-y-3">
+      {actionError && (
+        <div className="px-2 py-1.5 rounded bg-red-500/10 border border-red-500/30 text-red-300 text-[11px]">
+          {actionError}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
         <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] flex items-center gap-2">

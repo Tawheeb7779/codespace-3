@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useProjectStore } from '../store/useProjectStore';
+import { useRuntimeStore } from '../runtime/RuntimeManager';
 
 import { TopBar } from '../components/workspace/TopBar';
 import { Sidebar, SidebarTab } from '../components/workspace/Sidebar';
@@ -19,32 +20,79 @@ import { TeamChatPanel } from '../components/workspace/TeamChatPanel';
 import { AnalyticsPanel } from '../components/workspace/AnalyticsPanel';
 import { SqlStudioPanel } from '../components/workspace/SqlStudioPanel';
 import { CommandPaletteModal } from '../components/workspace/CommandPaletteModal';
+import { VercelDeploymentModal } from '../components/workspace/VercelDeploymentModal';
 
 export default function Workspace() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { projects, activeProjectId, setActiveProject } = useProjectStore();
+  const projects = useProjectStore((s) => s.projects);
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const setActiveProject = useProjectStore((s) => s.setActiveProject);
+  const saveAllFiles = useProjectStore((s) => s.saveAllFiles);
+
+  const runtimePhase = useRuntimeStore((s) => s.phase);
+  const startRuntime = useRuntimeStore((s) => s.start);
+  const stopRuntime = useRuntimeStore((s) => s.stop);
+  const refreshSupport = useRuntimeStore((s) => s.refreshSupport);
 
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab>('explorer');
   const [activeView, setActiveView] = useState<'code' | '3d' | 'preview' | 'split'>('split');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-  const [isRunActive, setIsRunActive] = useState(true);
+  const [isRunActive, setIsRunActive] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isDeployOpen, setIsDeployOpen] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
 
+  // Only re-run when the route changes; keying this on `projects` reset the open
+  // tabs on every keystroke.
   useEffect(() => {
-    if (projectId) {
-      const exists = projects.some((p) => p.id === projectId);
-      if (exists) {
-        setActiveProject(projectId);
-      } else {
-        navigate('/dashboard');
-      }
+    if (!projectId) return;
+    const exists = useProjectStore.getState().projects.some((p) => p.id === projectId);
+    if (exists) {
+      setActiveProject(projectId);
+    } else {
+      navigate('/dashboard');
     }
-  }, [projectId, projects, setActiveProject, navigate]);
+  }, [projectId, setActiveProject, navigate]);
+
+  useEffect(() => {
+    refreshSupport();
+  }, [refreshSupport]);
+
+  useEffect(() => {
+    setIsRunActive(runtimePhase === 'ready' || runtimePhase === 'starting' || runtimePhase === 'installing');
+  }, [runtimePhase]);
+
+  // Global save shortcut, so Ctrl/Cmd+S works outside the editor too.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent): void => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveAllFiles();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [saveAllFiles]);
 
   const currentProject = projects.find((p) => p.id === activeProjectId);
+
+  const handleToggleRun = useCallback(async () => {
+    const project = useProjectStore.getState().getActiveProject();
+    if (!project) return;
+    const phase = useRuntimeStore.getState().phase;
+    if (phase === 'ready' || phase === 'starting' || phase === 'installing' || phase === 'booting') {
+      await stopRuntime();
+    } else {
+      await startRuntime(project.id, project.files);
+    }
+  }, [startRuntime, stopRuntime]);
+
   if (!currentProject) return null;
 
   return (
@@ -56,11 +104,12 @@ export default function Workspace() {
         previewDevice={previewDevice}
         setPreviewDevice={setPreviewDevice}
         isRunActive={isRunActive}
-        setIsRunActive={setIsRunActive}
+        onToggleRun={handleToggleRun}
         onRefreshPreview={() => setPreviewKey((k) => k + 1)}
         toggleAiAssistant={() => setIsAiOpen(!isAiOpen)}
         isAiOpen={isAiOpen}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        onOpenDeploy={() => setIsDeployOpen(true)}
       />
 
       {/* Main Workspace Body */}
@@ -150,7 +199,7 @@ export default function Workspace() {
             )}
           </div>
 
-          <BottomPanel terminalComponent={<Terminal />} problemsCount={0} />
+          <BottomPanel terminalComponent={<Terminal />} />
         </div>
 
         <AiAssistantDrawer isOpen={isAiOpen} onClose={() => setIsAiOpen(false)} />
@@ -161,6 +210,8 @@ export default function Workspace() {
           onSelectView={setActiveView}
           toggleAi={() => setIsAiOpen(!isAiOpen)}
         />
+
+        <VercelDeploymentModal isOpen={isDeployOpen} onClose={() => setIsDeployOpen(false)} />
       </div>
     </div>
   );

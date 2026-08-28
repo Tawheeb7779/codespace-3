@@ -380,28 +380,37 @@ export default function Dashboard() {
               <div className="pt-3 border-t border-outline-variant/10 space-y-3">
                 <h4 className="text-sm font-medium text-white">AI Assistant Provider Configuration</h4>
                 <div>
-                  <label className="block text-xs text-outline mb-1">Provider Strategy</label>
+                  <label className="block text-xs text-outline mb-1" htmlFor="ai-provider">Provider</label>
                   <select
+                    id="ai-provider"
                     value={aiProvider}
-                    onChange={(e) => setAiProvider(e.target.value as 'mock' | 'openai' | 'anthropic')}
+                    onChange={(e) => setAiProvider(e.target.value as 'none' | 'openai' | 'anthropic')}
                     className="w-full px-3 py-2 bg-surface-container border border-outline-variant/20 rounded-md text-xs text-white"
                   >
-                    <option value="mock">Mock / Demo Provider (Built-in offline agent)</option>
-                    <option value="openai">OpenAI (User Key)</option>
-                    <option value="anthropic">Anthropic Claude (User Key)</option>
+                    <option value="none">Not configured (assistant disabled)</option>
+                    <option value="openai">OpenAI (your API key)</option>
+                    <option value="anthropic">Anthropic Claude (your API key)</option>
                   </select>
                 </div>
 
-                {aiProvider !== 'mock' && (
+                {aiProvider !== 'none' && (
                   <div>
-                    <label className="block text-xs text-outline mb-1">API Key (Session Only)</label>
+                    <label className="block text-xs text-outline mb-1" htmlFor="ai-key">
+                      API key (kept in memory for this tab only)
+                    </label>
                     <input
+                      id="ai-key"
                       type="password"
+                      autoComplete="off"
                       placeholder="sk-..."
                       value={aiApiKey || ''}
                       onChange={(e) => setAiApiKey(e.target.value)}
                       className="w-full px-3 py-2 bg-surface-container border border-outline-variant/20 rounded-md text-xs text-white"
                     />
+                    <p className="mt-1 text-[10px] text-outline">
+                      The key is never written to browser storage and must be re-entered after a reload. Requests
+                      are sent from the browser directly to the provider.
+                    </p>
                   </div>
                 )}
               </div>

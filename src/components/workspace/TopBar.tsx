@@ -15,10 +15,14 @@ import {
   Eye,
   EyeOff,
   Command,
-  User
+  User,
+  Cloud,
+  Loader2,
+  Save
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
+import { useRuntimeStore } from '../../runtime/RuntimeManager';
 import { useAuthStore } from '../../store/useAuthStore';
 import { UserProfileModal } from '../account/UserProfileModal';
 import { AuthModal } from '../auth/AuthModal';
@@ -29,11 +33,12 @@ interface TopBarProps {
   previewDevice: 'desktop' | 'tablet' | 'mobile';
   setPreviewDevice: (device: 'desktop' | 'tablet' | 'mobile') => void;
   isRunActive: boolean;
-  setIsRunActive: (run: boolean) => void;
+  onToggleRun: () => void;
   onRefreshPreview: () => void;
   toggleAiAssistant: () => void;
   isAiOpen: boolean;
   onOpenCommandPalette: () => void;
+  onOpenDeploy: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -42,16 +47,29 @@ export const TopBar: React.FC<TopBarProps> = ({
   previewDevice,
   setPreviewDevice,
   isRunActive,
-  setIsRunActive,
+  onToggleRun,
   onRefreshPreview,
   toggleAiAssistant,
   isAiOpen,
   onOpenCommandPalette,
+  onOpenDeploy,
 }) => {
   const navigate = useNavigate();
-  const { projects, activeProjectId, gitBranch, gitStatus } = useProjectStore();
+  const projects = useProjectStore((s) => s.projects);
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const gitBranch = useProjectStore((s) => s.gitBranch);
+  const gitStatus = useProjectStore((s) => s.gitStatus);
+  const saveAllFiles = useProjectStore((s) => s.saveAllFiles);
   const { enable3DWorkspace, setEnable3DWorkspace } = usePreferenceStore();
   const { isAuthenticated, profile } = useAuthStore();
+  const runtimePhase = useRuntimeStore((s) => s.phase);
+
+  const isRuntimeBusy =
+    runtimePhase === 'booting' ||
+    runtimePhase === 'mounting' ||
+    runtimePhase === 'installing' ||
+    runtimePhase === 'starting' ||
+    runtimePhase === 'stopping';
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -155,15 +173,31 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           <div className="flex items-center gap-1 pl-2 border-l border-outline-variant/15">
             <button
-              onClick={() => setIsRunActive(!isRunActive)}
-              className={`px-2.5 py-1 rounded font-medium text-[11px] flex items-center gap-1.5 transition-all ${
-                isRunActive
+              onClick={onToggleRun}
+              disabled={isRuntimeBusy && runtimePhase === 'stopping'}
+              title={`Runtime: ${runtimePhase}`}
+              className={`px-2.5 py-1 rounded font-medium text-[11px] flex items-center gap-1.5 transition-all disabled:opacity-50 ${
+                isRunActive || isRuntimeBusy
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                   : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30'
               }`}
             >
-              {isRunActive ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
-              <span>{isRunActive ? 'Stop' : 'Run Preview'}</span>
+              {isRuntimeBusy ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : isRunActive ? (
+                <Square className="w-3 h-3 fill-current" />
+              ) : (
+                <Play className="w-3 h-3 fill-current" />
+              )}
+              <span>{isRuntimeBusy ? runtimePhase : isRunActive ? 'Stop' : 'Run'}</span>
+            </button>
+
+            <button
+              onClick={saveAllFiles}
+              className="p-1.5 rounded hover:bg-surface-high text-outline hover:text-white transition-colors"
+              title="Save all files (Ctrl/Cmd+S)"
+            >
+              <Save className="w-3.5 h-3.5" />
             </button>
 
             <button
@@ -229,6 +263,14 @@ export const TopBar: React.FC<TopBarProps> = ({
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">AI Coding Assistant</span>
+          </button>
+
+          <button
+            onClick={onOpenDeploy}
+            className="p-1.5 text-outline hover:text-white rounded hover:bg-surface-high transition-colors"
+            title="Deploy to Vercel"
+          >
+            <Cloud className="w-3.5 h-3.5" />
           </button>
 
           <button
