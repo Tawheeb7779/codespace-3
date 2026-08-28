@@ -175,6 +175,13 @@ export class LocalShell {
     const store = useProjectStore.getState();
     const files = this.files();
 
+    // The working directory can disappear if it is renamed or deleted from the
+    // explorer while the shell is open.
+    if (this.cwd !== ROOT_ID && !files[this.cwd]) {
+      this.io.writeln(`${YELLOW}${this.cwd} no longer exists; returning to /.${RESET}`);
+      this.cwd = ROOT_ID;
+    }
+
     switch (cmd) {
       case 'help':
         this.io.writeln('File commands (operate on the real project tree):');
