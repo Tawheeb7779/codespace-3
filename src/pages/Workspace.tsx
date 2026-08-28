@@ -21,6 +21,7 @@ import { AnalyticsPanel } from '../components/workspace/AnalyticsPanel';
 import { SqlStudioPanel } from '../components/workspace/SqlStudioPanel';
 import { CommandPaletteModal } from '../components/workspace/CommandPaletteModal';
 import { VercelDeploymentModal } from '../components/workspace/VercelDeploymentModal';
+import { NotificationsDrawer } from '../components/workspace/NotificationsDrawer';
 
 export default function Workspace() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -42,6 +43,7 @@ export default function Workspace() {
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isDeployOpen, setIsDeployOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
 
   // Only re-run when the route changes; keying this on `projects` reset the open
@@ -110,6 +112,7 @@ export default function Workspace() {
         isAiOpen={isAiOpen}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onOpenDeploy={() => setIsDeployOpen(true)}
+        onOpenNotifications={() => setIsNotificationsOpen((open) => !open)}
       />
 
       {/* Main Workspace Body */}
@@ -203,6 +206,8 @@ export default function Workspace() {
         </div>
 
         <AiAssistantDrawer isOpen={isAiOpen} onClose={() => setIsAiOpen(false)} />
+
+        <NotificationsDrawer isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
 
         <CommandPaletteModal
           isOpen={isCommandPaletteOpen}

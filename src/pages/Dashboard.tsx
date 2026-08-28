@@ -18,10 +18,12 @@ import {
 } from 'lucide-react';
 import { useProjectStore } from '../store/useProjectStore';
 import { usePreferenceStore } from '../store/usePreferenceStore';
+import { GitHubImportService } from '../services/GitHubImportService';
+import { GitHubPushService } from '../services/GitHubPushService';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { projects, createProject, deleteProject, setActiveProject, githubConnected, setGithubConnected, setGithubRepo } = useProjectStore();
+  const { projects, createProject, importProject, deleteProject, setActiveProject, githubConnected, setGithubConnected, setGithubRepo } = useProjectStore();
   const { render3DQuality, setRender3DQuality, enable3DWorkspace, setEnable3DWorkspace, aiProvider, setAiProvider, aiApiKey, setAiApiKey } = usePreferenceStore();
 
   const [activeTab, setActiveTab] = useState<'projects' | 'github' | 'settings' | 'integrations'>('projects');
@@ -31,10 +33,70 @@ export default function Dashboard() {
   const [newProjectTemplate, setNewProjectTemplate] = useState<'react-three' | 'vanilla'>('react-three');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // GitHub import state
+  // GitHub import state. The token is session-only and never persisted.
   const [githubTokenInput, setGithubTokenInput] = useState('');
   const [repoSearchInput, setRepoSearchInput] = useState('');
   const [importingRepo, setImportingRepo] = useState(false);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [githubLogin, setGithubLogin] = useState<string | null>(null);
+  const [tokenError, setTokenError] = useState<string | null>(null);
+  const [verifyingToken, setVerifyingToken] = useState(false);
+
+  /** Only reports a session as connected once GitHub accepts the token. */
+  const handleConnectGithub = async () => {
+    setVerifyingToken(true);
+    setTokenError(null);
+    const verification = await GitHubPushService.verifyToken(githubTokenInput);
+    setVerifyingToken(false);
+
+    if (!verification.ok) {
+      setGithubConnected(false);
+      setGithubLogin(null);
+      setTokenError(verification.error || 'Token verification failed.');
+      return;
+    }
+    setGithubLogin(verification.login || null);
+    setGithubConnected(true);
+  };
+
+  /** Imports the repository's real file tree through the GitHub REST API. */
+  const handleImportRepository = async () => {
+    const target = repoSearchInput.trim();
+    if (!target || importingRepo) return;
+
+    setImportingRepo(true);
+    setImportError(null);
+    setImportStatus('Reading repository tree...');
+
+    const result = await GitHubImportService.importRepository(target, githubTokenInput, (progress) => {
+      setImportStatus(`Downloading ${progress.loaded}/${progress.total}: ${progress.path}`);
+    });
+
+    if (!result.success || !result.repository) {
+      setImportingRepo(false);
+      setImportStatus(null);
+      setImportError(result.error || 'Import failed.');
+      return;
+    }
+
+    const { owner, repo, branch, files, fileCount, skipped, truncated } = result.repository;
+    const project = importProject(
+      repo,
+      `Imported from ${owner}/${repo}@${branch}`,
+      files,
+      { githubRepo: `${owner}/${repo}`, branch }
+    );
+    setGithubRepo(`${owner}/${repo}`);
+
+    setImportingRepo(false);
+    setImportStatus(
+      `Imported ${fileCount} files from ${owner}/${repo}@${branch}` +
+        (skipped.length ? ` (${skipped.length} skipped: binary, oversized or over the import limit)` : '') +
+        (truncated ? '. The repository tree was truncated by GitHub, so some files were not listed.' : '')
+    );
+    navigate(`/workspace/${project.id}`);
+  };
 
   const handleCreateProject = (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,26 +294,28 @@ export default function Dashboard() {
                     className="flex-1 px-3.5 py-2 bg-surface-container border border-outline-variant/20 rounded-lg text-sm text-white focus:outline-none focus:border-primary-container"
                   />
                   <button
-                    onClick={() => {
-                      if (githubTokenInput) {
-                        setGithubConnected(true);
-                      }
-                    }}
-                    className="px-4 py-2 bg-primary-container text-white text-sm font-medium rounded-lg hover:bg-primary-container/80 transition-all"
+                    onClick={handleConnectGithub}
+                    disabled={!githubTokenInput.trim() || verifyingToken}
+                    className="px-4 py-2 bg-primary-container text-white text-sm font-medium rounded-lg hover:bg-primary-container/80 transition-all disabled:opacity-50"
                   >
-                    Connect Session
+                    {verifyingToken ? 'Verifying...' : 'Connect Session'}
                   </button>
                 </div>
+                {tokenError && <p className="mt-1.5 text-[11px] text-red-300">{tokenError}</p>}
               </div>
 
               {githubConnected && (
                 <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center justify-between text-xs text-emerald-300">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>GitHub Session Active</span>
+                    <span>{githubLogin ? `Authenticated as @${githubLogin}` : 'GitHub session active'}</span>
                   </div>
                   <button
-                    onClick={() => setGithubConnected(false)}
+                    onClick={() => {
+                      setGithubConnected(false);
+                      setGithubLogin(null);
+                      setGithubTokenInput('');
+                    }}
                     className="text-emerald-400 hover:underline text-[11px]"
                   >
                     Disconnect
@@ -270,26 +334,26 @@ export default function Dashboard() {
                     className="flex-1 px-3.5 py-2 bg-surface-container border border-outline-variant/20 rounded-lg text-sm text-white focus:outline-none focus:border-primary-container"
                   />
                   <button
-                    onClick={() => {
-                      if (!repoSearchInput.trim()) return;
-                      setImportingRepo(true);
-                      setTimeout(() => {
-                        const proj = createProject(
-                          repoSearchInput.split('/')[1] || repoSearchInput,
-                          `Imported repository: ${repoSearchInput}`,
-                          'react-three'
-                        );
-                        setGithubRepo(repoSearchInput);
-                        setImportingRepo(false);
-                        navigate(`/workspace/${proj.id}`);
-                      }, 1000);
-                    }}
-                    disabled={importingRepo}
-                    className="px-4 py-2 bg-secondary text-slate-950 text-sm font-medium rounded-lg hover:bg-secondary/90 transition-all flex items-center gap-2"
+                    onClick={handleImportRepository}
+                    disabled={importingRepo || !repoSearchInput.trim()}
+                    className="px-4 py-2 bg-secondary text-slate-950 text-sm font-medium rounded-lg hover:bg-secondary/90 transition-all flex items-center gap-2 disabled:opacity-50"
                   >
                     {importingRepo ? 'Importing...' : 'Import to Workspace'}
                   </button>
                 </div>
+
+                <p className="text-[11px] text-outline">
+                  Public repositories import without a token; a token raises the GitHub rate limit and is required
+                  for private repositories. Text files up to 512 KB are imported (600 files max); binary assets are
+                  skipped.
+                </p>
+
+                {importStatus && (
+                  <p className="text-[11px] font-mono text-emerald-300 break-all">{importStatus}</p>
+                )}
+                {importError && (
+                  <p className="text-[11px] text-red-300 break-words">{importError}</p>
+                )}
               </div>
             </div>
           </div>
@@ -327,11 +391,22 @@ export default function Dashboard() {
                 </div>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Connect OpenAI or Anthropic API providers to grant the workspace autonomous file-editing capabilities.
+                Add your own OpenAI or Anthropic API key to use the assistant. There is no built-in model, and the
+                key is kept in memory for this tab only.
               </p>
               <div className="pt-2 flex justify-between items-center text-xs">
-                <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Mock Fallback Enabled
+                <span
+                  className={`px-2 py-1 rounded border ${
+                    aiProvider !== 'none' && aiApiKey
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                      : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  }`}
+                >
+                  {aiProvider === 'none'
+                    ? 'No provider configured'
+                    : aiApiKey
+                      ? `${aiProvider} key set for this tab`
+                      : `${aiProvider} selected, key missing`}
                 </span>
                 <button onClick={() => setActiveTab('settings')} className="text-primary hover:underline">
                   Configure Keys

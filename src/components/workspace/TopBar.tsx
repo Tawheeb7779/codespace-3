@@ -18,7 +18,8 @@ import {
   User,
   Cloud,
   Loader2,
-  Save
+  Save,
+  Bell
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
@@ -39,6 +40,7 @@ interface TopBarProps {
   isAiOpen: boolean;
   onOpenCommandPalette: () => void;
   onOpenDeploy: () => void;
+  onOpenNotifications: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -53,6 +55,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   isAiOpen,
   onOpenCommandPalette,
   onOpenDeploy,
+  onOpenNotifications,
 }) => {
   const navigate = useNavigate();
   const projects = useProjectStore((s) => s.projects);
@@ -63,6 +66,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   const { enable3DWorkspace, setEnable3DWorkspace } = usePreferenceStore();
   const { isAuthenticated, profile } = useAuthStore();
   const runtimePhase = useRuntimeStore((s) => s.phase);
+  const runtimeErrorCount = useRuntimeStore((s) => s.errors.length);
 
   const isRuntimeBusy =
     runtimePhase === 'booting' ||
@@ -263,6 +267,19 @@ export const TopBar: React.FC<TopBarProps> = ({
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">AI Coding Assistant</span>
+          </button>
+
+          <button
+            onClick={onOpenNotifications}
+            className="relative p-1.5 text-outline hover:text-white rounded hover:bg-surface-high transition-colors"
+            title="Runtime notifications"
+          >
+            <Bell className="w-3.5 h-3.5" />
+            {runtimeErrorCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-red-500 text-white text-[9px] font-mono leading-[14px] text-center">
+                {runtimeErrorCount > 9 ? '9+' : runtimeErrorCount}
+              </span>
+            )}
           </button>
 
           <button

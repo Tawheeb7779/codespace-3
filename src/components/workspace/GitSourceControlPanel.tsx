@@ -33,7 +33,28 @@ export const GitSourceControlPanel: React.FC = () => {
   const [isPushing, setIsPushing] = useState(false);
   const [pushStatusText, setPushStatusText] = useState('');
   const [pushResult, setPushResult] = useState<PushResult | null>(null);
+  // Session-only credential: held in component state, never persisted.
   const [sessionToken, setSessionToken] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [githubLogin, setGithubLogin] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  /** Confirms the token really works before showing the session as active. */
+  const handleVerifyToken = async () => {
+    setIsVerifying(true);
+    setAuthError(null);
+    const verification = await GitHubPushService.verifyToken(sessionToken);
+    setIsVerifying(false);
+
+    if (!verification.ok) {
+      setGithubLogin(null);
+      setGithubConnected(false);
+      setAuthError(verification.error || 'Token verification failed.');
+      return;
+    }
+    setGithubLogin(verification.login || null);
+    setGithubConnected(true);
+  };
 
   const currentProject = projects.find((p) => p.id === activeProjectId);
 
@@ -49,7 +70,7 @@ export const GitSourceControlPanel: React.FC = () => {
     if (!githubRepo || !sessionToken) {
       setPushResult({
         success: false,
-        error: 'Missing required parameters. Please enter a valid GitHub Token and repository.',
+        error: 'Enter a GitHub token and set the repository before pushing.',
       });
       return;
     }
@@ -61,6 +82,14 @@ export const GitSourceControlPanel: React.FC = () => {
       });
       return;
     }
+
+    // The push replaces the branch contents with the workspace, so deletions on
+    // the remote are real. Confirm before doing it.
+    const confirmed = window.confirm(
+      `Push the entire workspace to ${githubRepo}@${gitBranch || 'main'}?\n\n` +
+        'Files that exist on the remote branch but not in this workspace will be deleted by the commit.'
+    );
+    if (!confirmed) return;
 
     setIsPushing(true);
     setPushResult(null);
@@ -121,23 +150,42 @@ export const GitSourceControlPanel: React.FC = () => {
 
         <div className="space-y-1 pt-1">
           <label className="block text-[10px] text-outline">GitHub Token (Session Memory Only)</label>
-          <input
-            type="password"
-            placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-            value={sessionToken}
-            onChange={(e) => {
-              setSessionToken(e.target.value);
-              if (e.target.value) setGithubConnected(true);
-            }}
-            className="w-full px-2 py-1 bg-surface-high border border-outline-variant/20 rounded text-[11px] text-white focus:outline-none focus:border-primary"
-          />
+          <div className="flex gap-1.5">
+            <input
+              type="password"
+              autoComplete="off"
+              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+              value={sessionToken}
+              onChange={(e) => {
+                setSessionToken(e.target.value);
+                setGithubConnected(false);
+                setGithubLogin(null);
+              }}
+              className="flex-1 px-2 py-1 bg-surface-high border border-outline-variant/20 rounded text-[11px] text-white focus:outline-none focus:border-primary"
+            />
+            <button
+              type="button"
+              onClick={handleVerifyToken}
+              disabled={!sessionToken.trim() || isVerifying}
+              className="px-2 py-1 bg-primary-container text-white rounded text-[11px] font-medium disabled:opacity-40"
+            >
+              {isVerifying ? 'Checking...' : 'Verify'}
+            </button>
+          </div>
+          {githubLogin && (
+            <p className="text-[10px] text-emerald-300 font-mono">Authenticated as @{githubLogin}</p>
+          )}
+          {authError && <p className="text-[10px] text-red-300">{authError}</p>}
         </div>
       </div>
 
       {/* Security Directive */}
       <div className="p-2.5 bg-surface-high/60 rounded border border-outline-variant/10 text-[11px] text-outline flex items-start gap-2">
         <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-        <p>Tokens are held strictly in ephemeral session memory and passed directly to GitHub REST API endpoints.</p>
+        <p>
+          The token stays in this panel's memory for the current tab, is sent only to api.github.com, and is
+          cleared on reload. Commit staging below is local bookkeeping - Push is what creates the real commit.
+        </p>
       </div>
 
       {/* Commit & Push Input Box */}
@@ -155,7 +203,7 @@ export const GitSourceControlPanel: React.FC = () => {
             disabled={gitStatus.staged.length === 0}
             className="flex-1 py-1.5 bg-primary-container disabled:opacity-40 hover:bg-primary-container/80 text-white rounded font-medium text-xs transition-all flex items-center justify-center gap-1.5"
           >
-            <GitCommit className="w-3.5 h-3.5" /> Commit ({gitStatus.staged.length})
+            <GitCommit className="w-3.5 h-3.5" /> Stage commit ({gitStatus.staged.length})
           </button>
           <button
             type="button"
@@ -182,7 +230,7 @@ export const GitSourceControlPanel: React.FC = () => {
           }`}>
             <div className="font-semibold flex items-center gap-1">
               {pushResult.success ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5 text-red-400" />}
-              {pushResult.success ? 'Remote Push Verified' : 'Push Failed'}
+              {pushResult.success ? 'Commit created and verified on GitHub' : 'Push failed'}
             </div>
             {pushResult.success && (
               <div className="space-y-0.5 font-mono text-[10px]">

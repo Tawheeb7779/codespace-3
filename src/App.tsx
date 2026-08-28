@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { initializeAuthListener } from './store/useAuthStore';
 
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const Workspace = React.lazy(() => import('./pages/Workspace'));
 
 export function App() {
+  // Restores an existing Supabase session on load and follows sign-in/out.
+  useEffect(() => initializeAuthListener(), []);
+
   return (
     <BrowserRouter>
       <React.Suspense fallback={

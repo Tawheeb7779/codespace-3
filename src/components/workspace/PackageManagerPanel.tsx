@@ -451,7 +451,7 @@ export const PackageManagerPanel: React.FC = () => {
               <ShieldAlert className="w-4 h-4 text-primary" /> Real OSV Advisory Querying
             </div>
             <p className="text-[11px] text-outline leading-relaxed">
-              Monitors manifest dependencies directly against Open Source Vulnerability (OSV) databases without storing static mock data.
+              Queries the public OSV.dev advisory database for the versions listed in package.json.
             </p>
           </div>
         </div>

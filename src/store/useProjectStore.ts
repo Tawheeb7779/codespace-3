@@ -142,6 +142,13 @@ interface ProjectState {
   // Project actions
   setActiveProject: (id: string) => void;
   createProject: (name: string, description: string, template?: Project['template']) => ExtendedProject;
+  /** Creates a project from an existing file map (e.g. a GitHub import). */
+  importProject: (
+    name: string,
+    description: string,
+    files: Record<string, ProjectFile>,
+    meta?: { githubRepo?: string; branch?: string }
+  ) => ExtendedProject;
   deleteProject: (id: string) => void;
 
   // Tab actions
@@ -327,6 +334,42 @@ export const useProjectStore = create<ProjectState>()(
             openTabIds: firstFile ? [firstFile.id] : [],
             gitBranch: 'main',
             gitStatus: { staged: [], unstaged: [], committed: false },
+          }));
+
+          RuntimeFilesystemBridge.initializeProject(id, files);
+          return newProject;
+        },
+
+        importProject: (name, description, files, meta = {}) => {
+          const currentUser = useAuthStore.getState().user;
+          const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'project';
+          const id = `${slug}-${Date.now().toString(36)}`;
+
+          const preferredEntry =
+            Object.values(files).find((f) => !f.isFolder && /^\/(README|readme)\./.test(f.path)) ||
+            Object.values(files).find((f) => !f.isFolder);
+
+          const newProject: ExtendedProject = {
+            id,
+            name,
+            description,
+            updatedAt: new Date().toISOString(),
+            branch: meta.branch || 'main',
+            githubRepo: meta.githubRepo,
+            isGitHubConnected: Boolean(meta.githubRepo),
+            files,
+            userId: currentUser?.id || 'guest-local',
+            visibility: 'private',
+          };
+
+          set((state) => ({
+            projects: [newProject, ...state.projects],
+            activeProjectId: id,
+            activeFileId: preferredEntry ? preferredEntry.id : null,
+            openTabIds: preferredEntry ? [preferredEntry.id] : [],
+            gitBranch: newProject.branch as string,
+            gitStatus: { staged: [], unstaged: [], committed: false },
+            githubRepo: meta.githubRepo ?? state.githubRepo,
           }));
 
           RuntimeFilesystemBridge.initializeProject(id, files);

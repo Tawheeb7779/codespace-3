@@ -4,6 +4,10 @@ import type { editor } from 'monaco-editor';
 import { X, FileCode, FileText, FileJson, Save, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
+import { setupMonaco } from '../../lib/monacoSetup';
+
+// Point @monaco-editor/react at the bundled Monaco before the first render.
+setupMonaco();
 
 /** Keeps a Monaco failure from taking down the whole workspace. */
 class EditorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
