@@ -30,11 +30,13 @@ function extractCodeBlock(text: string): string | null {
 }
 
 interface AiAssistantDrawerProps {
+  /** Rendered inside the workspace's right dock rather than as a floating drawer. */
+  docked?: boolean;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, onClose }) => {
+export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, onClose, docked = false }) => {
   const projects = useProjectStore((s) => s.projects);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
   const activeFileId = useProjectStore((s) => s.activeFileId);
@@ -220,7 +222,13 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
   if (!isOpen) return null;
 
   return (
-    <div className="w-80 bg-surface-low border-l border-outline-variant/15 flex flex-col h-full z-40 select-none shadow-2xl">
+    <div
+      className={
+        docked
+          ? 'w-full h-full bg-surface-low flex flex-col min-h-0'
+          : 'w-80 bg-surface-low border-l border-white/10 flex flex-col h-full z-40 shadow-2xl'
+      }
+    >
       {/* Header */}
       <div className="h-11 px-3 bg-surface-container border-b border-outline-variant/15 flex items-center justify-between">
         <div className="flex items-center gap-2 text-secondary font-semibold text-xs">
