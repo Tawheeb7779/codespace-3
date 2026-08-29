@@ -274,7 +274,10 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
             {aiProvider === 'none' ? 'not configured' : aiProvider}
           </span>
         </div>
-        <button onClick={onClose} className="p-1 hover:text-white text-outline rounded hover:bg-surface-high">
+        <button
+          onClick={onClose}
+          className="p-1 hover:text-white text-outline rounded hover:bg-surface-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef233c]/50"
+        >
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -390,7 +393,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
         <button
           type="submit"
           disabled={!input.trim() || isThinking}
-          className="p-2 bg-primary-container disabled:opacity-40 hover:bg-primary-container/80 text-white rounded-lg transition-colors"
+          className="p-2 bg-primary-container disabled:opacity-40 hover:bg-primary-container/80 text-white rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef233c]/50 transition-colors"
         >
           <Send className="w-3.5 h-3.5" />
         </button>

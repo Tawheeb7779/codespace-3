@@ -156,7 +156,7 @@ export default function WorkspaceCompact({ breakpoint }: WorkspaceCompactProps):
         <button
           onClick={() => navigate('/dashboard')}
           aria-label="Back to projects"
-          className="w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+          className="w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef233c]/50 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
@@ -173,7 +173,7 @@ export default function WorkspaceCompact({ breakpoint }: WorkspaceCompactProps):
           onClick={saveAllFiles}
           disabled={dirtyCount === 0}
           aria-label="Save all files"
-          className="w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-30 transition-colors"
+          className="w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef233c]/50 transition-colors"
         >
           <Save className="w-4 h-4" />
         </button>
@@ -181,7 +181,7 @@ export default function WorkspaceCompact({ breakpoint }: WorkspaceCompactProps):
         <button
           onClick={handleRun}
           aria-label={isRunActive ? 'Stop the dev server' : 'Run the project'}
-          className={`h-9 px-3 shrink-0 flex items-center gap-1.5 rounded-lg text-[12px] font-semibold transition-colors ${
+          className={`h-9 px-3 shrink-0 flex items-center gap-1.5 rounded-lg text-[12px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050507] focus-visible:ring-[#ef233c]/50 transition-colors ${
             isRunActive ? 'bg-amber-500/15 text-amber-300' : 'bg-[#ef233c] text-white'
           }`}
         >
@@ -199,7 +199,7 @@ export default function WorkspaceCompact({ breakpoint }: WorkspaceCompactProps):
           <button
             onClick={() => setIsPaletteOpen(true)}
             aria-label="Command palette"
-            className="w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef233c]/50 transition-colors"
           >
             <Command className="w-4 h-4" />
           </button>
@@ -223,7 +223,7 @@ export default function WorkspaceCompact({ breakpoint }: WorkspaceCompactProps):
               key={item.id}
               onClick={() => setPanel(active ? null : item.id)}
               aria-pressed={active}
-              className={`relative flex-1 min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-lg transition-colors ${
+              className={`relative flex-1 min-h-[52px] flex flex-col items-center justify-center gap-0.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#ef233c]/50 transition-colors ${
                 active ? 'text-[#ef233c]' : 'text-zinc-500 hover:text-zinc-200'
               }`}
             >

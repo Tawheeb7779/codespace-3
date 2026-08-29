@@ -97,11 +97,24 @@ const LANGUAGE_BY_EXTENSION: Record<string, string> = {
   xml: 'xml',
   svg: 'xml',
   txt: 'plaintext',
+  java: 'java',
+  c: 'c',
+  h: 'c',
+  cpp: 'cpp',
+  cc: 'cpp',
+  cxx: 'cpp',
+  hpp: 'cpp',
+  cs: 'csharp',
+  go: 'go',
+  rs: 'rust',
+  php: 'php',
 };
 
 const LANGUAGE_BY_FILENAME: Record<string, string> = {
   dockerfile: 'dockerfile',
-  makefile: 'makefile',
+  // No dedicated Makefile grammar is bundled; Monaco would treat an unregistered
+  // 'makefile' id as plaintext anyway, so map it explicitly.
+  makefile: 'plaintext',
   '.gitignore': 'plaintext',
   '.env': 'plaintext',
 };

@@ -2,7 +2,7 @@ import { ProjectFile } from '../types';
 import { PreviewPhase, RuntimeLog, ScriptResult } from '../types/runtime';
 import { WebContainerProvider, RunningProcess } from './WebContainerProvider';
 import { RuntimeFilesystemBridge } from './RuntimeFilesystemBridge';
-import { parseManifest } from './manifest';
+import { parseManifest, inferRunCommand, detectPackageManager, installCommand, runScriptCommand } from './manifest';
 
 export interface PreviewRuntimeEvents {
   onPhase: (phase: PreviewPhase, error?: string | null) => void;
@@ -89,13 +89,20 @@ export class PreviewRuntime {
       }
 
       const manifest = parseManifest(manifestFile.content);
-      if (!manifest.scripts || Object.keys(manifest.scripts).length === 0) {
-        throw new Error('/package.json defines no scripts - cannot start a dev server.');
-      }
+      const filePaths = Object.keys(files);
+      const pm = detectPackageManager(filePaths);
 
-      const script = manifest.scripts.dev ? 'dev' : manifest.scripts.start ? 'start' : null;
-      if (!script) {
-        throw new Error('/package.json has no "dev" or "start" script - cannot start a dev server.');
+      const runCmd = manifest.scripts?.dev
+        ? runScriptCommand(pm, 'dev')
+        : manifest.scripts?.start
+          ? runScriptCommand(pm, 'start')
+          : inferRunCommand(manifest, filePaths);
+      if (!runCmd) {
+        throw new Error(
+          '/package.json has no "dev" or "start" script, and no supported project shape was ' +
+            'detected (a "vite" dependency, a vite.config file, or a "main" entry). Add a ' +
+            '"scripts.dev" entry to package.json to run this project.'
+        );
       }
 
       const hasDeps =
@@ -107,13 +114,14 @@ export class PreviewRuntime {
 
       if (hasDeps && !alreadyInstalled) {
         this.emitPhase('installing');
-        this.emitLog('info', '$ npm install');
-        const installExit = await WebContainerProvider.run('npm', ['install'], {
+        const install = installCommand(pm);
+        this.emitLog('info', `$ ${install.label}`);
+        const installExit = await WebContainerProvider.run(install.command, install.args, {
           onData: (chunk) => this.emitLog('stdout', chunk),
         });
         if (this.stopRequested) return;
         if (installExit !== 0) {
-          throw new Error(`npm install failed with exit code ${installExit}.`);
+          throw new Error(`${install.label} failed with exit code ${installExit}.`);
         }
         this.installedManifest.set(projectId, manifestFile.content);
       } else if (hasDeps) {
@@ -121,7 +129,7 @@ export class PreviewRuntime {
       }
 
       this.emitPhase('starting');
-      this.emitLog('info', `$ npm run ${script}`);
+      this.emitLog('info', `$ ${runCmd.label}`);
 
       this.unsubscribeServerReady?.();
       this.unsubscribeServerReady = WebContainerProvider.addServerReadyListener((url, port) => {
@@ -130,7 +138,7 @@ export class PreviewRuntime {
         this.emitLog('info', `Dev server ready on ${url}`);
       });
 
-      const dev = await WebContainerProvider.spawn('npm', ['run', script], {
+      const dev = await WebContainerProvider.spawn(runCmd.command, runCmd.args, {
         onData: (chunk) => this.emitLog('stdout', chunk),
       });
       this.devProcess = dev;
@@ -185,14 +193,15 @@ export class PreviewRuntime {
     await RuntimeFilesystemBridge.mountProject(projectId, files);
 
     this.emitPhase('installing');
-    this.emitLog('info', '$ npm install');
-    const exitCode = await WebContainerProvider.run('npm', ['install'], {
+    const install = installCommand(detectPackageManager(Object.keys(files)));
+    this.emitLog('info', `$ ${install.label}`);
+    const exitCode = await WebContainerProvider.run(install.command, install.args, {
       onData: (chunk) => this.emitLog('stdout', chunk),
     });
 
     if (exitCode !== 0) {
-      this.emitPhase('failed', `npm install failed with exit code ${exitCode}.`);
-      throw new Error(`npm install failed with exit code ${exitCode}.`);
+      this.emitPhase('failed', `${install.label} failed with exit code ${exitCode}.`);
+      throw new Error(`${install.label} failed with exit code ${exitCode}.`);
     }
 
     const manifestFile = files['/package.json'];
@@ -225,6 +234,9 @@ export class PreviewRuntime {
       return fail(`/package.json defines no "${script}" script.`);
     }
 
+    const pm = detectPackageManager(Object.keys(files));
+    const run = runScriptCommand(pm, script);
+
     try {
       await RuntimeFilesystemBridge.mountProject(projectId, files);
 
@@ -232,27 +244,28 @@ export class PreviewRuntime {
         Object.keys(manifest.dependencies || {}).length > 0 ||
         Object.keys(manifest.devDependencies || {}).length > 0;
       if (hasDeps && !(await WebContainerProvider.exists('/node_modules'))) {
-        this.emitLog('info', '$ npm install');
-        const installExit = await WebContainerProvider.run('npm', ['install'], {
+        const install = installCommand(pm);
+        this.emitLog('info', `$ ${install.label}`);
+        const installExit = await WebContainerProvider.run(install.command, install.args, {
           onData: (chunk) => this.emitLog('stdout', chunk),
         });
-        if (installExit !== 0) return fail(`npm install failed with exit code ${installExit}.`);
+        if (installExit !== 0) return fail(`${install.label} failed with exit code ${installExit}.`);
         if (manifestFile) this.installedManifest.set(projectId, manifestFile.content);
       }
 
-      this.emitLog('info', `$ npm run ${script}`);
-      const exitCode = await WebContainerProvider.run('npm', ['run', script], {
+      this.emitLog('info', `$ ${run.label}`);
+      const exitCode = await WebContainerProvider.run(run.command, run.args, {
         onData: (chunk) => this.emitLog('stdout', chunk),
       });
 
       const durationMs = Math.round(performance.now() - started);
       this.emitLog(
         exitCode === 0 ? 'info' : 'error',
-        `npm run ${script} exited with code ${exitCode} in ${durationMs}ms.`
+        `${run.label} exited with code ${exitCode} in ${durationMs}ms.`
       );
       return { script, exitCode, success: exitCode === 0, durationMs };
     } catch (e: unknown) {
-      return fail(`npm run ${script} failed: ${e instanceof Error ? e.message : String(e)}`);
+      return fail(`${run.label} failed: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 }
