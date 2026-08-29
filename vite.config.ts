@@ -57,6 +57,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    // Explore-agent worktrees under .claude/ can leave stray copies of test files on
+    // disk; without this, Vitest picks them up and produces duplicate/false results.
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.claude/**'],
     /**
      * Unit tests must not pick up real credentials from .env.local, or the
      * Supabase-backed code paths would make live network calls and the

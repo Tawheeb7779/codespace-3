@@ -5,6 +5,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import * as THREE from 'three';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { Box, Layers, RefreshCw, Eye, Sliders } from 'lucide-react';
 
 /** Above this node count, labels only appear on hover or selection. */
@@ -12,6 +13,19 @@ const MAX_ALWAYS_ON_LABELS = 40;
 
 /** Hard cap on rendered nodes so a large imported repository cannot stall WebGL. */
 const MAX_RENDERED_NODES = 300;
+
+type RenderQuality = 'low' | 'medium' | 'high';
+const QUALITY_RANK: Record<RenderQuality, number> = { low: 0, medium: 1, high: 2 };
+
+/**
+ * A phone or tablet GPU shouldn't pay for a "high" scene the user configured on
+ * a desktop. This never writes back to the persisted preference - it only caps
+ * what gets rendered for the current viewport.
+ */
+function effectiveQuality(preference: RenderQuality, breakpoint: 'mobile' | 'tablet' | 'desktop'): RenderQuality {
+  const cap: RenderQuality = breakpoint === 'mobile' ? 'low' : breakpoint === 'tablet' ? 'medium' : 'high';
+  return QUALITY_RANK[cap] < QUALITY_RANK[preference] ? cap : preference;
+}
 
 interface Node3DData {
   id: string;
@@ -275,6 +289,8 @@ export const Spatial3DWorkspace: React.FC = () => {
   const activeFileId = useProjectStore((s) => s.activeFileId);
   const openFile = useProjectStore((s) => s.openFile);
   const render3DQuality = usePreferenceStore((s) => s.render3DQuality);
+  const breakpoint = useBreakpoint();
+  const quality = effectiveQuality(render3DQuality, breakpoint);
 
   const [searchFilter, setSearchFilter] = useState('');
   const [targetFocus, setTargetFocus] = useState<[number, number, number] | null>(null);
@@ -452,8 +468,8 @@ export const Spatial3DWorkspace: React.FC = () => {
 
         {/* 3D Canvas */}
         <Canvas camera={{ position: [0, 2, 7], fov: 55 }}>
-          <ambientLight intensity={render3DQuality === 'low' ? 0.8 : 0.4} />
-          {render3DQuality !== 'low' && <pointLight position={[10, 10, 10]} intensity={1} color="#ef233c" />}
+          <ambientLight intensity={quality === 'low' ? 0.8 : 0.4} />
+          {quality !== 'low' && <pointLight position={[10, 10, 10]} intensity={1} color="#ef233c" />}
 
           <ConnectionLines connections={connections} />
 
@@ -464,7 +480,7 @@ export const Spatial3DWorkspace: React.FC = () => {
               isActive={node.id === activeFileId}
               onSelect={openFile}
               onFocus={setTargetFocus}
-              isLowQuality={render3DQuality === 'low'}
+              isLowQuality={quality === 'low'}
               shaderPreset={shaderPreset}
               showLabel={filteredNodes.length <= MAX_ALWAYS_ON_LABELS}
             />
