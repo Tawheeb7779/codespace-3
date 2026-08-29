@@ -16,24 +16,16 @@ import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
 import { VoiceRecognitionService } from '../../services/VoiceRecognitionService';
 import { useRuntimeStore } from '../../runtime/RuntimeManager';
+import { runAgentLoop, ApiError } from '../../services/AiCodingAgent';
 
 interface Message {
   id: string;
   sender: 'user' | 'assistant';
   text: string;
   isError?: boolean;
+  /** A compact agent-step status line (tool call result) rather than a chat reply. */
+  isStep?: boolean;
 }
-
-/** Thrown for a non-ok HTTP response so callers can branch on status (e.g. 429). */
-class ApiError extends Error {
-  status: number;
-  constructor(message: string, status: number) {
-    super(message);
-    this.status = status;
-  }
-}
-
-const REQUEST_TIMEOUT_MS = 30_000;
 
 /** First fenced code block in a reply, or null when the reply has none. */
 function extractCodeBlock(text: string): string | null {
@@ -63,7 +55,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
     {
       id: '1',
       sender: 'assistant',
-      text: 'Configure an OpenAI or Anthropic API key in Dashboard > Settings to use the assistant. Your active file is sent as context with each request.',
+      text: 'Configure an OpenAI or Anthropic API key in Dashboard > Settings to use the agent. It can inspect this project, create/edit files, install packages, and run the dev server on your behalf.',
     },
   ]);
   const [isThinking, setIsThinking] = useState(false);
@@ -115,89 +107,37 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
 
     setIsThinking(true);
 
-    const context = [
-      `Project: ${currentProject?.name ?? 'unknown'}`,
-      `Active file: ${activeFile?.path ?? 'none'}`,
-      activeFile && !activeFile.isFolder
-        ? `Active file contents:\n${activeFile.content.slice(0, 4000)}`
-        : '',
-    ]
-      .filter(Boolean)
-      .join('\n');
-
-    const systemPrompt = `You are a coding assistant inside the CodeSpace 3D browser IDE.\n${context}`;
-
     // Cancel any still-pending request before starting a new one.
     abortControllerRef.current?.abort();
     const controller = new AbortController();
     abortControllerRef.current = controller;
-    let timedOut = false;
-    const timeoutId = window.setTimeout(() => {
-      timedOut = true;
-      controller.abort();
-    }, REQUEST_TIMEOUT_MS);
 
     try {
-      let replyText: string;
-
-      if (aiProvider === 'openai') {
-        const res = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          signal: controller.signal,
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${key}`,
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userText },
-            ],
-          }),
-        });
-        if (!res.ok) {
-          const errJson = await res.json().catch(() => ({}));
-          throw new ApiError(errJson.error?.message || `OpenAI API error ${res.status}`, res.status);
-        }
-        const data = await res.json();
-        replyText = data.choices?.[0]?.message?.content || 'The provider returned an empty response.';
-      } else {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          signal: controller.signal,
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': key,
-            'anthropic-version': '2023-06-01',
-            // Required for browser-originated calls to the Anthropic API.
-            'anthropic-dangerous-direct-browser-access': 'true',
-          },
-          body: JSON.stringify({
-            model: 'claude-3-5-haiku-latest',
-            max_tokens: 1500,
-            system: systemPrompt,
-            messages: [{ role: 'user', content: userText }],
-          }),
-        });
-        if (!res.ok) {
-          const errJson = await res.json().catch(() => ({}));
-          throw new ApiError(errJson.error?.message || `Anthropic API error ${res.status}`, res.status);
-        }
-        const data = await res.json();
-        replyText = data.content?.[0]?.text || 'The provider returned an empty response.';
-      }
+      const { finalText } = await runAgentLoop({
+        provider: aiProvider,
+        apiKey: key,
+        userText,
+        signal: controller.signal,
+        onStep: (label) => {
+          setMessages((prev) => [
+            ...prev,
+            { id: `${Date.now()}-${prev.length}`, sender: 'assistant', text: label, isStep: true },
+          ]);
+        },
+      });
 
       setMessages((prev) => [
         ...prev,
-        { id: `${Date.now() + 1}`, sender: 'assistant', text: replyText },
+        { id: `${Date.now() + 1}`, sender: 'assistant', text: finalText },
       ]);
     } catch (err: unknown) {
       let text: string;
       if (err instanceof DOMException && err.name === 'AbortError') {
-        text = timedOut
-          ? `The ${aiProvider} request timed out after ${REQUEST_TIMEOUT_MS / 1000}s. Try again or shorten the file context.`
-          : 'Request cancelled.';
+        // The per-turn timeout aborts an inner signal only; the outer controller is
+        // aborted only by an explicit Stop (or a superseding new send).
+        text = abortControllerRef.current?.signal.aborted
+          ? 'Request cancelled.'
+          : 'The request timed out. Try again or narrow the request.';
       } else if (err instanceof ApiError && err.status === 429) {
         text = `${aiProvider === 'openai' ? 'OpenAI' : 'Anthropic'} rate limit hit (429). Wait a moment before sending another request.`;
       } else {
@@ -209,7 +149,6 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
         { id: `${Date.now() + 1}`, sender: 'assistant', isError: true, text },
       ]);
     } finally {
-      window.clearTimeout(timeoutId);
       abortControllerRef.current = null;
       setIsThinking(false);
     }
@@ -296,7 +235,13 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3 text-xs">
-        {messages.map((m) => (
+        {messages.map((m) =>
+          m.isStep ? (
+            <div key={m.id} className="flex items-center gap-1.5 pl-1 text-[10px] text-zinc-500 font-mono">
+              <Wrench className="w-3 h-3 shrink-0 text-tertiary" />
+              <span className="truncate">{m.text}</span>
+            </div>
+          ) : (
           <div
             key={m.id}
             className={`flex flex-col gap-1 ${m.sender === 'user' ? 'items-end' : 'items-start'}`}
@@ -332,12 +277,13 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
               )}
             </div>
           </div>
-        ))}
+          )
+        )}
 
         {isThinking && (
           <div className="flex items-center gap-2 text-outline text-xs p-2">
             <Sparkles className="w-3.5 h-3.5 text-secondary animate-spin" />
-            <span>Analyzing workspace context...</span>
+            <span>Working...</span>
             <button
               onClick={handleCancelRequest}
               className="ml-auto flex items-center gap-1 px-2 py-1 rounded text-[10px] text-red-300 hover:text-red-200 hover:bg-red-500/10 border border-red-500/20"

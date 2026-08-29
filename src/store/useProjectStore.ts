@@ -150,6 +150,7 @@ interface ProjectState {
     meta?: { githubRepo?: string; branch?: string }
   ) => ExtendedProject;
   deleteProject: (id: string) => void;
+  renameProject: (id: string, newName: string) => void;
 
   // Tab actions
   openFile: (fileId: string) => void;
@@ -401,6 +402,15 @@ export const useProjectStore = create<ProjectState>()(
               projectAssets,
             };
           });
+        },
+
+        renameProject: (id, newName) => {
+          if (get().currentUserRole === 'viewer') return;
+          const trimmed = newName.trim();
+          if (!trimmed) return;
+          set((state) => ({
+            projects: state.projects.map((p) => (p.id === id ? { ...p, name: trimmed } : p)),
+          }));
         },
 
         openFile: (fileId) => {

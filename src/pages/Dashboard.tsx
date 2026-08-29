@@ -9,6 +9,7 @@ import {
   Sparkles,
   Search,
   Trash2,
+  Pencil,
   Plus,
   Cpu,
   Globe,
@@ -28,7 +29,7 @@ import { GitHubPushService } from '../services/GitHubPushService';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { projects, createProject, importProject, deleteProject, setActiveProject, githubConnected, setGithubConnected, setGithubRepo } = useProjectStore();
+  const { projects, createProject, importProject, deleteProject, renameProject, setActiveProject, githubConnected, setGithubConnected, setGithubRepo } = useProjectStore();
   const { render3DQuality, setRender3DQuality, enable3DWorkspace, setEnable3DWorkspace, aiProvider, setAiProvider, aiApiKey, setAiApiKey } = usePreferenceStore();
 
   const [activeTab, setActiveTab] = useState<'projects' | 'github' | 'settings' | 'integrations'>('projects');
@@ -278,16 +279,31 @@ export default function Dashboard() {
                           </span>
                         </div>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteProject(project.id);
-                        }}
-                        className="p-1.5 text-zinc-500 hover:text-[#ef233c] hover:bg-[#ef233c]/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                        title="Delete project"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const next = window.prompt('Rename project', project.name);
+                            if (next && next.trim()) renameProject(project.id, next.trim());
+                          }}
+                          className="p-1.5 text-zinc-500 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                          title="Rename project"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm(`Delete "${project.name}"? This cannot be undone.`)) {
+                              deleteProject(project.id);
+                            }
+                          }}
+                          className="p-1.5 text-zinc-500 hover:text-[#ef233c] hover:bg-[#ef233c]/10 rounded-lg transition-all"
+                          title="Delete project"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
 
                     <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
