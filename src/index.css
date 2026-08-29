@@ -68,3 +68,65 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(239, 35, 60, 0.5);
 }
+
+/* ---------------------------------------------------------------------------
+   Interaction and motion
+   Purposeful, fast transitions with a single easing curve, and a hard stop when
+   the OS asks for reduced motion.
+   --------------------------------------------------------------------------- */
+
+:root {
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 130ms;
+  --duration-base: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* One consistent, visible focus ring for keyboard users only. */
+:focus-visible {
+  outline: 2px solid rgba(239, 35, 60, 0.75);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Typography: tighter tracking at display sizes reads as more considered. */
+h1, h2, h3, .font-display {
+  letter-spacing: -0.02em;
+}
+
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The IDE is an application surface: it never rubber-bands or page-scrolls. */
+html, body, #root {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+/* Touch targets stay finger-sized on coarse pointers without inflating the
+   desktop UI. */
+@media (pointer: coarse) {
+  button, [role='button'], a {
+    min-height: 36px;
+  }
+}
+
+/* Monaco and xterm own their own scrollbars; keep ours out of their way. */
+.monaco-editor ::-webkit-scrollbar,
+.xterm ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}

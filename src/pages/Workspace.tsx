@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { useProjectStore } from '../store/useProjectStore';
 import { useRuntimeStore } from '../runtime/RuntimeManager';
+import { useBreakpoint } from '../hooks/useBreakpoint';
+import WorkspaceCompact from './WorkspaceCompact';
 import {
   useLayoutStore,
   SIDEBAR_MIN,
@@ -58,6 +60,7 @@ const SIDEBAR_TITLES: Partial<Record<SidebarTab, string>> = {
 export default function Workspace() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const breakpoint = useBreakpoint();
 
   const projects = useProjectStore((s) => s.projects);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
@@ -110,6 +113,19 @@ export default function Workspace() {
   useEffect(() => {
     refreshSupport();
   }, [refreshSupport]);
+
+  // Clamp the bottom dock on short viewports so the editor keeps the majority
+  // of the height, however the panel was last sized.
+  useEffect(() => {
+    const clamp = (): void => {
+      const max = Math.round(window.innerHeight * 0.4);
+      const layout = useLayoutStore.getState();
+      if (layout.bottomHeight > max) layout.setBottomHeight(max);
+    };
+    clamp();
+    window.addEventListener('resize', clamp);
+    return () => window.removeEventListener('resize', clamp);
+  }, []);
 
   // Keep the Run toggle in step with what the runtime is actually doing.
   useEffect(() => {
@@ -172,6 +188,9 @@ export default function Workspace() {
   }, []);
 
   if (!currentProject) return null;
+
+  // Phones and tablets get a purpose-built touch shell, not a squeezed desktop.
+  if (breakpoint !== 'desktop') return <WorkspaceCompact breakpoint={breakpoint} />;
 
   const previewPane = (
     <LivePreview
