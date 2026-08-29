@@ -22,10 +22,12 @@ import {
   ShieldCheck,
   ShieldAlert,
   Loader2,
-  Save
+  Save,
+  PanelRight
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { useRuntimeStore, isRuntimeBusy } from '../../runtime/RuntimeManager';
+import { useLayoutStore } from '../../store/useLayoutStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { UserProfileModal } from '../account/UserProfileModal';
@@ -76,6 +78,9 @@ export const TopBar: React.FC<TopBarProps> = ({
   const saveAllFiles = useProjectStore((s) => s.saveAllFiles);
   const runtimePhase = useRuntimeStore((s) => s.phase);
   const runtimeBusy = isRuntimeBusy(runtimePhase);
+  const rightPanel = useLayoutStore((s) => s.rightPanel);
+  const setRightPanel = useLayoutStore((s) => s.setRightPanel);
+  const isPreviewDocked = rightPanel === 'preview';
   const { enable3DWorkspace, setEnable3DWorkspace } = usePreferenceStore();
   const { isAuthenticated, profile } = useAuthStore();
 
@@ -208,9 +213,21 @@ export const TopBar: React.FC<TopBarProps> = ({
             </button>
 
             <button
+              onClick={() => setRightPanel(isPreviewDocked ? null : 'preview')}
+              className={`p-1.5 rounded-lg transition-colors ${
+                isPreviewDocked
+                  ? 'bg-[#ef233c]/15 text-[#ef233c]'
+                  : 'hover:bg-white/10 text-zinc-400 hover:text-white'
+              }`}
+              title={isPreviewDocked ? 'Close preview panel' : 'Open preview beside the editor'}
+            >
+              <PanelRight className="w-3.5 h-3.5" />
+            </button>
+
+            <button
               onClick={onRefreshPreview}
               className="p-1.5 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
-              title="Refresh Sandboxed Preview"
+              title="Reload preview"
             >
               <RotateCw className="w-3.5 h-3.5" />
             </button>

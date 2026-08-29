@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { useProjectStore } from '../store/useProjectStore';
 import { usePreferenceStore } from '../store/usePreferenceStore';
+import { Project } from '../types';
+import { TEMPLATE_CATALOG } from '../store/projectTemplates';
 import { GitHubImportService } from '../services/GitHubImportService';
 import { GitHubPushService } from '../services/GitHubPushService';
 
@@ -33,7 +35,8 @@ export default function Dashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
-  const [newProjectTemplate, setNewProjectTemplate] = useState<'react-three' | 'vanilla'>('react-three');
+  const [newProjectTemplate, setNewProjectTemplate] =
+    useState<NonNullable<Project['template']>>('react-vite');
   const [searchTerm, setSearchTerm] = useState('');
 
   // GitHub state. The token is session-only and never persisted.
@@ -568,14 +571,52 @@ export default function Dashboard() {
 
               <div>
                 <label className="block text-xs font-medium text-zinc-300 mb-1.5">Template</label>
-                <select
-                  value={newProjectTemplate}
-                  onChange={(e) => setNewProjectTemplate(e.target.value as 'react-three' | 'vanilla')}
-                  className="w-full px-3.5 py-2 bg-[#121215] border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-[#ef233c]/50"
-                >
-                  <option value="react-three">React + Three.js / React Three Fiber Spatial Starter</option>
-                  <option value="vanilla">Vanilla Web IDE Starter</option>
-                </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-0.5">
+                  {TEMPLATE_CATALOG.map((tpl) => {
+                    const selected = newProjectTemplate === tpl.id;
+                    return (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        onClick={() => setNewProjectTemplate(tpl.id)}
+                        className={`text-left p-2.5 rounded-xl border transition-all ${
+                          selected
+                            ? 'bg-[#ef233c]/10 border-[#ef233c]/60 shadow-red-glow-sm'
+                            : 'bg-[#121215] border-white/10 hover:border-white/25'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-white">{tpl.label}</span>
+                          <span
+                            className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
+                              tpl.runMode === 'static'
+                                ? 'bg-emerald-500/15 text-emerald-300'
+                                : 'bg-amber-500/15 text-amber-300'
+                            }`}
+                            title={
+                              tpl.runMode === 'static'
+                                ? 'Previews without the WebContainer runtime'
+                                : 'Needs the WebContainer runtime to run'
+                            }
+                          >
+                            {tpl.runMode === 'static' ? 'static' : 'dev server'}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-[10px] text-zinc-500 leading-relaxed">{tpl.description}</p>
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {tpl.stack.map((tech) => (
+                            <span
+                              key={tech}
+                              className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-zinc-400"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="pt-3 flex justify-end gap-3">

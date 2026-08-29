@@ -446,8 +446,317 @@ Run \`npm run dev\` in the terminal to start the HTTP server.
   },
 ];
 
+const REACT_VITE_ENTRIES: TemplateEntry[] = [
+  {
+    path: '/package.json',
+    content: `{
+  "name": "react-vite-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.2.11"
+  }
+}
+`,
+  },
+  {
+    path: '/vite.config.js',
+    content: `import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  server: { host: true },
+});
+`,
+  },
+  {
+    path: '/index.html',
+    content: `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>React + Vite</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+`,
+  },
+  {
+    path: '/src/main.jsx',
+    content: `import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+`,
+  },
+  {
+    path: '/src/App.jsx',
+    content: `import { useState } from 'react';
+
+export default function App() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <main className="app">
+      <h1>React + Vite</h1>
+      <p>Edit <code>src/App.jsx</code> and save - the dev server hot-reloads.</p>
+      <button onClick={() => setCount((c) => c + 1)}>count is {count}</button>
+    </main>
+  );
+}
+`,
+  },
+  {
+    path: '/src/index.css',
+    content: `:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #0b0b0d;
+  color: #e4e4e7;
+}
+
+.app { text-align: center; padding: 2rem; }
+h1 { margin: 0 0 0.5rem; font-size: 2rem; }
+p { color: #a1a1aa; }
+code { color: #ef233c; font-family: ui-monospace, monospace; }
+
+button {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  border: 1px solid #27272a;
+  background: #131316;
+  color: #e4e4e7;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+button:hover { border-color: #ef233c; }
+`,
+  },
+  {
+    path: '/README.md',
+    content: `# React + Vite
+
+    npm install
+    npm run dev
+`,
+  },
+];
+
+const TS_VITE_ENTRIES: TemplateEntry[] = [
+  {
+    path: '/package.json',
+    content: `{
+  "name": "ts-vite-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc && vite build",
+    "preview": "vite preview --host"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  }
+}
+`,
+  },
+  {
+    path: '/tsconfig.json',
+    content: `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}
+`,
+  },
+  {
+    path: '/index.html',
+    content: `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TypeScript + Vite</title>
+  </head>
+  <body>
+    <main id="app"></main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+`,
+  },
+  {
+    path: '/src/main.ts',
+    content: `import './style.css';
+import { createCounter } from './counter';
+
+const app = document.querySelector<HTMLElement>('#app');
+if (!app) throw new Error('#app not found');
+
+app.innerHTML = \`
+  <h1>TypeScript + Vite</h1>
+  <p>Edit <code>src/main.ts</code> and save - the dev server hot-reloads.</p>
+  <button id="counter" type="button"></button>
+\`;
+
+createCounter(document.querySelector<HTMLButtonElement>('#counter')!);
+`,
+  },
+  {
+    path: '/src/counter.ts',
+    content: `export function createCounter(element: HTMLButtonElement): void {
+  let count = 0;
+
+  const render = (): void => {
+    element.textContent = \`count is \${count}\`;
+  };
+
+  element.addEventListener('click', () => {
+    count += 1;
+    render();
+  });
+
+  render();
+}
+`,
+  },
+  {
+    path: '/src/style.css',
+    content: `:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #0b0b0d;
+  color: #e4e4e7;
+}
+
+#app { text-align: center; padding: 2rem; }
+h1 { margin: 0 0 0.5rem; font-size: 2rem; }
+p { color: #a1a1aa; }
+code { color: #ef233c; font-family: ui-monospace, monospace; }
+
+button {
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  border: 1px solid #27272a;
+  background: #131316;
+  color: #e4e4e7;
+  cursor: pointer;
+}
+button:hover { border-color: #ef233c; }
+`,
+  },
+  {
+    path: '/README.md',
+    content: `# TypeScript + Vite
+
+    npm install
+    npm run dev
+`,
+  },
+];
+
+/** Template metadata for the project-creation UI. */
+export interface TemplateInfo {
+  id: NonNullable<Project['template']>;
+  label: string;
+  description: string;
+  /** How the project is previewed: a dev server, or a static index.html. */
+  runMode: 'dev-server' | 'static';
+  stack: string[];
+}
+
+export const TEMPLATE_CATALOG: TemplateInfo[] = [
+  {
+    id: 'vanilla',
+    label: 'Vanilla HTML/CSS/JS',
+    description: 'No build step. Renders instantly in the static preview, even without the runtime.',
+    runMode: 'static',
+    stack: ['HTML', 'CSS', 'JS'],
+  },
+  {
+    id: 'react-vite',
+    label: 'React + Vite',
+    description: 'React 18 with the Vite dev server and hot reload.',
+    runMode: 'dev-server',
+    stack: ['React', 'Vite', 'JSX'],
+  },
+  {
+    id: 'ts-vite',
+    label: 'TypeScript + Vite',
+    description: 'Typed browser app with strict TypeScript and the Vite dev server.',
+    runMode: 'dev-server',
+    stack: ['TypeScript', 'Vite'],
+  },
+  {
+    id: 'react-three',
+    label: 'React Three Fiber',
+    description: 'TypeScript React app with a Three.js scene, matching the 3D workspace.',
+    runMode: 'dev-server',
+    stack: ['React', 'TypeScript', 'Three.js'],
+  },
+  {
+    id: 'node',
+    label: 'Node HTTP server',
+    description: 'Plain Node server with no dependencies. Needs the WebContainer runtime to run.',
+    runMode: 'dev-server',
+    stack: ['Node'],
+  },
+];
+
 const TEMPLATES: Record<NonNullable<Project['template']>, TemplateEntry[]> = {
   'react-three': REACT_THREE_ENTRIES,
+  'react-vite': REACT_VITE_ENTRIES,
+  'ts-vite': TS_VITE_ENTRIES,
   nextjs: REACT_THREE_ENTRIES,
   vanilla: VANILLA_ENTRIES,
   node: NODE_ENTRIES,
@@ -459,3 +768,4 @@ export function createTemplateFiles(
 ): Record<string, ProjectFile> {
   return buildFileMap(TEMPLATES[template] || REACT_THREE_ENTRIES);
 }
+

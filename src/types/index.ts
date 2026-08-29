@@ -22,7 +22,7 @@ export interface Project {
   name: string;
   description: string;
   updatedAt: string;
-  template?: 'react-three' | 'nextjs' | 'vanilla' | 'node';
+  template?: 'react-three' | 'react-vite' | 'ts-vite' | 'nextjs' | 'vanilla' | 'node';
   githubRepo?: string;
   branch?: string;
   isGitHubConnected?: boolean;
