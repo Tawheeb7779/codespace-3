@@ -1,107 +1,138 @@
 import { create } from 'zustand';
 import { ProjectFile } from '../types';
-import { RuntimeLog, RuntimeStatus, PackageManifest, BuildResult } from '../types/runtime';
-import { CompilerEngine } from './CompilerEngine';
+import { RuntimeLog, RuntimeStatus, PreviewPhase, ScriptResult } from '../types/runtime';
+import { parseManifest } from './manifest';
+import { PreviewRuntime } from './PreviewRuntime';
+import { WebContainerProvider } from './WebContainerProvider';
 
 interface RuntimeStoreState extends RuntimeStatus {
-  webContainerUrl: string | null;
-  // Actions
-  setWebContainerUrl: (url: string | null) => void;
-  startDevServer: (files: Record<string, ProjectFile>) => void;
-  stopDevServer: () => void;
-  buildProject: (files: Record<string, ProjectFile>) => BuildResult;
-  installPackages: (packageJsonContent?: string) => Promise<void>;
+  /** Project currently mounted in the runtime. */
+  projectId: string | null;
+
+  setPhase: (phase: PreviewPhase, error?: string | null) => void;
+  setServerUrl: (url: string | null, port?: number | null) => void;
+  refreshSupport: () => void;
+
+  startPreview: (projectId: string, files: Record<string, ProjectFile>) => Promise<void>;
+  stopPreview: () => Promise<void>;
+  restartPreview: (projectId: string, files: Record<string, ProjectFile>) => Promise<void>;
+  /** Runs a real `npm run <script>` in the container. */
+  runScript: (
+    projectId: string,
+    files: Record<string, ProjectFile>,
+    script: string
+  ) => Promise<ScriptResult>;
+  /** Convenience wrapper around `runScript('build')`. */
+  buildProject: (projectId: string, files: Record<string, ProjectFile>) => Promise<ScriptResult>;
+  installPackages: (projectId: string, files: Record<string, ProjectFile>) => Promise<boolean>;
   addLog: (type: RuntimeLog['type'], message: string) => void;
   clearLogs: () => void;
 }
 
+const RUNNING_PHASES: PreviewPhase[] = ['running'];
+const BUSY_PHASES: PreviewPhase[] = ['booting', 'mounting', 'installing', 'starting'];
+
+/** Phases in which the runtime is doing work the user should see as in progress. */
+export function isRuntimeBusy(phase: PreviewPhase): boolean {
+  return BUSY_PHASES.includes(phase);
+}
+
+const readManifest = (files: Record<string, ProjectFile>) => {
+  const pkg = files['/package.json'];
+  return pkg ? parseManifest(pkg.content) : null;
+};
+
 export const useRuntimeStore = create<RuntimeStoreState>((set, get) => ({
-  isRunning: true,
+  phase: 'idle',
+  isRunning: false,
   isBuilding: false,
-  port: 5173,
-  url: 'http://localhost:5173/',
-  webContainerUrl: null,
-  logs: [
-    {
-      id: '1',
-      type: 'info',
-      message: '[Vite Runtime] Dev server initializing on port 5173...',
-      timestamp: new Date().toLocaleTimeString(),
-    },
-  ],
+  isInstalling: false,
+  serverUrl: null,
+  serverPort: null,
+  error: null,
+  logs: [],
   errors: [],
   manifest: null,
+  projectId: null,
 
-  setWebContainerUrl: (url) => set({ webContainerUrl: url }),
-
-  startDevServer: (files) => {
-    const pkgFile = Object.values(files).find((f) => f.name === 'package.json');
-    const manifest = pkgFile ? CompilerEngine.parseManifest(pkgFile.content) : null;
-
+  setPhase: (phase, error = null) =>
     set({
-      isRunning: true,
-      manifest,
-    });
+      phase,
+      error,
+      isRunning: RUNNING_PHASES.includes(phase),
+      isInstalling: phase === 'installing',
+    }),
 
-    get().addLog('info', '[Vite Runtime] VITE v5.2.11 ready in 218 ms');
-    get().addLog('info', '  ➜  Local:   http://localhost:5173/');
-    get().addLog('info', '  ➜  Network: use --host to expose');
+  setServerUrl: (url, port = null) => set({ serverUrl: url, serverPort: port }),
+
+  refreshSupport: () => {
+    const reason = WebContainerProvider.unsupportedReason();
+    if (!reason) {
+      set((state) => (state.phase === 'unsupported' ? { phase: 'idle', error: null } : {}));
+      return;
+    }
+    set({ phase: 'unsupported', error: reason, isRunning: false, serverUrl: null, serverPort: null });
   },
 
-  stopDevServer: () => {
-    set({ isRunning: false, webContainerUrl: null });
-    get().addLog('info', '[Vite Runtime] Dev server stopped.');
+  startPreview: async (projectId, files) => {
+    set({ projectId, manifest: readManifest(files), errors: [] });
+    await PreviewRuntime.start(projectId, files);
   },
 
-  buildProject: (files) => {
+  stopPreview: async () => {
+    await PreviewRuntime.stop();
+  },
+
+  restartPreview: async (projectId, files) => {
+    await get().stopPreview();
+    await get().startPreview(projectId, files);
+  },
+
+  runScript: async (projectId, files, script) => {
+    set({ projectId, manifest: readManifest(files) });
+    return PreviewRuntime.runScript(projectId, files, script);
+  },
+
+  buildProject: async (projectId, files) => {
     set({ isBuilding: true });
-    get().addLog('info', '[Vite Runtime] Running tsc && vite build...');
-
-    const result = CompilerEngine.compileProject(files);
-
-    if (result.success) {
-      get().addLog('stdout', `[Vite Runtime] Build completed successfully in ${result.durationMs}ms!`);
-      get().addLog('stdout', `[Vite Runtime] Bundled ${Object.keys(result.outputFiles).length} modules into dist/`);
-    } else {
-      get().addLog('error', `[Vite Runtime] Build failed with ${result.errors.length} errors.`);
-      result.errors.forEach((err) => get().addLog('error', err));
+    try {
+      return await get().runScript(projectId, files, 'build');
+    } finally {
+      set({ isBuilding: false });
     }
-
-    set({ isBuilding: false });
-    return result;
   },
 
-  installPackages: async (packageJsonContent) => {
-    get().addLog('info', 'npm install');
-    get().addLog('info', 'Resolving dependencies from package.json...');
-
-    let manifest: PackageManifest = {};
-    if (packageJsonContent) {
-      manifest = CompilerEngine.parseManifest(packageJsonContent);
+  installPackages: async (projectId, files) => {
+    try {
+      await PreviewRuntime.install(projectId, files);
+      set({ projectId, manifest: readManifest(files) });
+      return true;
+    } catch (e: unknown) {
+      get().addLog('error', e instanceof Error ? e.message : String(e));
+      return false;
     }
-
-    const deps = { ...(manifest.dependencies || {}), ...(manifest.devDependencies || {}) };
-    const depCount = Object.keys(deps).length;
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        get().addLog('stdout', `added ${depCount || 12} packages, and audited ${depCount + 10 || 22} packages in 1.2s`);
-        get().addLog('stdout', 'found 0 vulnerabilities');
-        set({ manifest });
-        resolve();
-      }, 800);
-    });
   },
 
   addLog: (type, message) => {
+    if (!message) return;
     const log: RuntimeLog = {
-      id: Date.now().toString() + Math.random().toString().slice(-4),
+      id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
       type,
       message,
       timestamp: new Date().toLocaleTimeString(),
     };
-    set((state) => ({ logs: [...state.logs, log] }));
+    set((state) => ({
+      logs: [...state.logs, log].slice(-500),
+      errors: type === 'error' ? [...state.errors, message].slice(-50) : state.errors,
+    }));
   },
 
   clearLogs: () => set({ logs: [], errors: [] }),
 }));
+
+// Bridge the runtime lifecycle events into the store.
+PreviewRuntime.setEvents({
+  onPhase: (phase, error) => useRuntimeStore.getState().setPhase(phase, error),
+  onLog: (type, message) => useRuntimeStore.getState().addLog(type, message),
+  onServerUrl: (url, port) => useRuntimeStore.getState().setServerUrl(url, port),
+});

@@ -1,40 +1,52 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Bot,
   Send,
   Sparkles,
   X,
   Code2,
-  FilePlus,
   Wrench,
   Lock,
   AlertTriangle,
   Mic,
-  MicOff
+  MicOff,
+  StopCircle
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { usePreferenceStore } from '../../store/usePreferenceStore';
 import { VoiceRecognitionService } from '../../services/VoiceRecognitionService';
+import { useRuntimeStore } from '../../runtime/RuntimeManager';
+import { runAgentLoop, ApiError } from '../../services/AiCodingAgent';
 
 interface Message {
   id: string;
   sender: 'user' | 'assistant';
   text: string;
-  isFallback?: boolean;
-  action?: {
-    type: 'create_file' | 'edit_file';
-    fileName: string;
-    content: string;
-  };
+  isError?: boolean;
+  /** A compact agent-step status line (tool call result) rather than a chat reply. */
+  isStep?: boolean;
+}
+
+/** First fenced code block in a reply, or null when the reply has none. */
+function extractCodeBlock(text: string): string | null {
+  const match = text.match(/```[a-zA-Z0-9+-]*\n([\s\S]*?)```/);
+  return match ? match[1].replace(/\n$/, '') : null;
 }
 
 interface AiAssistantDrawerProps {
+  /** Rendered inside the workspace's right dock rather than as a floating drawer. */
+  docked?: boolean;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, onClose }) => {
-  const { projects, activeProjectId, activeFileId, createFile, updateFileContent } = useProjectStore();
+export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, onClose, docked = false }) => {
+  const projects = useProjectStore((s) => s.projects);
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const activeFileId = useProjectStore((s) => s.activeFileId);
+  const updateFileContent = useProjectStore((s) => s.updateFileContent);
+  const saveFile = useProjectStore((s) => s.saveFile);
+  const buildProject = useRuntimeStore((s) => s.buildProject);
   const { aiProvider, aiApiKey } = usePreferenceStore();
 
   const [input, setInput] = useState('');
@@ -43,10 +55,11 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
     {
       id: '1',
       sender: 'assistant',
-      text: 'Hello! I am your CodeSpace 3D Project Assistant. I analyze your workspace files and can generate or edit 3D components on disk.',
+      text: 'Configure an OpenAI or Anthropic API key in Dashboard > Settings to use the agent. It can inspect this project, create/edit files, install packages, and run the dev server on your behalf.',
     },
   ]);
   const [isThinking, setIsThinking] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const currentProject = projects.find((p) => p.id === activeProjectId);
   const activeFile = activeFileId && currentProject ? currentProject.files[activeFileId] : null;
@@ -70,139 +83,140 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
     if (!input.trim() || isThinking) return;
 
     const userText = input.trim();
-    const userMsg: Message = { id: Date.now().toString(), sender: 'user', text: userText };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput('');
-    setIsThinking(true);
-
-    let replyText = '';
-    let action: Message['action'] = undefined;
-    let isFallback = false;
-
     const key = (aiApiKey || '').trim();
 
-    // Check if real provider API call is possible
-    if ((aiProvider === 'openai' || aiProvider === 'anthropic') && key) {
-      try {
-        if (aiProvider === 'openai') {
-          const res = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${key}`,
-            },
-            body: JSON.stringify({
-              model: 'gpt-4o-mini',
-              messages: [
-                {
-                  role: 'system',
-                  content: `You are an AI coding assistant for CodeSpace 3D IDE. Current project: ${currentProject?.name}. Active file: ${activeFile?.name || 'none'}.`,
-                },
-                { role: 'user', content: userText },
-              ],
-            }),
-          });
-          if (!res.ok) {
-            const errJson = await res.json().catch(() => ({}));
-            throw new Error(errJson.error?.message || `OpenAI API Error ${res.status}`);
-          }
-          const data = await res.json();
-          replyText = data.choices?.[0]?.message?.content || 'No response returned from OpenAI.';
-        } else if (aiProvider === 'anthropic') {
-          const res = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': key,
-              'anthropic-version': '2023-06-01',
-            },
-            body: JSON.stringify({
-              model: 'claude-3-haiku-20240307',
-              max_tokens: 1000,
-              messages: [{ role: 'user', content: userText }],
-            }),
-          });
-          if (!res.ok) {
-            const errJson = await res.json().catch(() => ({}));
-            throw new Error(errJson.error?.message || `Anthropic API Error ${res.status}`);
-          }
-          const data = await res.json();
-          replyText = data.content?.[0]?.text || 'No response returned from Anthropic.';
-        }
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        replyText = `API Call Failed: ${msg}. Falling back to built-in offline agent.`;
-        isFallback = true;
-      }
+    setMessages((prev) => [...prev, { id: Date.now().toString(), sender: 'user', text: userText }]);
+    setInput('');
+
+    // No provider configured: say so instead of answering with a canned script.
+    if (aiProvider === 'none' || !key) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `${Date.now() + 1}`,
+          sender: 'assistant',
+          isError: true,
+          text:
+            aiProvider === 'none'
+              ? 'No AI provider is configured. Choose OpenAI or Anthropic in Dashboard > Settings and enter an API key. There is no built-in model.'
+              : `No API key is set for ${aiProvider}. Add one in Dashboard > Settings.`,
+        },
+      ]);
+      return;
     }
 
-    // Fallback offline agent logic if no API key provided or API failed
-    if (!replyText) {
-      isFallback = true;
-      replyText = `[Offline Agent] Analyzed **${currentProject?.name || 'Workspace'}**.`;
+    setIsThinking(true);
 
-      const lower = userText.toLowerCase();
+    // Cancel any still-pending request before starting a new one.
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
-      if (lower.includes('component') || lower.includes('create file') || lower.includes('spatial')) {
-        const newFileName = 'SpatialBox.tsx';
-        replyText += ` Created new React Three Fiber component \`${newFileName}\` on disk.`;
-        action = {
-          type: 'create_file',
-          fileName: newFileName,
-          content: `import React from 'react';\n\nexport function SpatialBox() {\n  return (\n    <mesh>\n      <boxGeometry args={[1, 1, 1]} />\n      <meshStandardMaterial color="#adc6ff" />\n    </mesh>\n  );\n}`,
-        };
-      } else if (lower.includes('fix') || lower.includes('refactor') || lower.includes('edit')) {
-        if (activeFile) {
-          replyText += ` Prepared optimization for active file \`${activeFile.name}\`.`;
-          action = {
-            type: 'edit_file',
-            fileName: activeFile.name,
-            content: activeFile.content + `\n\n// AI Refactored: Added spatial optimization hook\nexport const useSpatialOptim = () => true;`,
-          };
-        } else {
-          replyText += ` Please select a file in the editor first to refactor.`;
-        }
+    try {
+      const { finalText } = await runAgentLoop({
+        provider: aiProvider,
+        apiKey: key,
+        userText,
+        signal: controller.signal,
+        onStep: (label) => {
+          setMessages((prev) => [
+            ...prev,
+            { id: `${Date.now()}-${prev.length}`, sender: 'assistant', text: label, isStep: true },
+          ]);
+        },
+      });
+
+      setMessages((prev) => [
+        ...prev,
+        { id: `${Date.now() + 1}`, sender: 'assistant', text: finalText },
+      ]);
+    } catch (err: unknown) {
+      let text: string;
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        // The per-turn timeout aborts an inner signal only; the outer controller is
+        // aborted only by an explicit Stop (or a superseding new send).
+        text = abortControllerRef.current?.signal.aborted
+          ? 'Request cancelled.'
+          : 'The request timed out. Try again or narrow the request.';
+      } else if (err instanceof ApiError && err.status === 429) {
+        text = `${aiProvider === 'openai' ? 'OpenAI' : 'Anthropic'} rate limit hit (429). Wait a moment before sending another request.`;
       } else {
-        replyText += ` Workspace contains ${Object.keys(currentProject?.files || {}).length} file nodes. System status is optimal.`;
+        const message = err instanceof Error ? err.message : String(err);
+        text = `The ${aiProvider} request failed: ${message}`;
       }
+      setMessages((prev) => [
+        ...prev,
+        { id: `${Date.now() + 1}`, sender: 'assistant', isError: true, text },
+      ]);
+    } finally {
+      abortControllerRef.current = null;
+      setIsThinking(false);
     }
+  };
 
-    const assistantMsg: Message = {
-      id: (Date.now() + 1).toString(),
-      sender: 'assistant',
-      text: replyText,
-      isFallback,
-      action,
-    };
+  const handleCancelRequest = (): void => {
+    abortControllerRef.current?.abort();
+  };
 
-    setMessages((prev) => [...prev, assistantMsg]);
+  /**
+   * Runs the project's real `build` script in the WebContainer and reports the
+   * actual exit code - not an in-browser approximation of a compile.
+   */
+  const handleRunBuild = async (): Promise<void> => {
+    const project = useProjectStore.getState().getActiveProject();
+    if (!project || isThinking) return;
+
+    setIsThinking(true);
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now().toString(), sender: 'user', text: 'Run a build check.' },
+    ]);
+
+    const result = await buildProject(project.id, project.files);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `${Date.now() + 1}`,
+        sender: 'assistant',
+        isError: !result.success,
+        text: result.success
+          ? `npm run build succeeded in ${result.durationMs}ms. Full output is in the Output panel.`
+          : `npm run build did not succeed: ${result.error ?? `exit code ${result.exitCode}`}. See the Output panel.`,
+      },
+    ]);
     setIsThinking(false);
   };
 
-  const executeAction = (action: Message['action']) => {
-    if (!action) return;
-    if (action.type === 'create_file') {
-      createFile(action.fileName, 'src', false);
-      updateFileContent(action.fileName, action.content);
-    } else if (action.type === 'edit_file' && activeFileId) {
-      updateFileContent(activeFileId, action.content);
-    }
+  /** Applies the first fenced code block of a reply to the file open in the editor. */
+  const applyCodeBlock = (code: string) => {
+    if (!activeFileId) return;
+    updateFileContent(activeFileId, code);
+    saveFile(activeFileId);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="w-80 bg-surface-low border-l border-outline-variant/15 flex flex-col h-full z-40 select-none shadow-2xl">
+    <div
+      className={
+        docked
+          ? 'w-full h-full bg-surface-low flex flex-col min-h-0'
+          : 'w-80 bg-surface-low border-l border-white/10 flex flex-col h-full z-40 shadow-2xl'
+      }
+    >
       {/* Header */}
       <div className="h-11 px-3 bg-surface-container border-b border-outline-variant/15 flex items-center justify-between">
         <div className="flex items-center gap-2 text-secondary font-semibold text-xs">
           <Bot className="w-4 h-4" />
           <span>AI ASSISTANT</span>
           <span className="px-1.5 py-0.5 rounded text-[10px] bg-secondary/15 text-secondary border border-secondary/30 font-mono uppercase">
-            {aiProvider}
+            {aiProvider === 'none' ? 'not configured' : aiProvider}
           </span>
         </div>
-        <button onClick={onClose} className="p-1 hover:text-white text-outline rounded hover:bg-surface-high">
+        <button
+          onClick={onClose}
+          className="p-1 hover:text-white text-outline rounded hover:bg-surface-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef233c]/50"
+        >
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -211,15 +225,23 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
       <div className="p-2 bg-surface-high/50 border-b border-outline-variant/10 text-[10px] text-outline flex items-center gap-1.5 px-3">
         <Lock className="w-3 h-3 text-amber-400 shrink-0" />
         <span>
-          {aiProvider === 'mock' || !aiApiKey
-            ? 'Offline Fallback Agent Active (No API Key required)'
-            : `Using ${aiProvider.toUpperCase()} with stored API Key`}
+          {aiProvider === 'none'
+            ? 'No provider configured - set one in Dashboard > Settings. There is no built-in model.'
+            : aiApiKey
+              ? `Requests go from this browser directly to ${aiProvider}. Key held in memory only.`
+              : `Provider ${aiProvider} selected, but no API key is set.`}
         </span>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3 text-xs">
-        {messages.map((m) => (
+        {messages.map((m) =>
+          m.isStep ? (
+            <div key={m.id} className="flex items-center gap-1.5 pl-1 text-[10px] text-zinc-500 font-mono">
+              <Wrench className="w-3 h-3 shrink-0 text-tertiary" />
+              <span className="truncate">{m.text}</span>
+            </div>
+          ) : (
           <div
             key={m.id}
             className={`flex flex-col gap-1 ${m.sender === 'user' ? 'items-end' : 'items-start'}`}
@@ -231,36 +253,43 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
                   : 'bg-surface-container text-slate-200 border border-outline-variant/15 rounded-bl-none'
               }`}
             >
-              {m.isFallback && (
+              {m.isError && (
                 <div className="flex items-center gap-1 text-[10px] text-amber-400 font-mono">
-                  <AlertTriangle className="w-3 h-3" /> Offline Local Agent
+                  <AlertTriangle className="w-3 h-3" /> Not answered
                 </div>
               )}
               <p className="whitespace-pre-wrap">{m.text}</p>
 
-              {m.action && (
+              {m.sender === 'assistant' && !m.isError && extractCodeBlock(m.text) && activeFile && (
                 <div className="pt-2 border-t border-white/10 space-y-1">
                   <div className="flex items-center gap-1 text-[11px] font-mono text-tertiary">
                     <Sparkles className="w-3 h-3" />
-                    <span>Action: {m.action.type}</span>
+                    <span>Code block detected</span>
                   </div>
                   <button
-                    onClick={() => executeAction(m.action)}
+                    onClick={() => applyCodeBlock(extractCodeBlock(m.text) as string)}
                     className="w-full py-1 px-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded text-[10px] font-medium flex items-center justify-center gap-1 border border-emerald-500/30 transition-colors"
                   >
-                    {m.action.type === 'create_file' ? <FilePlus className="w-3 h-3" /> : <Wrench className="w-3 h-3" />}
-                    Apply Action to Workspace Disk
+                    <Wrench className="w-3 h-3" />
+                    Replace {activeFile.name} with this block
                   </button>
                 </div>
               )}
             </div>
           </div>
-        ))}
+          )
+        )}
 
         {isThinking && (
           <div className="flex items-center gap-2 text-outline text-xs p-2">
             <Sparkles className="w-3.5 h-3.5 text-secondary animate-spin" />
-            <span>Analyzing workspace context...</span>
+            <span>Working...</span>
+            <button
+              onClick={handleCancelRequest}
+              className="ml-auto flex items-center gap-1 px-2 py-1 rounded text-[10px] text-red-300 hover:text-red-200 hover:bg-red-500/10 border border-red-500/20"
+            >
+              <StopCircle className="w-3 h-3" /> Stop
+            </button>
           </div>
         )}
       </div>
@@ -272,6 +301,13 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
           className="px-2 py-1 bg-surface-container hover:text-white rounded border border-outline-variant/15 whitespace-nowrap flex items-center gap-1"
         >
           <Code2 className="w-3 h-3 text-primary" /> Create 3D Component
+        </button>
+        <button
+          onClick={handleRunBuild}
+          disabled={isThinking}
+          className="px-2 py-1 bg-surface-container hover:text-white rounded border border-outline-variant/15 whitespace-nowrap flex items-center gap-1 text-emerald-400 disabled:opacity-40"
+        >
+          <Sparkles className="w-3 h-3" /> Run Build Check
         </button>
         <button
           onClick={() => setInput('Refactor active file')}
@@ -303,7 +339,7 @@ export const AiAssistantDrawer: React.FC<AiAssistantDrawerProps> = ({ isOpen, on
         <button
           type="submit"
           disabled={!input.trim() || isThinking}
-          className="p-2 bg-primary-container disabled:opacity-40 hover:bg-primary-container/80 text-white rounded-lg transition-colors"
+          className="p-2 bg-primary-container disabled:opacity-40 hover:bg-primary-container/80 text-white rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef233c]/50 transition-colors"
         >
           <Send className="w-3.5 h-3.5" />
         </button>

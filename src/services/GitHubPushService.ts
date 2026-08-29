@@ -1,4 +1,5 @@
 import { ProjectFile } from '../types';
+import { toRuntimePath } from '../lib/paths';
 
 export interface PushResult {
   success: boolean;
@@ -83,8 +84,9 @@ export class GitHubPushService {
 
       // 4. Collect non-folder workspace files (excluding runtime artifacts)
       const validWorkspaceFiles = Object.values(files).filter((file) => {
-        if (file.isFolder || file.id === 'root') return false;
-        const path = file.path.replace(/^\//, '');
+        if (file.isFolder) return false;
+        const path = toRuntimePath(file.path);
+        if (!path) return false;
         if (
           path.startsWith('node_modules/') ||
           path.startsWith('dist/') ||
@@ -96,9 +98,7 @@ export class GitHubPushService {
         return true;
       });
 
-      const currentWorkspacePaths = new Set(
-        validWorkspaceFiles.map((f) => f.path.replace(/^\//, ''))
-      );
+      const currentWorkspacePaths = new Set(validWorkspaceFiles.map((f) => toRuntimePath(f.path)));
 
       // Build tree items for created/modified workspace files
       const treeItems: Array<{ path: string; mode: string; type: string; content?: string; sha?: null }> = [];
@@ -106,7 +106,7 @@ export class GitHubPushService {
       let filesDeleted = 0;
 
       validWorkspaceFiles.forEach((file) => {
-        const cleanPath = file.path.replace(/^\//, '');
+        const cleanPath = toRuntimePath(file.path);
         treeItems.push({
           path: cleanPath,
           mode: '100644',
@@ -212,6 +212,34 @@ export class GitHubPushService {
         success: false,
         error: `Network or API exception: ${msg}`,
       };
+    }
+  }
+
+  /** Confirms a token is valid and returns the authenticated login. */
+  public static async verifyToken(
+    token: string
+  ): Promise<{ ok: boolean; login?: string; error?: string }> {
+    if (!token.trim()) return { ok: false, error: 'A GitHub token is required.' };
+    try {
+      const res = await fetch('https://api.github.com/user', {
+        headers: {
+          Authorization: `Bearer ${token.trim()}`,
+          Accept: 'application/vnd.github+json',
+        },
+      });
+      if (!res.ok) {
+        return {
+          ok: false,
+          error:
+            res.status === 401
+              ? 'GitHub rejected this token (401 Unauthorized).'
+              : `GitHub API error ${res.status}.`,
+        };
+      }
+      const data = await res.json();
+      return { ok: true, login: data.login };
+    } catch (e: unknown) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
   }
 

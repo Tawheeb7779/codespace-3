@@ -14,7 +14,9 @@ import { ProjectAsset } from '../../types/stitch';
 import { useProjectStore } from '../../store/useProjectStore';
 
 export const AssetsManagerPanel: React.FC = () => {
-  const { activeProjectId, projectAssets, setAssetsForProject, createFile, updateFileContent } = useProjectStore();
+  const { activeProjectId, projectAssets, setAssetsForProject, createFile, updateFileContent, saveFile } =
+    useProjectStore();
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filterType, setFilterText] = useState<'all' | '3d-model' | 'texture' | 'audio' | 'image'>('all');
@@ -54,8 +56,14 @@ export function ${rawName}Model() {
   return <primitive object={scene} scale={1} />;
 }
 `;
-    createFile(compName, 'src', false);
-    updateFileContent(compName, codeContent);
+    const result = createFile(compName, '/src', false);
+    if (!result.ok || !result.id) {
+      setActionError(result.error || 'Unable to create the component file.');
+      return;
+    }
+    setActionError(null);
+    updateFileContent(result.id, codeContent);
+    saveFile(result.id);
   };
 
   const handleAddAsset = (e: React.FormEvent) => {
@@ -102,6 +110,11 @@ export function ${rawName}Model() {
 
   return (
     <div className="h-full flex flex-col bg-surface-low text-xs select-none border-r border-outline-variant/15 p-3 space-y-4 overflow-y-auto">
+      {actionError && (
+        <div className="px-2 py-1.5 rounded bg-red-500/10 border border-red-500/30 text-red-300 text-[11px]">
+          {actionError}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
         <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] flex items-center gap-2">

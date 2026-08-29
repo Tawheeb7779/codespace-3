@@ -23,6 +23,28 @@ describe('useProjectStore Hardening Pass', () => {
     expect(state.projectChats[proj.id].length).toBe(1);
   });
 
+  it('moves files between folders while updating parent-child relationships and paths', () => {
+    const store = useProjectStore.getState();
+    const proj = store.createProject('Move File Test', 'Testing file move operation');
+    store.setActiveProject(proj.id);
+
+    // Files are keyed by absolute path, so a move re-keys the whole subtree.
+    store.createFile('MovableFile.tsx', '/src', false);
+    store.createFile('subfolder', '/src', true);
+
+    store.moveFile('/src/MovableFile.tsx', '/src/subfolder');
+
+    const updatedProj = useProjectStore.getState().projects.find(p => p.id === proj.id)!;
+    const movedFile = updatedProj.files['/src/subfolder/MovableFile.tsx'];
+    const subfolder = updatedProj.files['/src/subfolder'];
+    const srcFolder = updatedProj.files['/src'];
+
+    expect(updatedProj.files['/src/MovableFile.tsx']).toBeUndefined();
+    expect(movedFile.parentId).toBe('/src/subfolder');
+    expect(subfolder.children).toContain('/src/subfolder/MovableFile.tsx');
+    expect(srcFolder.children).not.toContain('/src/MovableFile.tsx');
+  });
+
   it('guarantees complete isolation between Project A and Project B', () => {
     const store = useProjectStore.getState();
     const projA = store.createProject('Project A', 'First project');

@@ -8,32 +8,40 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#0e131d',
+        background: '#050507',
         surface: {
-          DEFAULT: '#171c26',
-          dim: '#0e131d',
-          low: '#171c26',
-          container: '#1b202a',
-          high: '#252a35',
-          highest: '#303540',
+          DEFAULT: '#09090b',
+          dim: '#050507',
+          low: '#0e0e11',
+          container: '#121215',
+          high: '#18181b',
+          highest: '#222226',
         },
         primary: {
-          DEFAULT: '#adc6ff',
-          container: '#4d8eff',
-          dark: '#002e6a',
+          DEFAULT: '#ef233c',
+          container: '#ef233c',
+          dark: '#8d0801',
         },
-        secondary: '#a4c9ff',
-        tertiary: '#ffb786',
-        accent: '#6366f1',
+        secondary: '#d90429',
+        tertiary: '#ff2a2a',
+        accent: '#ef233c',
         outline: {
-          DEFAULT: '#8c909f',
-          variant: '#424754',
+          DEFAULT: 'rgba(255, 255, 255, 0.1)',
+          variant: 'rgba(255, 255, 255, 0.05)',
         }
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        // Real fallbacks matter here: the webfont stylesheet is cross-origin and
+        // can be blocked by the workspace's embedder policy or an offline client.
+        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        display: ['Manrope', 'Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'],
       },
+      boxShadow: {
+        'red-glow': '0 0 25px rgba(239, 35, 60, 0.35)',
+        'red-glow-sm': '0 0 12px rgba(239, 35, 60, 0.25)',
+        'red-glow-lg': '0 0 45px rgba(239, 35, 60, 0.45)',
+      }
     },
   },
   plugins: [],

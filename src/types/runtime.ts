@@ -8,23 +8,48 @@ export interface RuntimeLog {
 export interface PackageManifest {
   name?: string;
   version?: string;
+  main?: string;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   scripts?: Record<string, string>;
 }
 
-export interface BuildResult {
+/**
+ * Lifecycle of the real WebContainer dev server backing the live preview.
+ *
+ * `unsupported` means the browser context cannot run WebContainer at all, and
+ * is terminal for that session - nothing is ever reported as running unless a
+ * real process is alive.
+ */
+export type PreviewPhase =
+  | 'idle'
+  | 'unsupported'
+  | 'booting'
+  | 'mounting'
+  | 'installing'
+  | 'starting'
+  | 'running'
+  | 'stopping'
+  | 'stopped'
+  | 'failed';
+
+/** Result of running a package script (build, test, ...) to completion. */
+export interface ScriptResult {
+  script: string;
+  exitCode: number;
   success: boolean;
-  outputFiles: Record<string, string>;
-  errors: string[];
   durationMs: number;
+  error?: string;
 }
 
 export interface RuntimeStatus {
+  phase: PreviewPhase;
   isRunning: boolean;
   isBuilding: boolean;
-  port: number;
-  url: string;
+  isInstalling: boolean;
+  serverUrl: string | null;
+  serverPort: number | null;
+  error: string | null;
   logs: RuntimeLog[];
   errors: string[];
   manifest: PackageManifest | null;

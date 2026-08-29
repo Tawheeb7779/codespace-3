@@ -20,20 +20,20 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
 
   const currentProject = projects.find((p) => p.id === activeProjectId);
 
+  // Ctrl/Cmd+K toggling lives in the workspace so a single listener owns it;
+  // two listeners raced and left the palette permanently open.
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        if (isOpen) onClose();
-        else setQuery('');
-      }
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
+    if (!isOpen) return undefined;
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (isOpen) setQuery('');
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -41,9 +41,9 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     ? Object.values(currentProject.files).filter((f) => !f.isFolder)
     : [];
 
-  const filteredFiles = fileItems.filter((f) =>
-    f.name.toLowerCase().includes(query.toLowerCase())
-  );
+  const filteredFiles = fileItems
+    .filter((f) => f.path.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 60);
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-start justify-center pt-20 p-4">

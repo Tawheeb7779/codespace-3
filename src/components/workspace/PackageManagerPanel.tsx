@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { useRuntimeStore } from '../../runtime/RuntimeManager';
-import { CompilerEngine } from '../../runtime/CompilerEngine';
+import { parseManifest } from '../../runtime/manifest';
+import { WebContainerProvider } from '../../runtime/WebContainerProvider';
 import { VoiceRecognitionService } from '../../services/VoiceRecognitionService';
 
 interface NpmSearchResult {
@@ -43,8 +44,14 @@ const POPULAR_RECOMMENDED_PACKAGES: NpmSearchResult[] = [
 ];
 
 export const PackageManagerPanel: React.FC = () => {
-  const { projects, activeProjectId, updateFileContent } = useProjectStore();
-  const { installPackages, addLog } = useRuntimeStore();
+  const projects = useProjectStore((s) => s.projects);
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const updateFileContent = useProjectStore((s) => s.updateFileContent);
+  const saveFile = useProjectStore((s) => s.saveFile);
+  const installPackages = useRuntimeStore((s) => s.installPackages);
+  const addLog = useRuntimeStore((s) => s.addLog);
+  const unsupportedReason = WebContainerProvider.unsupportedReason();
+  const isRuntimeInstalling = useRuntimeStore((s) => s.isInstalling);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isInstalling, setIsInstalling] = useState(false);
@@ -59,11 +66,11 @@ export const PackageManagerPanel: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
 
   const currentProject = projects.find((p) => p.id === activeProjectId);
-  const pkgFile = currentProject?.files['package.json'];
-  const manifest = pkgFile ? CompilerEngine.parseManifest(pkgFile.content) : {};
+  const pkgFile = currentProject?.files['/package.json'];
+  const manifest = pkgFile ? parseManifest(pkgFile.content) : {};
 
-  const dependencies = manifest.dependencies || {};
-  const devDependencies = manifest.devDependencies || {};
+  const dependencies: Record<string, string> = manifest.dependencies || {};
+  const devDependencies: Record<string, string> = manifest.devDependencies || {};
 
   const handleToggleVoice = () => {
     if (isListening) {
@@ -135,25 +142,44 @@ export const PackageManagerPanel: React.FC = () => {
     }
   };
 
+  /**
+   * Writes the dependency into package.json and then runs a real `npm install`
+   * in the runtime. When the runtime is unavailable the manifest is still
+   * updated, but the panel says plainly that nothing was installed.
+   */
   const handleInstallPackage = async (pkgName: string, version: string = 'latest', isDev: boolean = false) => {
     if (!pkgFile || !currentProject) return;
 
     setIsInstalling(true);
-    addLog('info', `npm install ${pkgName}@${version}`);
-
     try {
-      const parsed = CompilerEngine.parseManifest(pkgFile.content);
+      const parsed = parseManifest(pkgFile.content);
       const targetGroup = isDev ? 'devDependencies' : 'dependencies';
       parsed[targetGroup] = {
         ...(parsed[targetGroup] || {}),
-        [pkgName]: `^${version.replace('^', '')}`,
+        [pkgName]: version === 'latest' ? 'latest' : `^${version.replace('^', '')}`,
       };
 
       const updatedJson = JSON.stringify(parsed, null, 2);
-      updateFileContent('package.json', updatedJson);
+      updateFileContent(pkgFile.id, updatedJson);
+      saveFile(pkgFile.id);
 
-      await installPackages(updatedJson);
-      addLog('stdout', `+ ${pkgName}@${version} added to ${targetGroup}`);
+      if (unsupportedReason) {
+        addLog(
+          'error',
+          `${pkgName} was added to ${targetGroup} in package.json, but not installed: ${unsupportedReason}`
+        );
+        return;
+      }
+
+      const project = useProjectStore.getState().getActiveProject();
+      if (!project) return;
+      const ok = await installPackages(project.id, project.files);
+      addLog(
+        ok ? 'info' : 'error',
+        ok
+          ? `${pkgName} installed and added to ${targetGroup}.`
+          : `${pkgName} was added to ${targetGroup} but npm install did not complete.`
+      );
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       addLog('error', `Failed to install package: ${msg}`);
@@ -165,7 +191,7 @@ export const PackageManagerPanel: React.FC = () => {
   const handleRemovePackage = (pkgName: string) => {
     if (!pkgFile || !currentProject) return;
 
-    const parsed = CompilerEngine.parseManifest(pkgFile.content);
+    const parsed = parseManifest(pkgFile.content);
     if (parsed.dependencies && parsed.dependencies[pkgName]) {
       delete parsed.dependencies[pkgName];
     }
@@ -174,8 +200,9 @@ export const PackageManagerPanel: React.FC = () => {
     }
 
     const updatedJson = JSON.stringify(parsed, null, 2);
-    updateFileContent('package.json', updatedJson);
-    addLog('info', `- ${pkgName} removed from package.json`);
+    updateFileContent(pkgFile.id, updatedJson);
+    saveFile(pkgFile.id);
+    addLog('info', `${pkgName} removed from package.json. Run "npm install" to update node_modules.`);
   };
 
   const filteredSearchResults = POPULAR_RECOMMENDED_PACKAGES.filter((p) =>
@@ -185,6 +212,14 @@ export const PackageManagerPanel: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col bg-surface-low text-xs select-none border-r border-outline-variant/15 p-3 space-y-4 overflow-y-auto">
+      {unsupportedReason ? (
+        <div className="px-2 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] flex items-start gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
+          <span>
+            Packages can be added to package.json, but nothing can be installed here: {unsupportedReason}
+          </span>
+        </div>
+      ) : null}
       {/* Header */}
       <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
         <span className="font-semibold text-slate-200 tracking-wide uppercase text-[11px] flex items-center gap-2">
@@ -323,12 +358,12 @@ export const PackageManagerPanel: React.FC = () => {
                     </div>
                     {isInstalled ? (
                       <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 font-medium flex items-center gap-1 border border-emerald-500/30">
-                        <CheckCircle2 className="w-3 h-3" /> Installed
+                        <CheckCircle2 className="w-3 h-3" /> In manifest
                       </span>
                     ) : (
                       <button
                         onClick={() => handleInstallPackage(pkg.name, pkg.version)}
-                        disabled={isInstalling}
+                        disabled={isInstalling || isRuntimeInstalling}
                         className="px-2.5 py-1 bg-primary-container hover:bg-primary-container/80 text-white rounded text-[11px] font-medium transition-all flex items-center gap-1"
                       >
                         <Download className="w-3 h-3" /> Install
@@ -417,7 +452,7 @@ export const PackageManagerPanel: React.FC = () => {
               <ShieldAlert className="w-4 h-4 text-primary" /> Real OSV Advisory Querying
             </div>
             <p className="text-[11px] text-outline leading-relaxed">
-              Monitors manifest dependencies directly against Open Source Vulnerability (OSV) databases without storing static mock data.
+              Queries the public OSV.dev advisory database for the versions listed in package.json.
             </p>
           </div>
         </div>
