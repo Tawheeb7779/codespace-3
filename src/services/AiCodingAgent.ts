@@ -85,6 +85,30 @@ const TOOLS: ToolDef[] = [
     description: "Run the project's real build script to completion and report the actual exit code/errors.",
     parameters: { type: 'object', properties: {}, required: [] },
   },
+  {
+    name: 'stop_project',
+    description: 'Stop the currently running dev server.',
+    parameters: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'run_script',
+    description: 'Run an arbitrary package.json script (e.g. "test", "lint") to completion and report the real exit code/output.',
+    parameters: {
+      type: 'object',
+      properties: { script: { type: 'string', description: 'Script name from package.json scripts' } },
+      required: ['script'],
+    },
+  },
+  {
+    name: 'read_runtime_errors',
+    description: 'Read the most recent real runtime/dev-server error messages.',
+    parameters: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'read_terminal_output',
+    description: 'Read the most recent real dev-server/build log lines (stdout/stderr), not the interactive shell history.',
+    parameters: { type: 'object', properties: {}, required: [] },
+  },
 ];
 
 const MAX_TREE_ENTRIES = 300;
@@ -258,6 +282,31 @@ async function toolRunBuild(): Promise<ToolResult> {
   return { ok: result.success, exitCode: result.exitCode, error: result.error, durationMs: result.durationMs };
 }
 
+async function toolStopProject(): Promise<ToolResult> {
+  await useRuntimeStore.getState().stopPreview();
+  return { ok: true };
+}
+
+async function toolRunScript(script: string): Promise<ToolResult> {
+  const project = useProjectStore.getState().getActiveProject();
+  if (!project) return { ok: false, error: 'No active project.' };
+  const result = await useRuntimeStore.getState().runScript(project.id, project.files, script);
+  return { ok: result.success, exitCode: result.exitCode, error: result.error, durationMs: result.durationMs };
+}
+
+function toolReadRuntimeErrors(): ToolResult {
+  const errors = useRuntimeStore.getState().errors.slice(-10);
+  return { ok: true, errors };
+}
+
+function toolReadTerminalOutput(): ToolResult {
+  const lines = useRuntimeStore
+    .getState()
+    .logs.slice(-20)
+    .map((l) => `[${l.type}] ${l.message}`);
+  return { ok: true, output: lines };
+}
+
 async function executeTool(name: string, argsJson: string): Promise<{ result: ToolResult; label: string }> {
   let args: Record<string, string> = {};
   try {
@@ -301,6 +350,18 @@ async function executeTool(name: string, argsJson: string): Promise<{ result: To
       const result = await toolRunBuild();
       return { result, label: result.ok ? 'Build succeeded' : 'Build failed' };
     }
+    case 'stop_project': {
+      const result = await toolStopProject();
+      return { result, label: 'Stopped the dev server' };
+    }
+    case 'run_script': {
+      const result = await toolRunScript(args.script);
+      return { result, label: result.ok ? `Ran "${args.script}" successfully` : `"${args.script}" failed` };
+    }
+    case 'read_runtime_errors':
+      return { result: toolReadRuntimeErrors(), label: 'Read runtime errors' };
+    case 'read_terminal_output':
+      return { result: toolReadTerminalOutput(), label: 'Read terminal output' };
     default:
       return { result: { ok: false, error: `Unknown tool "${name}".` }, label: `Unknown tool "${name}"` };
   }

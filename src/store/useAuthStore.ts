@@ -18,6 +18,7 @@ export interface UserProfile {
  * nothing and grants no entitlements.
  */
 export type AuthMode = 'supabase' | 'local';
+export type OAuthProvider = 'google' | 'github' | 'facebook' | 'twitter';
 
 interface AuthState {
   user: { id: string; email: string } | null;
@@ -25,11 +26,14 @@ interface AuthState {
   isAuthenticated: boolean;
   authMode: AuthMode;
   isLoading: boolean;
+  /** True once the initial session check has resolved - lets callers tell "not signed in" from "don't know yet". */
+  authChecked: boolean;
   error: string | null;
 
   initializeAuth: () => Promise<void>;
   signUp: (email: string, pass: string, username: string) => Promise<boolean>;
   signIn: (email: string, pass: string) => Promise<boolean>;
+  signInWithOAuth: (provider: OAuthProvider, redirectTo?: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   recoverPassword: (email: string) => Promise<boolean>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
@@ -63,11 +67,13 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       authMode: isSupabaseConfigured ? 'supabase' : 'local',
       isLoading: false,
+      // Nothing to check in local mode - there's no session to wait on.
+      authChecked: !isSupabaseConfigured,
       error: null,
 
       initializeAuth: async () => {
         if (!isSupabaseConfigured) {
-          set({ authMode: 'local' });
+          set({ authMode: 'local', authChecked: true });
           return;
         }
 
@@ -79,7 +85,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (!session?.user) {
             // A stale persisted profile must not survive an expired session.
-            set({ user: null, profile: null, isAuthenticated: false, isLoading: false });
+            set({ user: null, profile: null, isAuthenticated: false, isLoading: false, authChecked: true });
             return;
           }
 
@@ -103,9 +109,9 @@ export const useAuthStore = create<AuthState>()(
               }
             : { ...localProfile(user.id, fallbackName), createdAt: new Date().toISOString() };
 
-          set({ user, profile, isAuthenticated: true, isLoading: false, error: null });
+          set({ user, profile, isAuthenticated: true, isLoading: false, authChecked: true, error: null });
         } catch (e: unknown) {
-          set({ error: e instanceof Error ? e.message : String(e), isLoading: false });
+          set({ error: e instanceof Error ? e.message : String(e), isLoading: false, authChecked: true });
         }
       },
 
@@ -200,6 +206,32 @@ export const useAuthStore = create<AuthState>()(
           return true;
         } catch (e: unknown) {
           set({ error: e instanceof Error ? e.message : String(e), isLoading: false });
+          return false;
+        }
+      },
+
+      signInWithOAuth: async (provider, redirectTo) => {
+        set({ error: null });
+
+        if (!isSupabaseConfigured) {
+          set({
+            error: `${provider} sign-in needs a configured Supabase backend with that provider enabled. This build stores profiles locally.`,
+          });
+          return false;
+        }
+
+        try {
+          // Supabase redirects the whole page to the provider; on return it lands
+          // on `redirectTo` with a session already in the URL for detectSessionInUrl
+          // to pick up. There is nothing further to do in this tab.
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider,
+            options: { redirectTo: redirectTo || `${window.location.origin}/auth/callback` },
+          });
+          if (error) throw error;
+          return true;
+        } catch (e: unknown) {
+          set({ error: e instanceof Error ? e.message : String(e) });
           return false;
         }
       },

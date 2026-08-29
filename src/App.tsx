@@ -2,10 +2,13 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { initializeAuthListener } from './store/useAuthStore';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 const LandingPage = React.lazy(() => import('./pages/LandingPage'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const Workspace = React.lazy(() => import('./pages/Workspace'));
+const SignInPage = React.lazy(() => import('./pages/SignInPage'));
+const AuthCallback = React.lazy(() => import('./pages/AuthCallback'));
 
 export function App() {
   // Restores an existing Supabase session on load and follows sign-in/out.
@@ -24,8 +27,24 @@ export function App() {
         }>
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/workspace/:projectId" element={<Workspace />} />
+            <Route path="/signin" element={<SignInPage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspace/:projectId"
+              element={
+                <ProtectedRoute>
+                  <Workspace />
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </React.Suspense>

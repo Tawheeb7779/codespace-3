@@ -401,7 +401,14 @@ export const Spatial3DWorkspace: React.FC = () => {
 
   return (
     <WebGLBoundary>
-      <div className="w-full h-full relative bg-[#050507] overflow-hidden select-none font-sans">
+      {/*
+        touch-none on the ancestor (not the <canvas> itself) stops one/two-finger
+        orbit and pinch-zoom from also scrolling the page: the browser's touch-action
+        algorithm intersects an element's value with its ancestors', so this holds
+        even though OrbitControls' own connect()/dispose() cycle mutates the canvas
+        element's own inline touch-action between 'none' and 'auto'.
+      */}
+      <div className="w-full h-full relative bg-[#050507] overflow-hidden select-none font-sans touch-none">
         {/* Controls Overlay */}
         <div className="absolute top-3 left-3 z-20 flex flex-wrap gap-2 items-center">
           <div className="bg-[#09090b]/80 backdrop-blur-md p-1.5 rounded-xl border border-white/10 flex items-center gap-2">

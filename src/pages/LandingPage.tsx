@@ -21,7 +21,13 @@ import {
 } from 'lucide-react';
 import { AuthModal } from '../components/auth/AuthModal';
 import { Spatial3DWorkspace } from '../components/workspace/Spatial3DWorkspace';
+import { CanvasRevealEffect, ShaderBoundary } from '../components/ui/CanvasRevealEffect';
+import { useBreakpoint, usePrefersReducedMotion } from '../hooks/useBreakpoint';
 import { PRICING_TIERS } from '../data/pricing';
+
+/** CodeSpace 3D brand red (#ef233c) as RGB - passed explicitly, never baked into the shader component. */
+const BRAND_RED: number[][] = [[239, 35, 60]];
+const BACKDROP_OPACITIES = [0.05, 0.05, 0.08, 0.08, 0.1, 0.1, 0.14, 0.14, 0.18, 0.2];
 
 const FEATURES = [
   {
@@ -86,6 +92,9 @@ const HERO_INTEGRATIONS = INTEGRATIONS.filter((i) =>
 export default function LandingPage() {
   const navigate = useNavigate();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const breakpoint = useBreakpoint();
+  const reducedMotion = usePrefersReducedMotion();
+  const shaderEnabled = breakpoint !== 'mobile' && !reducedMotion;
 
   const scrollToShowcase = () => {
     document.getElementById('hero-showcase')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -93,8 +102,23 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#050507] text-[#e4e4e7] selection:bg-[#ef233c]/30 selection:text-white font-sans overflow-x-hidden">
-      {/* Background Grids & Ambient Red Glow */}
-      <div className="fixed inset-0 bg-grid-pattern opacity-20 pointer-events-none" />
+      {/* Background: animated shader on desktop/tablet, static grid fallback on mobile / reduced motion */}
+      {shaderEnabled ? (
+        <div className="fixed inset-0 pointer-events-none">
+          <ShaderBoundary>
+            <CanvasRevealEffect
+              animationSpeed={2}
+              colors={BRAND_RED}
+              opacities={BACKDROP_OPACITIES}
+              dotSize={breakpoint === 'tablet' ? 5 : 3}
+              showGradient={false}
+              containerClassName="opacity-40"
+            />
+          </ShaderBoundary>
+        </div>
+      ) : (
+        <div className="fixed inset-0 bg-grid-pattern opacity-20 pointer-events-none" />
+      )}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-[#ef233c]/15 via-[#ef233c]/5 to-transparent blur-[120px] pointer-events-none" />
 
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />

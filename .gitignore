@@ -8,3 +8,8 @@ build/
 
 # Local env files must never be committed (they were, historically).
 .env.local
+
+# Agent tooling installed per-machine, not part of the product.
+.agents/
+.claude/
+skills-lock.json
